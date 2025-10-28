@@ -38,6 +38,13 @@ from prettyplot.utils.validation import (
     check_required_columns,
 )
 
+from prettyplot.utils.fonts import (
+    _register_fonts,
+    list_registered_fonts,
+)
+# Register fonts globally
+_register_fonts()
+
 __all__ = [
     # I/O functions
     "savefig",
@@ -66,4 +73,6 @@ __all__ = [
     "validate_range",
     "coerce_to_numeric",
     "check_required_columns",
+    # Fonts functions
+    "list_registered_fonts",
 ]

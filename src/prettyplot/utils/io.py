@@ -19,7 +19,7 @@ def savefig(
     dpi: Optional[int] = None,
     format: Optional[str] = None,
     bbox_inches: str = 'tight',
-    transparent: bool = False,
+    transparent: bool = True,
     facecolor: Optional[str] = None,
     edgecolor: Optional[str] = None,
     pad_inches: float = 0.1,
