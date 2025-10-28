@@ -9,6 +9,8 @@ from prettyplot.themes.colors import (
     get_palette,
     list_palettes,
     show_palette,
+    resolve_palette,
+    DEFAULT_COLOR,
     PASTEL_CATEGORICAL,
     PASTEL_CATEGORICAL_MINIMAL,
     PASTEL_SEQUENTIAL_GREEN,
@@ -47,6 +49,9 @@ __all__ = [
     "get_palette",
     "list_palettes",
     "show_palette",
+    "resolve_palette",
+    # Color constants
+    "DEFAULT_COLOR",
     # Color palettes
     "PASTEL_CATEGORICAL",
     "PASTEL_CATEGORICAL_MINIMAL",
