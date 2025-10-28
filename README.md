@@ -22,6 +22,39 @@ cd prettyplot
 pip install -e .
 ```
 
+### Development with uv and Jupyter
+
+If you're using [uv](https://github.com/astral-sh/uv) for Python environment management and want to use the package in Jupyter notebooks:
+
+```bash
+# Clone the repository
+git clone https://github.com/jorgebotas/prettyplot.git
+cd prettyplot
+
+# Create a new uv environment with Python 3.11 (or your preferred version)
+uv venv --python 3.11
+
+# Activate the environment
+source .venv/bin/activate  # On Linux/macOS
+# or
+.venv\Scripts\activate  # On Windows
+
+# Install the package in editable mode with all dependencies
+uv pip install -e .
+
+# Install ipykernel to make the environment available in Jupyter
+uv pip install ipykernel
+
+# Register the environment as a Jupyter kernel
+python -m ipykernel install --user --name=prettyplot --display-name="Python (prettyplot)"
+```
+
+Now you can select the "Python (prettyplot)" kernel in Jupyter Lab or Jupyter Notebook and import prettyplot:
+
+```python
+import prettyplot as pp
+```
+
 ### From PyPI (coming soon)
 
 ```bash
