@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 
 from prettyplot.config import DEFAULT_LINEWIDTH, DEFAULT_ALPHA, DEFAULT_CAPSIZE, DEFAULT_FIGSIZE
+from prettyplot.themes.colors import resolve_palette, DEFAULT_COLOR
 
 
 def barplot(
@@ -127,6 +128,40 @@ def barplot(
     else:
         fig = ax.get_figure()
 
+    # Resolve palette (handles prettyplot and seaborn palettes)
+    resolved_palette = None
+    bar_color = None
+
+    # Determine if we need to use color or palette
+    has_grouping = hue is not None or split is not None
+
+    if has_grouping:
+        # When there's grouping (hue or split), use palette
+        if isinstance(palette, str) or palette is None:
+            # Determine number of colors needed based on hue or split
+            if hue is not None:
+                n_colors = data[hue].nunique()
+            else:  # split is not None
+                n_colors = data[x].nunique()
+            resolved_palette = resolve_palette(palette, n_colors=n_colors)
+        else:
+            resolved_palette = palette
+    else:
+        # When there's no grouping, use a single color
+        if palette is None:
+            # Use default color
+            bar_color = DEFAULT_COLOR
+        elif isinstance(palette, str):
+            # Resolve the palette and use the first color
+            colors = resolve_palette(palette, n_colors=1)
+            bar_color = colors[0] if isinstance(colors, list) else list(colors.values())[0]
+        elif isinstance(palette, list):
+            # Use the first color from the list
+            bar_color = palette[0]
+        elif isinstance(palette, dict):
+            # Use the first color from the dict
+            bar_color = list(palette.values())[0]
+
     plot_data = data.copy()
 
     # Handle split bars (side-by-side grouped bars)
@@ -147,43 +182,49 @@ def barplot(
     if order is not None:
         plot_data[x] = pd.Categorical(plot_data[x], categories=order, ordered=True)
 
+    # Prepare kwargs for seaborn barplot
+    barplot_kwargs = {
+        'data': plot_data,
+        'x': plot_x,
+        'y': y,
+        'fill': False,
+        'linewidth': linewidth,
+        'capsize': capsize,
+        'ax': ax,
+        'err_kws': {"linewidth": linewidth},
+        'errorbar': errorbar,
+        'gap': gap,
+        'legend': False,
+    }
+
+    # Add hue if split is used, otherwise only if explicitly provided
+    if split is not None:
+        barplot_kwargs['hue'] = x
+    elif hue is not None:
+        barplot_kwargs['hue'] = hue
+
+    # Add palette or color
+    if resolved_palette is not None:
+        barplot_kwargs['palette'] = resolved_palette
+    elif bar_color is not None:
+        barplot_kwargs['color'] = bar_color
+
+    # Merge with user-provided kwargs
+    barplot_kwargs.update(kwargs)
+
     # Create outline bars
-    sns.barplot(
-        data=plot_data,
-        x=plot_x,
-        y=y,
-        hue=hue if split is None else x,
-        fill=False,
-        linewidth=linewidth,
-        capsize=capsize,
-        ax=ax,
-        palette=palette,
-        err_kws={"linewidth": linewidth},
-        errorbar=errorbar,
-        gap=gap,
-        legend=False,
-        **kwargs
-    )
+    sns.barplot(**barplot_kwargs)
 
     # Add filled bars with alpha if needed
     if 0 < alpha < 1:
-        sns.barplot(
-            data=plot_data,
-            x=plot_x,
-            y=y,
-            hue=hue if split is None else x,
-            fill=True,
-            alpha=alpha,
-            linewidth=0,
-            capsize=capsize,
-            ax=ax,
-            palette=palette,
-            err_kws={"linewidth": 0},
-            errorbar=errorbar,
-            gap=gap,
-            legend=False,
-            **kwargs
-        )
+        fill_kwargs = barplot_kwargs.copy()
+        fill_kwargs.update({
+            'fill': True,
+            'alpha': alpha,
+            'linewidth': 0,
+            'err_kws': {"linewidth": 0},
+        })
+        sns.barplot(**fill_kwargs)
 
     # Apply hatch patterns if split is used
     if split is not None:

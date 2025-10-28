@@ -32,7 +32,7 @@ from prettyplot.utils.axes import (
 )
 
 # Theming
-from prettyplot.themes.colors import get_palette, list_palettes, show_palette
+from prettyplot.themes.colors import get_palette, list_palettes, show_palette, resolve_palette, DEFAULT_COLOR
 from prettyplot.themes.styles import (
     set_publication_style,
     set_minimal_style,
@@ -67,6 +67,9 @@ __all__ = [
     "get_palette",
     "list_palettes",
     "show_palette",
+    "resolve_palette",
+    # Color constants
+    "DEFAULT_COLOR",
     # Style functions
     "set_publication_style",
     "set_minimal_style",

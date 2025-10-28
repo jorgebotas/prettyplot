@@ -12,6 +12,20 @@ import numpy as np
 
 
 # =============================================================================
+# Default Color
+# =============================================================================
+
+DEFAULT_COLOR: str = "#5d83c3"
+"""
+Default color for single-color plots.
+
+This slate blue color is used as the default when no palette or color
+is specified. It provides a professional, publication-ready appearance
+while being distinct and visually appealing.
+"""
+
+
+# =============================================================================
 # Categorical Palettes
 # =============================================================================
 
@@ -314,6 +328,82 @@ def _interpolate_colors(colors: List[str], n: int) -> List[str]:
     interpolated = [to_hex(cmap(idx)) for idx in indices]
 
     return interpolated
+
+
+def resolve_palette(
+    palette: Optional[Union[str, List[str], Dict[str, str]]] = None,
+    n_colors: Optional[int] = None
+) -> Union[List[str], Dict[str, str]]:
+    """
+    Resolve a palette to actual colors, supporting both prettyplot and seaborn palettes.
+
+    This helper function translates palette specifications to actual color values.
+    It checks if a string palette name is a prettyplot palette first, then falls
+    back to seaborn palettes if not found.
+
+    Parameters
+    ----------
+    palette : str, list, dict, or None
+        Palette specification:
+        - None: Returns default color
+        - str: Palette name (checks prettyplot first, then seaborn)
+        - list: List of color hex codes (returned as-is)
+        - dict: Mapping from categories to colors (returned as-is)
+    n_colors : int, optional
+        Number of colors to return. Only applicable for string palette names.
+
+    Returns
+    -------
+    Union[List[str], Dict[str, str]]
+        Resolved palette as list of colors or dictionary.
+
+    Examples
+    --------
+    Get default color:
+    >>> colors = resolve_palette()
+    >>> colors
+    ['#5d83c3']
+
+    Resolve prettyplot palette:
+    >>> colors = resolve_palette('pastel_categorical', n_colors=5)
+
+    Resolve seaborn palette:
+    >>> colors = resolve_palette('viridis', n_colors=5)
+
+    Pass through color list:
+    >>> colors = resolve_palette(['#ff0000', '#00ff00', '#0000ff'])
+    ['#ff0000', '#00ff00', '#0000ff']
+    """
+    import seaborn as sns
+
+    # Handle None: return default color
+    if palette is None:
+        return [DEFAULT_COLOR]
+
+    # Handle list/dict: return as-is
+    if isinstance(palette, (list, dict)):
+        return palette
+
+    # Handle string: check prettyplot first, then seaborn
+    if isinstance(palette, str):
+        # Try prettyplot palette first
+        if palette in PALETTES:
+            return get_palette(palette, n_colors=n_colors)
+
+        # Fall back to seaborn palette
+        try:
+            if n_colors is not None:
+                return sns.color_palette(palette, n_colors=n_colors).as_hex()
+            else:
+                return sns.color_palette(palette).as_hex()
+        except Exception as e:
+            raise ValueError(
+                f"Unknown palette '{palette}'. Not found in prettyplot palettes "
+                f"({', '.join(PALETTES.keys())}) or seaborn palettes. Error: {e}"
+            )
+
+    # Should not reach here
+    raise ValueError(f"Invalid palette type: {type(palette)}")
 
 
 def list_palettes() -> List[str]:
