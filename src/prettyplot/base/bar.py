@@ -135,6 +135,7 @@ def barplot(
     # Resolve palette (handles prettyplot and seaborn palettes)
     resolved_palette = None
     bar_color = None
+    user_color_palette = None  # Store user's desired color scheme
 
     # Determine if we need to use color or palette
     has_grouping = hue is not None or hatch is not None
@@ -142,22 +143,34 @@ def barplot(
     if has_grouping:
         # When there's grouping (hue or hatch), use palette
         if isinstance(palette, str) or palette is None:
-            # Determine number of colors needed based on hue or hatch
-            if hue is not None:
+            # Determine number of colors needed based on actual coloring column
+            if hatch is not None and hue is not None:
+                # Both hatch and hue: color by hue, group by hatch
                 n_colors = data[hue].nunique()
-            else:  # hatch is not None
-                # For hatch, we need colors for x categories, but we'll map them to hatch values
+            elif hue is not None:
+                # Only hue: standard behavior
+                n_colors = data[hue].nunique()
+            else:
+                # Only hatch: color by x
                 n_colors = data[x].nunique()
             resolved_palette = resolve_palette(palette, n_colors=n_colors)
-
-            # When hatch is used, we need to create a palette that maps hatch values
-            # to colors based on their corresponding x categories
-            if hatch is not None and not isinstance(palette, dict):
-                resolved_palette = _create_hatch_palette(
-                    data, x, hatch, resolved_palette
-                )
         else:
             resolved_palette = palette
+
+        # Store the user's color palette for later recoloring
+        if hatch is not None:
+            if hue is not None:
+                # User wants to color by hue
+                user_color_palette = resolved_palette
+            else:
+                # Color by x categories
+                user_color_palette = resolved_palette
+
+            # Create temporary palette for seaborn that maps hatch values
+            # This is needed because we use hue=hatch for grouping
+            resolved_palette = _create_hatch_palette(
+                data, x, hatch, resolved_palette
+            )
     else:
         # When there's no grouping, use custom color or default color
         bar_color = color if color is not None else DEFAULT_COLOR
@@ -232,16 +245,30 @@ def barplot(
 
     # Apply hatch patterns and recolor bars if hatch is used
     if hatch is not None:
-        # First, recolor bars based on x categories
-        _recolor_bars_by_x(
+        # Determine the coloring column and prepare palette
+        if hue is not None:
+            color_col = hue
+        else:
+            color_col = x
+
+        # Convert user_color_palette to dict if it's a list
+        if isinstance(user_color_palette, list):
+            color_values = sorted(data[color_col].unique())
+            color_palette_dict = {
+                val: user_color_palette[i % len(user_color_palette)]
+                for i, val in enumerate(color_values)
+            }
+        else:
+            color_palette_dict = user_color_palette
+
+        # First, recolor bars based on the desired coloring scheme
+        _recolor_bars_by_category(
             ax=ax,
             data=data,
             x_col=x,
             hatch_col=hatch,
-            palette=resolved_palette if isinstance(palette, dict) else
-                   {val: resolved_palette[i % len(resolved_palette)]
-                    for i, val in enumerate(sorted(data[x].unique()))}
-                   if isinstance(resolved_palette, list) else resolved_palette,
+            color_col=color_col,
+            palette=color_palette_dict,
             alpha=alpha
         )
 
@@ -336,24 +363,36 @@ def _create_hatch_palette(
     return {hatch_val: colors[i % len(colors)] for i, hatch_val in enumerate(hatch_values)}
 
 
-def _recolor_bars_by_x(
+def _recolor_bars_by_category(
     ax: Axes,
     data: pd.DataFrame,
     x_col: str,
     hatch_col: str,
+    color_col: str,
     palette: Dict,
     alpha: float
 ) -> None:
     """
-    Recolor bars to match x categories instead of hatch categories.
+    Recolor bars to match a specific category instead of hatch categories.
 
     When using hue=hatch for grouping, seaborn colors by hatch values.
-    This function recolors bars based on their x category.
+    This function recolors bars based on a specified color column.
+
+    Parameters
+    ----------
+    color_col : str
+        Column to use for coloring (e.g., x_col or a separate hue column)
     """
     x_values = sorted(data[x_col].unique())
     hatch_values = list(data[hatch_col].unique())
     n_hatch = len(hatch_values)
     n_x = len(x_values)
+
+    # Create a mapping from (x_value, hatch_value) to color_value
+    color_map = {}
+    for _, row in data.iterrows():
+        key = (row[x_col], row[hatch_col])
+        color_map[key] = row[color_col]
 
     # Total number of bars in each layer (outline and fill)
     total_bars = n_x * n_hatch
@@ -363,11 +402,19 @@ def _recolor_bars_by_x(
     # Recolor all patches
     for idx, patch in enumerate(ax.patches):
         if hasattr(patch, 'get_height'):  # Check if it's a bar
-            # Determine which x category this bar belongs to
+            # Determine which (x, hatch) combination this bar belongs to
             bar_idx = idx % total_bars
             x_idx = bar_idx // n_hatch
+            hatch_idx = bar_idx % n_hatch
             x_val = x_values[x_idx]
-            color = palette.get(x_val, 'black')
+            hatch_val = hatch_values[hatch_idx]
+
+            # Get the color value for this (x, hatch) combination
+            color_val = color_map.get((x_val, hatch_val))
+            if color_val is not None:
+                color = palette.get(color_val, 'black')
+            else:
+                color = 'black'
 
             # Set color based on layer (outline vs fill)
             layer = idx // total_bars
