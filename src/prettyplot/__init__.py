@@ -17,6 +17,7 @@ __author__ = "Jorge Botas"
 
 # Core plotting functions (base)
 from prettyplot.base.bar import barplot
+from prettyplot.base.scatter import scatterplot
 from prettyplot.base.heatmap import circle_heatmap
 
 # Advanced plotting functions
@@ -51,6 +52,7 @@ __all__ = [
     "__author__",
     # Base plots
     "barplot",
+    "scatterplot",
     "circle_heatmap",
     # Advanced plots
     "venn_diagram",

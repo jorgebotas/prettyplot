@@ -43,8 +43,8 @@ PUBLICATION_STYLE: Dict[str, Any] = {
     "axes.edgecolor": "0.2",
     "axes.labelcolor": "0.2",
     "axes.grid": False,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
+    "axes.spines.top": True,
+    "axes.spines.right": True,
     "axes.axisbelow": True,
 
     # Grid settings
@@ -134,7 +134,7 @@ or large-screen presentations.
 
 def set_publication_style(
     font: str = "Arial",
-    font_scale: float = 1.0,
+    font_scale: float = 1.6,
     context: str = "paper",
     palette: str = "pastel_categorical"
 ) -> None:
@@ -229,7 +229,7 @@ def set_minimal_style(
 
 def set_poster_style(
     font: str = "Arial",
-    font_scale: float = 1.0,
+    font_scale: float = 2.0,
     palette: str = "pastel_categorical"
 ) -> None:
     """

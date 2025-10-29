@@ -22,6 +22,7 @@ def barplot(
     y: str,
     hue: Optional[str] = None,
     split: Optional[str] = None,
+    color: Optional[str] = None,
     ax: Optional[Axes] = None,
     title: str = "",
     xlabel: str = "",
@@ -58,6 +59,9 @@ def barplot(
     split : str, optional
         Column name for splitting bars side-by-side with hatch patterns.
         When specified, creates grouped bars within each x category.
+    color : str, optional
+        Fixed color for all bars (only used when hue is None).
+        Overrides DEFAULT_COLOR. Example: '#ff0000' or 'red'.
     ax : Axes, optional
         Matplotlib axes object. If None, creates new figure.
     title : str, default=""
@@ -147,20 +151,8 @@ def barplot(
         else:
             resolved_palette = palette
     else:
-        # When there's no grouping, use a single color
-        if palette is None:
-            # Use default color
-            bar_color = DEFAULT_COLOR
-        elif isinstance(palette, str):
-            # Resolve the palette and use the first color
-            colors = resolve_palette(palette, n_colors=1)
-            bar_color = colors[0] if isinstance(colors, list) else list(colors.values())[0]
-        elif isinstance(palette, list):
-            # Use the first color from the list
-            bar_color = palette[0]
-        elif isinstance(palette, dict):
-            # Use the first color from the dict
-            bar_color = list(palette.values())[0]
+        # When there's no grouping, use custom color or default color
+        bar_color = color if color is not None else DEFAULT_COLOR
 
     plot_data = data.copy()
 
