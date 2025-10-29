@@ -140,19 +140,17 @@ def barplot(
     has_grouping = hue is not None or hatch is not None
 
     if has_grouping:
-        # When there's grouping (hue or hatch), use palette
-        if isinstance(palette, str) or palette is None:
-            # Determine number of colors needed based on what we're coloring by
-            if hue is not None:
+        # When there's grouping (hue or hatch), determine if we need palette
+        if hue is not None:
+            # Hue is provided: resolve palette based on hue
+            if isinstance(palette, str) or palette is None:
                 n_colors = data[hue].nunique()
-            elif hatch is not None:
-                # When only hatch, color by x
-                n_colors = data[x].nunique()
+                resolved_palette = resolve_palette(palette, n_colors=n_colors)
             else:
-                n_colors = data[x].nunique()
-            resolved_palette = resolve_palette(palette, n_colors=n_colors)
+                resolved_palette = palette
         else:
-            resolved_palette = palette
+            # Only hatch, no hue: will use single color (color arg or DEFAULT_COLOR)
+            resolved_palette = None
     else:
         # When there's no grouping, use custom color or default color
         bar_color = color if color is not None else DEFAULT_COLOR
@@ -351,12 +349,13 @@ def _apply_hatches_and_override_colors(
     alpha: float,
 ) -> None:
     """
-    Apply hatch patterns using patch.get_label() trick and override colors if needed.
+    Apply hatch patterns using patch.get_label() and idx // n_x, then override colors.
 
-    Strategy:
-    1. Use idx // n_x to determine which hue group each patch belongs to
-    2. Apply hatch pattern based on hatch_col value
-    3. If needs_color_override, override colors based on hue_col or x_col
+    Uses the approach from user's example:
+    - Track which category each patch belongs to via idx // n_x
+    - Use patch.get_label() or hue_order to determine the category
+    - Apply hatch based on the hatch column value
+    - Override colors if needed
     """
     n_x = data[x_col].nunique()
     n_hue = len(hue_order_for_patches)
@@ -371,26 +370,35 @@ def _apply_hatches_and_override_colors(
         # Position within layer
         bar_idx = idx % total_bars
 
-        # Get the hue category for this bar using idx // n_x approach
-        hue_idx = bar_idx % n_hue
-        hue_val = hue_order_for_patches[hue_idx]
+        # Use idx // n_x to determine which hue/hatch group this patch belongs to
+        # This is the key insight from user's example
+        label_idx = bar_idx % n_hue
+        label = hue_order_for_patches[label_idx]
 
-        # Get x category for this bar
+        # Also get x category for color override
         x_idx = bar_idx // n_hue
         x_vals = sorted(data[x_col].unique())
         x_val = x_vals[x_idx]
 
-        # Determine hatch value
-        if hue_col is not None and hue_col != hatch_col and '_combined_group' not in hue_order_for_patches[0]:
-            # hue != hatch, not combined: hue_val is from hatch_col
-            hatch_val = hue_val
-        elif '_' in str(hue_val) and hue_col is not None and hue_col != hatch_col:
-            # Combined group: parse to get hatch value
-            parts = str(hue_val).split('_', 1)
-            hatch_val = parts[1] if len(parts) == 2 else hue_val
+        # Determine hatch value from the label
+        # The label can be: hatch_val, hue_val, or "hue_val_hatch_val"
+        if hue_col is not None and hue_col != hatch_col and '_' in str(label):
+            # Combined group case: "hue_hatch"
+            parts = str(label).split('_', 1)
+            if len(parts) == 2:
+                hue_val_for_color = parts[0]
+                hatch_val = parts[1]
+            else:
+                hue_val_for_color = label
+                hatch_val = label
+        elif hue_col is None:
+            # Only hatch: label is from hatch column
+            hatch_val = label
+            hue_val_for_color = None
         else:
-            # hue == hatch or only hatch or only hue
-            hatch_val = hue_val
+            # hue == hatch or standard hue
+            hatch_val = label
+            hue_val_for_color = label
 
         # Apply hatch pattern
         hatch_pattern = hatch_mapping.get(hatch_val, '')
@@ -399,38 +407,30 @@ def _apply_hatches_and_override_colors(
         # Override color if needed
         if needs_color_override:
             if override_color is not None:
-                # Single color for all bars
+                # Single color for all bars (only hatch case with no hue)
                 color = override_color
-            elif hue_col is not None:
-                if '_' in str(hue_val) and hue_col != hatch_col:
-                    # Combined group: parse to get hue value for coloring
-                    parts = str(hue_val).split('_', 1)
-                    color_val = parts[0] if len(parts) == 2 else hue_val
-                elif hue_col == x_col:
-                    # hue is x: use x value for coloring
-                    color_val = x_val
-                else:
-                    color_val = hue_val
-
-                # Get color from palette
+            elif hue_col == x_col:
+                # Color by x value
                 if isinstance(color_palette, dict):
-                    color = color_palette.get(color_val, 'black')
+                    color = color_palette.get(x_val, 'black')
                 elif isinstance(color_palette, list):
-                    # Find index of color_val in sorted hue values
-                    if hue_col == x_col:
-                        vals = x_vals
-                        val_idx = x_idx
-                    else:
-                        vals = sorted(data[hue_col].unique())
-                        val_idx = vals.index(color_val) if color_val in vals else 0
-                    color = color_palette[val_idx % len(color_palette)]
+                    color = color_palette[x_idx % len(color_palette)]
+                else:
+                    color = 'black'
+            elif hue_val_for_color is not None:
+                # Color by hue value (combined group case)
+                if isinstance(color_palette, dict):
+                    color = color_palette.get(hue_val_for_color, 'black')
+                elif isinstance(color_palette, list):
+                    hue_vals = sorted(data[hue_col].unique())
+                    hue_idx = hue_vals.index(hue_val_for_color) if hue_val_for_color in hue_vals else 0
+                    color = color_palette[hue_idx % len(color_palette)]
                 else:
                     color = 'black'
             else:
-                # Should not happen, but fallback
                 color = 'black'
 
-            # Apply color
+            # Apply color to both outline and fill
             if layer == 0:  # Outline layer
                 patch.set_edgecolor(color)
             else:  # Fill layer
