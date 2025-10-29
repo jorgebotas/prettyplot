@@ -21,7 +21,7 @@ def barplot(
     x: str,
     y: str,
     hue: Optional[str] = None,
-    split: Optional[str] = None,
+    hatch: Optional[str] = None,
     color: Optional[str] = None,
     ax: Optional[Axes] = None,
     title: str = "",
@@ -36,7 +36,7 @@ def barplot(
     errorbar: str = "se",
     gap: float = 0.1,
     order: Optional[List[str]] = None,
-    split_order: Optional[List[str]] = None,
+    hatch_order: Optional[List[str]] = None,
     **kwargs
 ) -> Tuple[plt.Figure, Axes]:
     """
@@ -55,8 +55,8 @@ def barplot(
     y : str
         Column name for y-axis values.
     hue : str, optional
-        Column name for color grouping (typically same as x for split bars).
-    split : str, optional
+        Column name for color grouping (typically same as x for hatched bars).
+    hatch : str, optional
         Column name for splitting bars side-by-side with hatch patterns.
         When specified, creates grouped bars within each x category.
     color : str, optional
@@ -67,7 +67,7 @@ def barplot(
     title : str, default=""
         Plot title.
     xlabel : str, default=""
-        X-axis label. If empty and split is used, uses x column name.
+        X-axis label. If empty and hatch is used, uses x column name.
     ylabel : str, default=""
         Y-axis label. If empty, uses y column name.
     linewidth : float, default=2.0
@@ -84,7 +84,7 @@ def barplot(
         - dict: mapping from hue values to colors
         - list: list of colors
     hatch_mapping : dict, optional
-        Mapping from split values to hatch patterns.
+        Mapping from hatch values to hatch patterns.
         Example: {'group1': '', 'group2': '///', 'group3': '\\\\\\'}
     errorbar : str, default='se'
         Error bar type: 'se' (standard error), 'sd' (standard deviation),
@@ -93,8 +93,8 @@ def barplot(
         Gap between bar groups (0-1).
     order : list, optional
         Order of x-axis categories.
-    split_order : list, optional
-        Order of split categories. If provided, determines bar order within groups.
+    hatch_order : list, optional
+        Order of hatch categories. If provided, determines bar order within groups.
     **kwargs
         Additional keyword arguments passed to seaborn.barplot().
 
@@ -114,10 +114,10 @@ def barplot(
     >>> fig, ax = pp.barplot(data=df, x='category', y='value',
     ...                       hue='group', palette='pastel_categorical')
 
-    Bar plot with split bars and hatch patterns:
+    Bar plot with hatched bars and patterns:
     >>> fig, ax = pp.barplot(
     ...     data=df, x='condition', y='measurement',
-    ...     split='treatment', hue='condition',
+    ...     hatch='treatment', hue='condition',
     ...     hatch_mapping={'control': '', 'treated': '///'},
     ...     palette={'A': '#75b375', 'B': '#8e8ec1'}
     ... )
@@ -137,17 +137,25 @@ def barplot(
     bar_color = None
 
     # Determine if we need to use color or palette
-    has_grouping = hue is not None or split is not None
+    has_grouping = hue is not None or hatch is not None
 
     if has_grouping:
-        # When there's grouping (hue or split), use palette
+        # When there's grouping (hue or hatch), use palette
         if isinstance(palette, str) or palette is None:
-            # Determine number of colors needed based on hue or split
+            # Determine number of colors needed based on hue or hatch
             if hue is not None:
                 n_colors = data[hue].nunique()
-            else:  # split is not None
+            else:  # hatch is not None
+                # For hatch, we need colors for x categories, but we'll map them to hatch values
                 n_colors = data[x].nunique()
             resolved_palette = resolve_palette(palette, n_colors=n_colors)
+
+            # When hatch is used, we need to create a palette that maps hatch values
+            # to colors based on their corresponding x categories
+            if hatch is not None and not isinstance(palette, dict):
+                resolved_palette = _create_hatch_palette(
+                    data, x, hatch, resolved_palette
+                )
         else:
             resolved_palette = palette
     else:
@@ -156,19 +164,25 @@ def barplot(
 
     plot_data = data.copy()
 
-    # Handle split bars (side-by-side grouped bars)
-    if split is not None:
-        plot_data = _prepare_split_data(
-            plot_data, x, y, split, split_order=split_order
-        )
-        plot_x = '_plot_group'
+    # Handle hatch bars (side-by-side grouped bars)
+    if hatch is not None:
+        # Apply hatch_order if specified
+        if hatch_order is not None:
+            plot_data[hatch] = pd.Categorical(
+                plot_data[hatch], categories=hatch_order, ordered=True
+            )
 
         # Create default hatch mapping if not provided
         if hatch_mapping is None:
-            split_values = data[split].unique()
-            hatch_mapping = _create_default_hatch_mapping(split_values)
+            hatch_values = plot_data[hatch].unique()
+            hatch_mapping = _create_default_hatch_mapping(hatch_values)
+
+        # Use seaborn's native hue-based grouping for better bar positioning
+        plot_x = x
+        plot_hue_col = hatch
     else:
         plot_x = x
+        plot_hue_col = hue
 
     # Apply order to x categories if specified
     if order is not None:
@@ -189,11 +203,9 @@ def barplot(
         'legend': False,
     }
 
-    # Add hue if split is used, otherwise only if explicitly provided
-    if split is not None:
-        barplot_kwargs['hue'] = x
-    elif hue is not None:
-        barplot_kwargs['hue'] = hue
+    # Add hue for grouping if needed
+    if plot_hue_col is not None:
+        barplot_kwargs['hue'] = plot_hue_col
 
     # Add palette or color
     if resolved_palette is not None:
@@ -218,20 +230,45 @@ def barplot(
         })
         sns.barplot(**fill_kwargs)
 
-    # Apply hatch patterns if split is used
-    if split is not None:
+    # Apply hatch patterns and recolor bars if hatch is used
+    if hatch is not None:
+        # First, recolor bars based on x categories
+        _recolor_bars_by_x(
+            ax=ax,
+            data=data,
+            x_col=x,
+            hatch_col=hatch,
+            palette=resolved_palette if isinstance(palette, dict) else
+                   {val: resolved_palette[i % len(resolved_palette)]
+                    for i, val in enumerate(sorted(data[x].unique()))}
+                   if isinstance(resolved_palette, list) else resolved_palette,
+            alpha=alpha
+        )
+
+        # Then apply hatch patterns
         _apply_hatch_to_bars(
             ax=ax,
             data=data,
-            split_col=split,
+            x_col=x,
+            hatch_col=hatch,
             hatch_mapping=hatch_mapping,
         )
 
-        # Clean up x-axis labels to show only main categories
-        _fix_split_xticks(ax, plot_data, data, x, split)
+    # Add legend if hue or hatch is used
+    if hue is not None or hatch is not None:
+        _create_barplot_legend(
+            ax=ax,
+            data=data,
+            hue=hue,
+            hatch=hatch,
+            palette=resolved_palette,
+            hatch_mapping=hatch_mapping,
+            alpha=alpha,
+            linewidth=linewidth
+        )
 
     # Set labels
-    ax.set_xlabel(xlabel if xlabel else (x if split is None else x))
+    ax.set_xlabel(xlabel if xlabel else (x if hatch is None else x))
     ax.set_ylabel(ylabel if ylabel else y)
     ax.set_title(title)
 
@@ -273,22 +310,96 @@ def _create_default_hatch_mapping(split_values: Union[list, np.ndarray]) -> Dict
     }
 
 
+def _create_hatch_palette(
+    data: pd.DataFrame,
+    x_col: str,
+    hatch_col: str,
+    x_palette: Union[List, Dict]
+) -> Dict:
+    """
+    Create a palette for hatch-based plotting that colors by x categories.
+
+    When using hue=hatch for grouping, we need to map hatch values to colors
+    based on their corresponding x categories. Since each hatch value appears
+    across multiple x categories, we create a simple palette that cycles through
+    x colors for each hatch value.
+    """
+    # For simplicity, just create a palette that maps hatch values to colors
+    # We'll recolor bars manually after plotting
+    hatch_values = data[hatch_col].unique()
+    if isinstance(x_palette, dict):
+        colors = list(x_palette.values())
+    else:
+        colors = list(x_palette)
+
+    # Return a simple mapping - we'll fix colors later
+    return {hatch_val: colors[i % len(colors)] for i, hatch_val in enumerate(hatch_values)}
+
+
+def _recolor_bars_by_x(
+    ax: Axes,
+    data: pd.DataFrame,
+    x_col: str,
+    hatch_col: str,
+    palette: Dict,
+    alpha: float
+) -> None:
+    """
+    Recolor bars to match x categories instead of hatch categories.
+
+    When using hue=hatch for grouping, seaborn colors by hatch values.
+    This function recolors bars based on their x category.
+    """
+    x_values = sorted(data[x_col].unique())
+    hatch_values = list(data[hatch_col].unique())
+    n_hatch = len(hatch_values)
+    n_x = len(x_values)
+
+    # Total number of bars in each layer (outline and fill)
+    total_bars = n_x * n_hatch
+    n_patches = len(ax.patches)
+    n_layers = n_patches // total_bars if total_bars > 0 else 1
+
+    # Recolor all patches
+    for idx, patch in enumerate(ax.patches):
+        if hasattr(patch, 'get_height'):  # Check if it's a bar
+            # Determine which x category this bar belongs to
+            bar_idx = idx % total_bars
+            x_idx = bar_idx // n_hatch
+            x_val = x_values[x_idx]
+            color = palette.get(x_val, 'black')
+
+            # Set color based on layer (outline vs fill)
+            layer = idx // total_bars
+            if layer == 0:  # First layer (outline)
+                patch.set_edgecolor(color)
+            else:  # Second layer (fill)
+                patch.set_facecolor(color)
+
+
 def _apply_hatch_to_bars(
     ax: Axes,
     data: pd.DataFrame,
-    split_col: str,
+    x_col: str,
+    hatch_col: str,
     hatch_mapping: Dict[str, str],
 ) -> None:
-    """Apply hatch patterns to bars based on a split column."""
-    # Get split values in the order specified by hatch_mapping
-    split_values = list(hatch_mapping.keys())
-    n_splits = len(split_values)
+    """Apply hatch patterns to grouped bars based on hatch column."""
+    # Get hatch values in the order they appear
+    hatch_values = list(hatch_mapping.keys())
+    n_hatch = len(hatch_values)
+    n_x = data[x_col].nunique()
 
+    # Apply hatch patterns to all patches
+    # When using seaborn with hue, patches are organized as:
+    # [x1_hatch1, x1_hatch2, ..., x2_hatch1, x2_hatch2, ...]
     for idx, patch in enumerate(ax.patches):
         if hasattr(patch, 'get_height'):  # Check if it's a bar
-            split_idx = idx % n_splits
-            split_val = split_values[split_idx]
-            patch.set_hatch(hatch_mapping[split_val])
+            # Determine which hatch value this patch corresponds to
+            bar_idx = idx % (n_x * n_hatch)
+            hatch_idx = bar_idx % n_hatch
+            hatch_val = hatch_values[hatch_idx]
+            patch.set_hatch(hatch_mapping[hatch_val])
 
 
 def _fix_split_xticks(
@@ -318,3 +429,91 @@ def _fix_split_xticks(
 
     ax.set_xticks(tick_positions)
     ax.set_xticklabels(x_labels)
+
+
+def _create_barplot_legend(
+    ax: Axes,
+    data: pd.DataFrame,
+    hue: Optional[str],
+    hatch: Optional[str],
+    palette: Optional[Union[str, Dict, List]],
+    hatch_mapping: Optional[Dict[str, str]],
+    alpha: float,
+    linewidth: float
+) -> None:
+    """
+    Create a combined legend for barplot with doublemarker trick.
+
+    This function creates legend entries that properly represent both the filled
+    (with alpha) and outlined bars, avoiding duplicate legend entries.
+    """
+    import matplotlib.patches as mpatches
+
+    # Determine what to show in legend
+    if hatch is not None:
+        # For hatched bars, create legend entries for each hatch category
+        legend_labels = list(hatch_mapping.keys())
+        legend_handles = []
+
+        # Get one representative color for the legend (use first color from palette)
+        # All hatch patterns will use the same color in the legend
+        if isinstance(palette, dict):
+            sample_color = list(palette.values())[0] if palette else 'black'
+        elif isinstance(palette, list):
+            sample_color = palette[0] if palette else 'black'
+        else:
+            sample_color = 'black'
+
+        # Create custom legend handles with fill + edge + hatch
+        for label in legend_labels:
+            hatch_pattern = hatch_mapping[label]
+            handle = mpatches.Patch(
+                facecolor=sample_color,
+                edgecolor=sample_color,
+                alpha=alpha,
+                linewidth=linewidth,
+                hatch=hatch_pattern,
+                label=label
+            )
+            legend_handles.append(handle)
+
+        ax.legend(
+            handles=legend_handles,
+            labels=legend_labels,
+            bbox_to_anchor=(1, 1),
+            loc='upper left',
+            frameon=False
+        )
+
+    elif hue is not None:
+        # For hue-based bars, create legend entries for each hue category
+        hue_values = sorted(data[hue].unique())
+        legend_handles = []
+
+        # Map hue values to colors
+        if isinstance(palette, dict):
+            colors = [palette.get(val, 'black') for val in hue_values]
+        elif isinstance(palette, list):
+            colors = palette[:len(hue_values)]
+        else:
+            colors = ['black'] * len(hue_values)
+
+        # Create custom legend handles with fill + edge
+        for i, label in enumerate(hue_values):
+            color = colors[i] if i < len(colors) else 'black'
+            handle = mpatches.Patch(
+                facecolor=color,
+                edgecolor=color,
+                alpha=alpha,
+                linewidth=linewidth,
+                label=str(label)
+            )
+            legend_handles.append(handle)
+
+        ax.legend(
+            handles=legend_handles,
+            labels=[str(val) for val in hue_values],
+            bbox_to_anchor=(1, 1),
+            loc='upper left',
+            frameon=False
+        )
