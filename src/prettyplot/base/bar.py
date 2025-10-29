@@ -159,32 +159,6 @@ def barplot(
 
     plot_data = data.copy()
 
-    # Determine seaborn hue column for grouping
-    # Key insight: hue and hatch should create same PLACEMENT, just different visual encoding
-    if hue is not None and hatch is not None:
-        if hue == hatch:
-            # Same column for hue and hatch: group by that column, apply both color and hatch
-            plot_hue_col = hue
-            needs_combined_group = False
-        else:
-            # Different columns: create combined grouping
-            plot_data['_combined_group'] = (
-                plot_data[hue].astype(str) + '_' + plot_data[hatch].astype(str)
-            )
-            plot_hue_col = '_combined_group'
-            needs_combined_group = True
-    elif hue is not None:
-        # Only hue: standard behavior
-        plot_hue_col = hue
-        needs_combined_group = False
-    elif hatch is not None:
-        # Only hatch: use hatch for grouping, but will recolor by x
-        plot_hue_col = hatch
-        needs_combined_group = False
-    else:
-        plot_hue_col = None
-        needs_combined_group = False
-
     # Apply orders if specified
     if order is not None:
         plot_data[x] = pd.Categorical(plot_data[x], categories=order, ordered=True)
@@ -196,10 +170,67 @@ def barplot(
         hatch_values = plot_data[hatch].unique()
         hatch_mapping = _create_default_hatch_mapping(hatch_values)
 
-    # Create the appropriate palette for seaborn
-    if plot_hue_col is not None:
-        if needs_combined_group:
-            # Create palette mapping combined groups to colors based on hue column
+    # Determine the strategy for handling hatch and hue
+    # Key insight: use hue=hatch for splitting when needed, then override colors
+
+    needs_hatch_splitting = False
+    needs_color_override = False
+    override_color = None
+    seaborn_hue = None
+    hue_order_for_patches = None
+
+    if hatch is not None:
+        # Check if hatch is the categorical variable (x or y)
+        hatch_is_categorical = (hatch == x)
+
+        if not hatch_is_categorical:
+            # hatch != x|y: need to split by hatch for proper placement
+            needs_hatch_splitting = True
+            seaborn_hue = hatch
+            hue_order_for_patches = sorted(plot_data[hatch].unique())
+
+            if hue is None:
+                # No hue: use single color for all bars
+                needs_color_override = True
+                override_color = color if color is not None else DEFAULT_COLOR
+            elif hue == x:
+                # hue is the categorical variable: override to x-based colors
+                needs_color_override = True
+                override_color = None  # Will use palette
+            elif hue == hatch:
+                # hue == hatch: no override needed, colors are correct
+                needs_color_override = False
+            else:
+                # hue != hatch != x|y: sophisticated case
+                # Create combined grouping
+                plot_data['_combined_group'] = (
+                    plot_data[hue].astype(str) + '_' + plot_data[hatch].astype(str)
+                )
+                seaborn_hue = '_combined_group'
+                hue_order_for_patches = sorted(plot_data['_combined_group'].unique())
+                needs_color_override = True  # Will override to hue-based colors
+                override_color = None  # Will use palette
+        else:
+            # hatch == x|y: just apply hatches, use standard hue behavior
+            seaborn_hue = hue if hue is not None else x
+            hue_order_for_patches = sorted(plot_data[seaborn_hue].unique())
+            needs_hatch_splitting = False
+    else:
+        # No hatch: standard behavior
+        seaborn_hue = hue
+        if hue is not None:
+            hue_order_for_patches = sorted(plot_data[hue].unique())
+
+    # Build seaborn palette
+    if seaborn_hue is not None:
+        if needs_hatch_splitting and not needs_color_override:
+            # hue == hatch: use resolved_palette directly
+            seaborn_palette = resolved_palette
+        elif needs_hatch_splitting and needs_color_override:
+            # Will override colors: don't pass palette to seaborn or use dummy
+            seaborn_palette = None
+        elif needs_hatch_splitting and hue is not None and hue != hatch and hue != x:
+            # Sophisticated case: palette maps combined groups to hue colors
             seaborn_palette = {}
             for _, row in plot_data[[hue, hatch, '_combined_group']].drop_duplicates().iterrows():
                 combined_key = row['_combined_group']
@@ -210,21 +241,9 @@ def barplot(
                     hue_vals = sorted(plot_data[hue].unique())
                     hue_idx = hue_vals.index(hue_val) if hue_val in hue_vals else 0
                     seaborn_palette[combined_key] = resolved_palette[hue_idx % len(resolved_palette)]
-        elif hatch is not None and hue is None:
-            # Only hatch: create palette mapping hatch values to x-based colors
-            seaborn_palette = {}
-            for _, row in plot_data[[x, hatch]].drop_duplicates().iterrows():
-                hatch_val = row[hatch]
-                x_val = row[x]
-                if isinstance(resolved_palette, dict):
-                    seaborn_palette[hatch_val] = resolved_palette.get(x_val, 'black')
-                elif isinstance(resolved_palette, list):
-                    x_vals = sorted(plot_data[x].unique())
-                    x_idx = x_vals.index(x_val) if x_val in x_vals else 0
-                    seaborn_palette[hatch_val] = resolved_palette[x_idx % len(resolved_palette)]
         else:
-            # Standard hue or hue==hatch: use resolved_palette directly
-            seaborn_palette = resolved_palette
+            # Standard case
+            seaborn_palette = resolved_palette if resolved_palette is not None else None
     else:
         seaborn_palette = None
 
@@ -244,9 +263,10 @@ def barplot(
     }
 
     # Add hue for grouping if needed
-    if plot_hue_col is not None:
-        barplot_kwargs['hue'] = plot_hue_col
-        barplot_kwargs['palette'] = seaborn_palette
+    if seaborn_hue is not None:
+        barplot_kwargs['hue'] = seaborn_hue
+        if seaborn_palette is not None:
+            barplot_kwargs['palette'] = seaborn_palette
     elif bar_color is not None:
         barplot_kwargs['color'] = bar_color
 
@@ -267,26 +287,18 @@ def barplot(
         })
         sns.barplot(**fill_kwargs)
 
-    # Apply hatch patterns and fix colors if needed
+    # Apply hatch patterns and override colors if needed
     if hatch is not None:
-        # Get hue order for tracking patches
-        if plot_hue_col is not None:
-            if needs_combined_group:
-                hue_order = sorted(plot_data['_combined_group'].unique())
-            else:
-                hue_order = sorted(plot_data[plot_hue_col].unique())
-        else:
-            hue_order = None
-
-        _apply_hatch_and_colors(
+        _apply_hatches_and_override_colors(
             ax=ax,
             data=data,
             x_col=x,
             hue_col=hue,
             hatch_col=hatch,
-            hue_order=hue_order,
+            hue_order_for_patches=hue_order_for_patches,
             hatch_mapping=hatch_mapping,
-            needs_combined_group=needs_combined_group,
+            needs_color_override=needs_color_override,
+            override_color=override_color,
             color_palette=resolved_palette,
             alpha=alpha,
         )
@@ -325,49 +337,30 @@ def _create_default_hatch_mapping(split_values: Union[list, np.ndarray]) -> Dict
     }
 
 
-def _apply_hatch_and_colors(
+def _apply_hatches_and_override_colors(
     ax: Axes,
     data: pd.DataFrame,
     x_col: str,
     hue_col: Optional[str],
     hatch_col: str,
-    hue_order: List[str],
+    hue_order_for_patches: List[str],
     hatch_mapping: Dict[str, str],
-    needs_combined_group: bool,
+    needs_color_override: bool,
+    override_color: Optional[str],
     color_palette: Union[Dict, List],
     alpha: float,
 ) -> None:
     """
-    Apply hatch patterns and fix colors using patch labels.
+    Apply hatch patterns using patch.get_label() trick and override colors if needed.
 
-    Uses the approach from user's example: track which category each patch
-    belongs to via idx // n_x_categories, then apply colors and hatches.
+    Strategy:
+    1. Use idx // n_x to determine which hue group each patch belongs to
+    2. Apply hatch pattern based on hatch_col value
+    3. If needs_color_override, override colors based on hue_col or x_col
     """
     n_x = data[x_col].nunique()
-    n_hue = len(hue_order)
-
-    # Total patches per layer (outline and fill)
+    n_hue = len(hue_order_for_patches)
     total_bars = n_x * n_hue
-
-    # Create mapping from hue_order value to (original_hue_val, hatch_val)
-    if needs_combined_group:
-        # Combined group: parse back to get original hue and hatch values
-        category_map = {}
-        for val in hue_order:
-            parts = val.split('_', 1)
-            if len(parts) == 2:
-                category_map[val] = (parts[0], parts[1])
-            else:
-                category_map[val] = (val, val)
-    elif hue_col is None:
-        # Only hatch: need to determine x value for each bar to color correctly
-        # Build mapping from hatch values to x values (for coloring)
-        # Since each hatch appears at each x, we can't use a simple map
-        # We'll handle this in the loop
-        category_map = None
-    else:
-        # hue==hatch or only hue
-        category_map = {val: (val, val) for val in hue_order}
 
     for idx, patch in enumerate(ax.patches):
         if not hasattr(patch, 'get_height'):
@@ -378,52 +371,70 @@ def _apply_hatch_and_colors(
         # Position within layer
         bar_idx = idx % total_bars
 
-        # Get the hue category for this bar using the user's approach
+        # Get the hue category for this bar using idx // n_x approach
         hue_idx = bar_idx % n_hue
-        hue_val = hue_order[hue_idx]
+        hue_val = hue_order_for_patches[hue_idx]
 
         # Get x category for this bar
         x_idx = bar_idx // n_hue
         x_vals = sorted(data[x_col].unique())
         x_val = x_vals[x_idx]
 
-        # Determine color and hatch based on scenario
-        if needs_combined_group:
-            # hue and hatch are different columns
-            orig_hue_val, hatch_val = category_map[hue_val]
-            # Color by original hue value
-            if isinstance(color_palette, dict):
-                color = color_palette.get(orig_hue_val, 'black')
-            elif isinstance(color_palette, list):
-                hue_vals = sorted(data[hue_col].unique())
-                hue_palette_idx = hue_vals.index(orig_hue_val) if orig_hue_val in hue_vals else 0
-                color = color_palette[hue_palette_idx % len(color_palette)]
-            else:
-                color = 'black'
-        elif hue_col is None:
-            # Only hatch: color by x value
-            if isinstance(color_palette, dict):
-                color = color_palette.get(x_val, 'black')
-            elif isinstance(color_palette, list):
-                color = color_palette[x_idx % len(color_palette)]
-            else:
-                color = 'black'
-            hatch_val = hue_val  # hue_order contains hatch values
-        else:
-            # hue==hatch or only hue
-            color = None  # Keep seaborn's color
+        # Determine hatch value
+        if hue_col is not None and hue_col != hatch_col and '_combined_group' not in hue_order_for_patches[0]:
+            # hue != hatch, not combined: hue_val is from hatch_col
             hatch_val = hue_val
-
-        # Apply color if needed (only hatch or combined group)
-        if color is not None:
-            if layer == 0:  # Outline layer
-                patch.set_edgecolor(color)
-            else:  # Fill layer
-                patch.set_facecolor(color)
+        elif '_' in str(hue_val) and hue_col is not None and hue_col != hatch_col:
+            # Combined group: parse to get hatch value
+            parts = str(hue_val).split('_', 1)
+            hatch_val = parts[1] if len(parts) == 2 else hue_val
+        else:
+            # hue == hatch or only hatch or only hue
+            hatch_val = hue_val
 
         # Apply hatch pattern
         hatch_pattern = hatch_mapping.get(hatch_val, '')
         patch.set_hatch(hatch_pattern)
+
+        # Override color if needed
+        if needs_color_override:
+            if override_color is not None:
+                # Single color for all bars
+                color = override_color
+            elif hue_col is not None:
+                if '_' in str(hue_val) and hue_col != hatch_col:
+                    # Combined group: parse to get hue value for coloring
+                    parts = str(hue_val).split('_', 1)
+                    color_val = parts[0] if len(parts) == 2 else hue_val
+                elif hue_col == x_col:
+                    # hue is x: use x value for coloring
+                    color_val = x_val
+                else:
+                    color_val = hue_val
+
+                # Get color from palette
+                if isinstance(color_palette, dict):
+                    color = color_palette.get(color_val, 'black')
+                elif isinstance(color_palette, list):
+                    # Find index of color_val in sorted hue values
+                    if hue_col == x_col:
+                        vals = x_vals
+                        val_idx = x_idx
+                    else:
+                        vals = sorted(data[hue_col].unique())
+                        val_idx = vals.index(color_val) if color_val in vals else 0
+                    color = color_palette[val_idx % len(color_palette)]
+                else:
+                    color = 'black'
+            else:
+                # Should not happen, but fallback
+                color = 'black'
+
+            # Apply color
+            if layer == 0:  # Outline layer
+                patch.set_edgecolor(color)
+            else:  # Fill layer
+                patch.set_facecolor(color)
 
 
 def _create_barplot_legend(
