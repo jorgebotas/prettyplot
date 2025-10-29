@@ -345,7 +345,7 @@ def resolve_palette(
     ----------
     palette : str, list, dict, or None
         Palette specification:
-        - None: Returns default color
+        - None: Returns default palette (or default color for n_colors=1)
         - str: Palette name (checks prettyplot first, then seaborn)
         - list: List of color hex codes (returned as-is)
         - dict: Mapping from categories to colors (returned as-is)
@@ -359,10 +359,15 @@ def resolve_palette(
 
     Examples
     --------
-    Get default color:
-    >>> colors = resolve_palette()
+    Get default color for single-color plots:
+    >>> colors = resolve_palette(n_colors=1)
     >>> colors
     ['#5d83c3']
+
+    Get default palette for multi-color plots:
+    >>> colors = resolve_palette(n_colors=3)
+    >>> len(colors)
+    3
 
     Resolve prettyplot palette:
     >>> colors = resolve_palette('pastel_categorical', n_colors=5)
@@ -375,10 +380,16 @@ def resolve_palette(
     ['#ff0000', '#00ff00', '#0000ff']
     """
     import seaborn as sns
+    from prettyplot.config import DEFAULT_PALETTE
 
-    # Handle None: return default color
+    # Handle None: use default palette for multiple colors, default color for single
     if palette is None:
-        return [DEFAULT_COLOR]
+        if n_colors is not None and n_colors > 1:
+            # Use default palette for multiple colors
+            return get_palette(DEFAULT_PALETTE, n_colors=n_colors)
+        else:
+            # Use default color for single color
+            return [DEFAULT_COLOR]
 
     # Handle list/dict: return as-is
     if isinstance(palette, (list, dict)):
