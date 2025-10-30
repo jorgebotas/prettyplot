@@ -403,18 +403,35 @@ def resolve_palette(
 
         # Fall back to seaborn palette
         try:
-            if n_colors is not None:
                 return sns.color_palette(palette, n_colors=n_colors).as_hex()
-            else:
-                return sns.color_palette(palette).as_hex()
         except Exception as e:
             raise ValueError(
                 f"Unknown palette '{palette}'. Not found in prettyplot palettes "
                 f"({', '.join(PALETTES.keys())}) or seaborn palettes. Error: {e}"
             )
 
-    # Should not reach here
-    raise ValueError(f"Invalid palette type: {type(palette)}")
+def resolve_palette_mapping(
+    values: Optional[List[str]] = None,
+    palette: Optional[Union[str, Dict, List]] = None,
+) -> Dict[str, str]:
+    """
+    Resolve a palette mapping to actual colors.
+
+    Parameters
+    ----------
+    values : List[str], optional
+        List of values to map to colors.
+    palette : str, dict, or list, optional
+        Palette specification:
+        - None: Returns default palette (or default color for n_colors=1)
+        - str: Palette name (checks prettyplot first, then seaborn)
+        - list: List of color hex codes (returned as-is)
+        - dict: Mapping from categories to colors (returned as-is)
+    """
+    if values is None:
+        return {}
+    palette = resolve_palette(palette, n_colors=len(values))
+    return {value: palette[i % len(palette)] for i, value in enumerate(values)}
 
 
 def list_palettes() -> List[str]:

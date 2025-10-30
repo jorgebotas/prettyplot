@@ -13,8 +13,7 @@ import pandas as pd
 import numpy as np
 
 from prettyplot.config import DEFAULT_LINEWIDTH, DEFAULT_ALPHA, DEFAULT_CAPSIZE, DEFAULT_FIGSIZE
-from prettyplot.themes.colors import resolve_palette_mapping, DEFAULT_COLOR
-from prettyplot.themes.hatches import resolve_hatch_mapping
+from prettyplot.themes.colors import resolve_palette, DEFAULT_COLOR
 
 
 def barplot(
@@ -23,7 +22,7 @@ def barplot(
     y: str,
     hue: Optional[str] = None,
     hatch: Optional[str] = None,
-    color: Optional[str] = DEFAULT_COLOR,
+    color: Optional[str] = None,
     ax: Optional[Axes] = None,
     title: str = "",
     xlabel: str = "",
@@ -62,7 +61,7 @@ def barplot(
         When specified, creates grouped bars within each x category.
     color : str, optional
         Fixed color for all bars (only used when hue is None).
-        Overrides DEFAULT_COLOR. Example: "#ff0000" or "red".
+        Overrides DEFAULT_COLOR. Example: '#ff0000' or 'red'.
     ax : Axes, optional
         Matplotlib axes object. If None, creates new figure.
     title : str, default=""
@@ -86,10 +85,10 @@ def barplot(
         - list: list of colors
     hatch_mapping : dict, optional
         Mapping from hatch values to hatch patterns.
-        Example: {"group1": "", "group2": "///", "group3": "\\\\\\"}
-    errorbar : str, default="se"
-        Error bar type: "se" (standard error), "sd" (standard deviation),
-        "ci" (confidence interval), or None for no error bars.
+        Example: {'group1': '', 'group2': '///', 'group3': '\\\\\\'}
+    errorbar : str, default='se'
+        Error bar type: 'se' (standard error), 'sd' (standard deviation),
+        'ci' (confidence interval), or None for no error bars.
     gap : float, default=0.1
         Gap between bar groups (0-1).
     order : list, optional
@@ -109,18 +108,18 @@ def barplot(
     Examples
     --------
     Simple bar plot:
-    >>> fig, ax = pp.barplot(data=df, x="category", y="value")
+    >>> fig, ax = pp.barplot(data=df, x='category', y='value')
 
     Bar plot with color groups:
-    >>> fig, ax = pp.barplot(data=df, x="category", y="value",
-    ...                       hue="group", palette="pastel_categorical")
+    >>> fig, ax = pp.barplot(data=df, x='category', y='value',
+    ...                       hue='group', palette='pastel_categorical')
 
     Bar plot with hatched bars and patterns:
     >>> fig, ax = pp.barplot(
-    ...     data=df, x="condition", y="measurement",
-    ...     hatch="treatment", hue="condition",
-    ...     hatch_mapping={"control": "", "treated": "///"},
-    ...     palette={"A": "#75b375", "B": "#8e8ec1"}
+    ...     data=df, x='condition', y='measurement',
+    ...     hatch='treatment', hue='condition',
+    ...     hatch_mapping={'control': '', 'treated': '///'},
+    ...     palette={'A': '#75b375', 'B': '#8e8ec1'}
     ... )
 
     See Also
@@ -133,60 +132,141 @@ def barplot(
     else:
         fig = ax.get_figure()
 
-    data = data.copy()
+    # Resolve palette (handles prettyplot and seaborn palettes)
+    resolved_palette = None
+    bar_color = None
 
-    # Get hue palette and hatch mappings
-    palette = resolve_palette_mapping(
-        values=data[hue].unique() if hue is not None else None,
-        palette=palette,
-    )
-    hatch_mapping = resolve_hatch_mapping(
-        values=data[hatch].unique() if hatch is not None else None,
-        palette=hatch_mapping,
-    )
+    # Determine if we need to use color or palette
+    has_grouping = hue is not None or hatch is not None
+
+    if has_grouping:
+        # When there's grouping (hue or hatch), determine if we need palette
+        if hue is not None:
+            # Hue is provided: resolve palette based on hue
+            if isinstance(palette, str) or palette is None:
+                n_colors = data[hue].nunique()
+                resolved_palette = resolve_palette(palette, n_colors=n_colors)
+            else:
+                resolved_palette = palette
+        else:
+            # Only hatch, no hue: will use single color (color arg or DEFAULT_COLOR)
+            resolved_palette = None
+    else:
+        # When there's no grouping, use custom color or default color
+        bar_color = color if color is not None else DEFAULT_COLOR
+
+    plot_data = data.copy()
+
+    # Apply orders if specified
+    if order is not None:
+        plot_data[x] = pd.Categorical(plot_data[x], categories=order, ordered=True)
+    if hatch is not None and hatch_order is not None:
+        plot_data[hatch] = pd.Categorical(plot_data[hatch], categories=hatch_order, ordered=True)
+
+    # Create hatch_mapping if hatch is provided
+    if hatch is not None and hatch_mapping is None:
+        hatch_values = plot_data[hatch].unique()
+        hatch_mapping = _create_default_hatch_mapping(hatch_values)
 
     # Determine the strategy for handling hatch and hue
     # Key insight: use hue=hatch for splitting when needed, then override colors
-    sns_palette = palette
-    sns_hue = hue
 
-    # Fint out categorical axis
-    categorical_axis = "x" if isinstance(data[x], pd.Categorical) else "y"
+    needs_hatch_splitting = False
+    needs_color_override = False
+    override_color = None
+    seaborn_hue = None
+    hue_order_for_patches = None
 
-    # hatch split only needed if hatch is not the same as the categorical axis
-    split_by_hatch = hatch is not None and hatch != categorical_axis
-    double_split = split_by_hatch and hue is not None and hue != categorical_axis and hatch != hue
-    if split_by_hatch:
-        if double_split:
-            # Need to create double split by creating a new column with the combined value of hue and hatch
-            data = _prepare_split_data(data, hue, hatch, orderA=order, orderB=hatch_order)
-            # Color bars by 
-            sns_palette = {
-                x: palette[x.split("_")[0]] for x in data[f"{hue}_{hatch}"].cat.categories
-            }
-            sns_hue = f"{hue}_{hatch}"
+    if hatch is not None:
+        # Check if hatch is the categorical variable (x or y)
+        hatch_is_categorical = (hatch == x)
+
+        if not hatch_is_categorical:
+            # hatch != x|y: need to split by hatch for proper placement
+            needs_hatch_splitting = True
+            seaborn_hue = hatch
+            hue_order_for_patches = sorted(plot_data[hatch].unique())
+
+            if hue is None:
+                # No hue: use single color for all bars
+                needs_color_override = True
+                override_color = color if color is not None else DEFAULT_COLOR
+            elif hue == x:
+                # hue is the categorical variable: override to x-based colors
+                needs_color_override = True
+                override_color = None  # Will use palette
+            elif hue == hatch:
+                # hue == hatch: no override needed, colors are correct
+                needs_color_override = False
+            else:
+                # hue != hatch != x|y: sophisticated case
+                # Create combined grouping
+                plot_data['_combined_group'] = (
+                    plot_data[hue].astype(str) + '_' + plot_data[hatch].astype(str)
+                )
+                seaborn_hue = '_combined_group'
+                hue_order_for_patches = sorted(plot_data['_combined_group'].unique())
+                needs_color_override = True  # Will override to hue-based colors
+                override_color = None  # Will use palette
         else:
-            # Only need to split by hatch
-            # We will recolor the bars to color argument if hue is None
-            sns_hue = hatch
+            # hatch == x|y: just apply hatches, use standard hue behavior
+            seaborn_hue = hue if hue is not None else x
+            hue_order_for_patches = sorted(plot_data[seaborn_hue].unique())
+            needs_hatch_splitting = False
+    else:
+        # No hatch: standard behavior
+        seaborn_hue = hue
+        if hue is not None:
+            hue_order_for_patches = sorted(plot_data[hue].unique())
+
+    # Build seaborn palette
+    if seaborn_hue is not None:
+        if needs_hatch_splitting and not needs_color_override:
+            # hue == hatch: use resolved_palette directly
+            seaborn_palette = resolved_palette
+        elif needs_hatch_splitting and needs_color_override:
+            # Will override colors: don't pass palette to seaborn or use dummy
+            seaborn_palette = None
+        elif needs_hatch_splitting and hue is not None and hue != hatch and hue != x:
+            # Sophisticated case: palette maps combined groups to hue colors
+            seaborn_palette = {}
+            for _, row in plot_data[[hue, hatch, '_combined_group']].drop_duplicates().iterrows():
+                combined_key = row['_combined_group']
+                hue_val = row[hue]
+                if isinstance(resolved_palette, dict):
+                    seaborn_palette[combined_key] = resolved_palette.get(hue_val, 'black')
+                elif isinstance(resolved_palette, list):
+                    hue_vals = sorted(plot_data[hue].unique())
+                    hue_idx = hue_vals.index(hue_val) if hue_val in hue_vals else 0
+                    seaborn_palette[combined_key] = resolved_palette[hue_idx % len(resolved_palette)]
+        else:
+            # Standard case
+            seaborn_palette = resolved_palette if resolved_palette is not None else None
+    else:
+        seaborn_palette = None
 
     # Prepare kwargs for seaborn barplot
     barplot_kwargs = {
-        "data": data,
-        "x": x,
-        "y": y,
-        "hue": sns_hue,
-        "palette": sns_palette,
-        "color": color,
-        "fill": False,
-        "linewidth": linewidth,
-        "capsize": capsize,
-        "ax": ax,
-        "err_kws": {"linewidth": linewidth},
-        "errorbar": errorbar,
-        "gap": gap,
-        "legend": False,
+        'data': plot_data,
+        'x': x,
+        'y': y,
+        'fill': False,
+        'linewidth': linewidth,
+        'capsize': capsize,
+        'ax': ax,
+        'err_kws': {"linewidth": linewidth},
+        'errorbar': errorbar,
+        'gap': gap,
+        'legend': False,
     }
+
+    # Add hue for grouping if needed
+    if seaborn_hue is not None:
+        barplot_kwargs['hue'] = seaborn_hue
+        if seaborn_palette is not None:
+            barplot_kwargs['palette'] = seaborn_palette
+    elif bar_color is not None:
+        barplot_kwargs['color'] = bar_color
 
     # Merge with user-provided kwargs
     barplot_kwargs.update(kwargs)
@@ -198,10 +278,10 @@ def barplot(
     if 0 < alpha < 1:
         fill_kwargs = barplot_kwargs.copy()
         fill_kwargs.update({
-            "fill": True,
-            "alpha": alpha,
-            "linewidth": 0,
-            "err_kws": {"linewidth": 0},
+            'fill': True,
+            'alpha': alpha,
+            'linewidth': 0,
+            'err_kws': {"linewidth": 0},
         })
         sns.barplot(**fill_kwargs)
 
@@ -210,27 +290,29 @@ def barplot(
         _apply_hatches_and_override_colors(
             ax=ax,
             data=data,
-            x=x,
-            hue=hue,
-            hatch=hatch,
-            color=color,
-            palette=palette,
+            x_col=x,
+            hue_col=hue,
+            hatch_col=hatch,
+            hue_order_for_patches=hue_order_for_patches,
             hatch_mapping=hatch_mapping,
+            needs_color_override=needs_color_override,
+            override_color=override_color,
+            color_palette=resolved_palette,
             alpha=alpha,
         )
 
-    # # Add legend if hue or hatch is used
-    # if hue is not None or hatch is not None:
-    #     _create_barplot_legend(
-    #         ax=ax,
-    #         data=data,
-    #         hue=hue,
-    #         hatch=hatch,
-    #         palette=resolved_palette,
-    #         hatch_mapping=hatch_mapping,
-    #         alpha=alpha,
-    #         linewidth=linewidth
-    #     )
+    # Add legend if hue or hatch is used
+    if hue is not None or hatch is not None:
+        _create_barplot_legend(
+            ax=ax,
+            data=data,
+            hue=hue,
+            hatch=hatch,
+            palette=resolved_palette,
+            hatch_mapping=hatch_mapping,
+            alpha=alpha,
+            linewidth=linewidth
+        )
 
     # Set labels
     ax.set_xlabel(xlabel if xlabel else (x if hatch is None else x))
@@ -244,53 +326,14 @@ def barplot(
 # Helper Functions
 # =============================================================================
 
+def _create_default_hatch_mapping(split_values: Union[list, np.ndarray]) -> Dict[str, str]:
+    """Create default hatch mapping for split values."""
+    default_patterns = ['', '///', '\\\\\\', '|||', '---', '+++', 'xxx', '...']
+    return {
+        val: default_patterns[i % len(default_patterns)]
+        for i, val in enumerate(split_values)
+    }
 
-def _prepare_split_data(
-    data: pd.DataFrame, 
-    colA: str,
-    colB: str,
-    orderA: Optional[List[str]] = None,
-    orderB: Optional[List[str]] = None,
-) -> pd.DataFrame:
-    """
-    Prepare data for split bar plotting by creating a combined column.
-    
-    Parameters
-    ----------
-    data : DataFrame
-        Input data
-    colA : str
-        Column name for first split
-    colB : str
-        Column name for second split
-    orderA : list, optional
-        Order of column A values. If provided, data will be sorted to match this order.
-    orderB : list, optional
-        Order of column B values. If provided, data will be sorted to match this order.
-    
-    Returns
-    -------
-    DataFrame
-        Data with new combined column for proper bar separation and sorted by the order of the columns
-        New column name is f"{colA}_{colB}"
-    """
-    data = data.copy()
-    
-    # If order is provided, ensure the split column follows that order
-    if orderA is not None:
-        data[colA] = pd.Categorical(data[colA], categories=orderA, ordered=True)
-        data = data.sort_values([colA])
-    if orderB is not None:
-        data[colB] = pd.Categorical(data[colB], categories=orderB, ordered=True)
-        data = data.sort_values([colB])
-
-    # Sort the data by the columns in the order of the columns
-    columns = ([colA] if orderA is not None else []) + ([colB] if orderB is not None else [])
-    data.sort_values(columns, inplace=True)
-    
-    # Create a combined column that seaborn will use to separate bars
-    data[f"{colA}_{colB}"] = (data[colA].astype(str) + "_" + data[colB].astype(str)).astype("category")
-    return data
 
 def _apply_hatches_and_override_colors(
     ax: Axes,
@@ -308,7 +351,7 @@ def _apply_hatches_and_override_colors(
     """
     Apply hatch patterns using patch.get_label() and idx // n_x, then override colors.
 
-    Uses the approach from user"s example:
+    Uses the approach from user's example:
     - Track which category each patch belongs to via idx // n_x
     - Use patch.get_label() or hue_order to determine the category
     - Apply hatch based on the hatch column value
@@ -319,7 +362,7 @@ def _apply_hatches_and_override_colors(
     total_bars = n_x * n_hue
 
     for idx, patch in enumerate(ax.patches):
-        if not hasattr(patch, "get_height"):
+        if not hasattr(patch, 'get_height'):
             continue
 
         # Determine which layer (outline=0, fill=1)
@@ -328,7 +371,7 @@ def _apply_hatches_and_override_colors(
         bar_idx = idx % total_bars
 
         # Use idx // n_x to determine which hue/hatch group this patch belongs to
-        # This is the key insight from user"s example
+        # This is the key insight from user's example
         label_idx = bar_idx % n_hue
         label = hue_order_for_patches[label_idx]
 
@@ -339,9 +382,9 @@ def _apply_hatches_and_override_colors(
 
         # Determine hatch value from the label
         # The label can be: hatch_val, hue_val, or "hue_val_hatch_val"
-        if hue_col is not None and hue_col != hatch_col and "_" in str(label):
+        if hue_col is not None and hue_col != hatch_col and '_' in str(label):
             # Combined group case: "hue_hatch"
-            parts = str(label).split("_", 1)
+            parts = str(label).split('_', 1)
             if len(parts) == 2:
                 hue_val_for_color = parts[0]
                 hatch_val = parts[1]
@@ -358,7 +401,7 @@ def _apply_hatches_and_override_colors(
             hue_val_for_color = label
 
         # Apply hatch pattern
-        hatch_pattern = hatch_mapping.get(hatch_val, "")
+        hatch_pattern = hatch_mapping.get(hatch_val, '')
         patch.set_hatch(hatch_pattern)
 
         # Override color if needed
@@ -369,23 +412,23 @@ def _apply_hatches_and_override_colors(
             elif hue_col == x_col:
                 # Color by x value
                 if isinstance(color_palette, dict):
-                    color = color_palette.get(x_val, "black")
+                    color = color_palette.get(x_val, 'black')
                 elif isinstance(color_palette, list):
                     color = color_palette[x_idx % len(color_palette)]
                 else:
-                    color = "black"
+                    color = 'black'
             elif hue_val_for_color is not None:
                 # Color by hue value (combined group case)
                 if isinstance(color_palette, dict):
-                    color = color_palette.get(hue_val_for_color, "black")
+                    color = color_palette.get(hue_val_for_color, 'black')
                 elif isinstance(color_palette, list):
                     hue_vals = sorted(data[hue_col].unique())
                     hue_idx = hue_vals.index(hue_val_for_color) if hue_val_for_color in hue_vals else 0
                     color = color_palette[hue_idx % len(color_palette)]
                 else:
-                    color = "black"
+                    color = 'black'
             else:
-                color = "black"
+                color = 'black'
 
             # Apply color to both outline and fill
             if layer == 0:  # Outline layer
@@ -421,11 +464,11 @@ def _create_barplot_legend(
         # Get one representative color for the legend (use first color from palette)
         # All hatch patterns will use the same color in the legend
         if isinstance(palette, dict):
-            sample_color = list(palette.values())[0] if palette else "black"
+            sample_color = list(palette.values())[0] if palette else 'black'
         elif isinstance(palette, list):
-            sample_color = palette[0] if palette else "black"
+            sample_color = palette[0] if palette else 'black'
         else:
-            sample_color = "black"
+            sample_color = 'black'
 
         # Create custom legend handles with fill + edge + hatch
         for label in legend_labels:
@@ -444,7 +487,7 @@ def _create_barplot_legend(
             handles=legend_handles,
             labels=legend_labels,
             bbox_to_anchor=(1, 1),
-            loc="upper left",
+            loc='upper left',
             frameon=False
         )
 
@@ -455,15 +498,15 @@ def _create_barplot_legend(
 
         # Map hue values to colors
         if isinstance(palette, dict):
-            colors = [palette.get(val, "black") for val in hue_values]
+            colors = [palette.get(val, 'black') for val in hue_values]
         elif isinstance(palette, list):
             colors = palette[:len(hue_values)]
         else:
-            colors = ["black"] * len(hue_values)
+            colors = ['black'] * len(hue_values)
 
         # Create custom legend handles with fill + edge
         for i, label in enumerate(hue_values):
-            color = colors[i] if i < len(colors) else "black"
+            color = colors[i] if i < len(colors) else 'black'
             handle = mpatches.Patch(
                 facecolor=color,
                 edgecolor=color,
@@ -477,6 +520,6 @@ def _create_barplot_legend(
             handles=legend_handles,
             labels=[str(val) for val in hue_values],
             bbox_to_anchor=(1, 1),
-            loc="upper left",
+            loc='upper left',
             frameon=False
         )
