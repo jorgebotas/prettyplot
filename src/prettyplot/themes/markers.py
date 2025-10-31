@@ -6,6 +6,7 @@ marker usage across visualizations.
 """
 
 from typing import List, Dict, Tuple
+from prettyplot.themes.hatches import HATCH_PATTERNS
 
 
 # =============================================================================
@@ -106,34 +107,6 @@ Recommended size range for continuous data with size encoding.
 
 Use case: When size represents a continuous variable (e.g., p-value, effect size).
 This range provides good visual distinction without markers becoming too large.
-"""
-
-
-# =============================================================================
-# Hatch Patterns
-# =============================================================================
-
-HATCH_PATTERNS: List[str] = [
-    '',        # No hatch
-    '///',     # Diagonal lines (forward)
-    '\\\\\\',  # Diagonal lines (backward)
-    '|||',     # Vertical lines
-    '---',     # Horizontal lines
-    '+++',     # Plus signs
-    'xxx',     # Crosses
-    '...',     # Dots
-]
-"""
-Standard hatch patterns for bar plots and patches.
-
-Use case: When color alone is insufficient (e.g., for colorblind accessibility
-or black-and-white printing), hatch patterns provide an additional visual
-encoding dimension.
-
-Example:
-    >>> import prettyplot as pp
-    >>> hatches = pp.HATCH_PATTERNS
-    >>> pp.barplot(data, x='group', y='value', hatch=hatches[1])
 """
 
 

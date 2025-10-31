@@ -27,3 +27,6 @@ DEFAULT_PALETTE: str = 'pastel_categorical'
 
 # Marker settings
 DEFAULT_MARKER_SIZE: Tuple[float, float] = (50, 1000)
+
+# Hatch settings
+DEFAULT_HATCH_MODE: int = 2
