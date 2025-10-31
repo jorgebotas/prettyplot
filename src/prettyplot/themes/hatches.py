@@ -1,21 +1,21 @@
 from typing import Optional, Dict, List
 HATCH_PATTERNS: List[str] = [
-    '',        # No hatch
-    '///',     # Diagonal lines (forward)
-    '\\\\\\',  # Diagonal lines (backward)
-    '...',     # Dots
-    '|||',     # Vertical lines
-    '---',     # Horizontal lines
-    '+++',     # Plus signs
-    'xxx',     # Crosses
+   "",        # No hatch
+    "///",     # Diagonal lines (forward)
+    "\\\\\\",  # Diagonal lines (backward)
+    "...",     # Dots
+    "|||",     # Vertical lines
+    "---",     # Horizontal lines
+    "+++",     # Plus signs
+    "xxx",     # Crosses
 ]
 
 
 def resolve_hatches(
-    hatches: Optional[List[str]] = None,
-    n_hatches: Optional[int] = None,
-    reverse: bool = False
-) -> List[str]:
+        hatches: Optional[List[str]] = None,
+        n_hatches: Optional[int] = None,
+        reverse: bool = False
+    ) -> List[str]:
     """
     Resolve a hatch mapping to actual hatch patterns.
 
@@ -38,10 +38,10 @@ def resolve_hatches(
     return hatches
 
 def resolve_hatch_mapping(
-    values: Optional[List[str]] = None,
-    hatch_mapping: Optional[Dict[str, str]] = None,
-    reverse: bool = False
-) -> Dict[str, str]:
+        values: Optional[List[str]] = None,
+        hatch_mapping: Optional[Dict[str, str]] = None,
+        reverse: bool = False
+    ) -> Dict[str, str]:
     """
     Resolve a hatch mapping to actual hatch patterns.
 
@@ -61,4 +61,4 @@ def resolve_hatch_mapping(
         return hatch_mapping
 
     hatches = resolve_hatches(hatch_mapping, n_hatches=len(values), reverse=reverse)
-    return {val: hatches for val, hatch in zip(values, hatches)}
+    return {value: hatch for value, hatch in zip(values, hatches)}

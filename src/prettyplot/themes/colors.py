@@ -430,6 +430,8 @@ def resolve_palette_mapping(
     """
     if values is None:
         return {}
+    if isinstance(palette, dict):
+        return palette
     palette = resolve_palette(palette, n_colors=len(values))
     return {value: palette[i % len(palette)] for i, value in enumerate(values)}
 
