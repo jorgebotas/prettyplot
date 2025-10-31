@@ -11,6 +11,38 @@ import pandas as pd
 from matplotlib import colors as mpl_colors
 
 
+def is_categorical(
+        values: Union[pd.Series, pd.Categorical, np.ndarray, list, tuple],
+    ) -> bool:
+    """
+    Check if values are categorical.
+    If is pd.Categorical, returns True (even if numeric values).
+    Otherwise, returns True if not numeric.
+
+    Parameters
+    ----------
+    values : pd.Series
+        Values to check.
+
+    Returns
+    -------
+    bool
+        True if values are categorical, False otherwise.
+
+    Examples
+    --------
+    >>> is_categorical(pd.Series(["a", "b", "c"]))
+    True
+    >>> is_categorical(pd.Series(["a", "b", "c"], dtype="category"))
+    True
+    >>> is_categorical(pd.Series([1, 2, 3]))
+    False
+    >>> is_categorical(pd.Series([1, 2, 3], dtype="category"))
+    True
+    """
+    return isinstance(values, pd.Categorical) or not pd.api.types.is_numeric_dtype(values)
+
+
 def validate_data(
     data: Union[pd.DataFrame, np.ndarray, None],
     required_columns: Optional[List[str]] = None

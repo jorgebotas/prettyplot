@@ -28,6 +28,7 @@ from prettyplot.utils.axes import (
 )
 
 from prettyplot.utils.validation import (
+    is_categorical,
     validate_data,
     validate_numeric,
     validate_colors,
@@ -65,6 +66,7 @@ __all__ = [
     "set_aspect_equal",
     "tighten_layout",
     # Validation functions
+    "is_categorical",
     "validate_data",
     "validate_numeric",
     "validate_colors",
