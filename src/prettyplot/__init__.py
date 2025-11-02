@@ -49,7 +49,6 @@ from prettyplot.themes.markers import (
 from prettyplot.themes.hatches import (
     set_hatch_mode,
     get_hatch_mode,
-    reset_hatch_mode,
     get_hatch_patterns,
     list_hatch_patterns,
 )
@@ -90,7 +89,6 @@ __all__ = [
     # Hatch functions
     "set_hatch_mode",
     "get_hatch_mode",
-    "reset_hatch_mode",
     "get_hatch_patterns",
     "list_hatch_patterns",
     # Constants

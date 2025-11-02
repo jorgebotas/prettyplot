@@ -30,9 +30,10 @@ DEFAULT_HATCH_MODE: int = 1
 """
 Default hatch pattern density mode (1, 2, or 3).
 
-Mode 1: Simple, sparse patterns (e.g., '///')
-Mode 2: Medium-density patterns (e.g., '//////')
-Mode 3: Dense patterns (e.g., '/////////')
+Base patterns are simple single-character patterns that get multiplied:
+    Mode 1: base × 3 (e.g., '/', '.' → '///', '...')
+    Mode 2: base × 6 (e.g., '/', '.' → '//////', '......')
+    Mode 3: base × 9 (e.g., '/', '.' → '/////////', '.........')
 """
 
 # Marker settings
