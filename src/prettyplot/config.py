@@ -25,5 +25,15 @@ DEFAULT_CAPSIZE: float = 0.0
 # Color settings
 DEFAULT_PALETTE: str = 'pastel_categorical'
 
+# Hatch settings
+DEFAULT_HATCH_MODE: int = 1
+"""
+Default hatch pattern density mode (1, 2, or 3).
+
+Mode 1: Simple, sparse patterns (e.g., '///')
+Mode 2: Medium-density patterns (e.g., '//////')
+Mode 3: Dense patterns (e.g., '/////////')
+"""
+
 # Marker settings
 DEFAULT_MARKER_SIZE: Tuple[float, float] = (50, 1000)

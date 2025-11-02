@@ -1,6 +1,28 @@
-from typing import Optional, Dict, List
-HATCH_PATTERNS: List[str] = [
-   "",        # No hatch
+"""
+Hatch patterns for prettyplot.
+
+This module provides configurable hatch patterns for distinguishing categories
+in publication-ready visualizations. Hatch patterns are particularly useful for
+black-and-white printing or when color alone is insufficient to distinguish groups.
+
+The module supports three density modes for patterns:
+    - Mode 1: Simple, sparse patterns (recommended for most use cases)
+    - Mode 2: Medium-density patterns (for higher contrast needs)
+    - Mode 3: Dense patterns (for maximum distinction or small plot areas)
+"""
+
+from typing import Optional, Dict, List, Union
+
+# Global variable to store current hatch mode
+_current_hatch_mode: int = None  # Will default to config.DEFAULT_HATCH_MODE
+
+
+# =============================================================================
+# Base Hatch Patterns (Mode 1)
+# =============================================================================
+
+BASE_HATCH_PATTERNS: List[str] = [
+    "",        # No hatch
     "///",     # Diagonal lines (forward)
     "\\\\\\",  # Diagonal lines (backward)
     "...",     # Dots
@@ -9,56 +31,458 @@ HATCH_PATTERNS: List[str] = [
     "+++",     # Plus signs
     "xxx",     # Crosses
 ]
+"""
+Base hatch patterns (Mode 1 - sparse).
+
+These patterns provide clear visual distinction while maintaining readability.
+Use for standard publications and presentations where patterns need to be
+easily distinguishable.
+
+Example:
+    >>> import prettyplot as pp
+    >>> pp.set_hatch_mode(1)
+    >>> fig, ax = pp.barplot(data=df, x='x', y='y', hue='category')
+"""
 
 
-def resolve_hatches(
-        hatches: Optional[List[str]] = None,
-        n_hatches: Optional[int] = None,
-        reverse: bool = False
-    ) -> List[str]:
+# =============================================================================
+# Pattern Generation Functions
+# =============================================================================
+
+def _generate_denser_pattern(base_pattern: str, multiplier: int) -> str:
     """
-    Resolve a hatch mapping to actual hatch patterns.
+    Generate a denser version of a pattern by multiplying its elements.
+
+    For patterns with repeated characters, this increases density by
+    repeating the base unit multiple times. Empty patterns remain empty.
 
     Parameters
     ----------
-    hatches : list, optional
-        List of hatch patterns.
-    n_hatches : int, optional
+    base_pattern : str
+        The base pattern string to densify.
+    multiplier : int
+        How many times to repeat the pattern elements (typically 2 or 3).
+
+    Returns
+    -------
+    str
+        The densified pattern string.
+
+    Examples
+    --------
+    >>> _generate_denser_pattern('///', 2)
+    '//////'
+    >>> _generate_denser_pattern('...', 3)
+    '.........'
+    >>> _generate_denser_pattern('', 2)
+    ''
     """
+    if not base_pattern:
+        return base_pattern
+    return (base_pattern * multiplier).strip()
 
+
+def get_hatch_patterns(mode: Optional[int] = None) -> List[str]:
+    """
+    Get hatch patterns for a specified density mode.
+
+    The density mode controls how dense/sparse the hatch patterns are:
+        - Mode 1: Simple patterns (e.g., '///', '...')
+        - Mode 2: Medium density (e.g., '//////', '......')
+        - Mode 3: High density (e.g., '/////////', '.........')
+
+    Denser patterns provide stronger visual distinction but may appear
+    cluttered in small plot areas. Mode 1 is recommended for most use cases.
+
+    Parameters
+    ----------
+    mode : int, optional
+        Pattern density mode (1, 2, or 3). If None, uses the current global
+        mode set by set_hatch_mode() or DEFAULT_HATCH_MODE from config.
+
+    Returns
+    -------
+    List[str]
+        List of hatch pattern strings.
+
+    Raises
+    ------
+    ValueError
+        If mode is not 1, 2, or 3.
+
+    Examples
+    --------
+    Get mode 1 (sparse) patterns:
+    >>> patterns = get_hatch_patterns(mode=1)
+    >>> patterns[1]  # Forward diagonal
+    '///'
+
+    Get mode 3 (dense) patterns:
+    >>> patterns = get_hatch_patterns(mode=3)
+    >>> patterns[1]  # Forward diagonal
+    '/////////'
+
+    Use current global mode:
+    >>> set_hatch_mode(2)
+    >>> patterns = get_hatch_patterns()  # Uses mode 2
+    """
+    # Get the mode to use
+    if mode is None:
+        mode = get_hatch_mode()
+
+    # Validate mode
+    if mode not in [1, 2, 3]:
+        raise ValueError(
+            f"Invalid hatch mode {mode}. Mode must be 1, 2, or 3. "
+            "Use set_hatch_mode() to change the global mode."
+        )
+
+    # Mode 1: return base patterns
+    if mode == 1:
+        return BASE_HATCH_PATTERNS.copy()
+
+    # Mode 2 or 3: generate denser patterns
+    return [_generate_denser_pattern(pattern, mode) for pattern in BASE_HATCH_PATTERNS]
+
+
+def set_hatch_mode(mode: int) -> None:
+    """
+    Set the global hatch pattern density mode.
+
+    This setting affects all subsequent hatch pattern generation unless
+    explicitly overridden. The mode determines the density of hatch patterns:
+
+        - Mode 1: Simple, sparse patterns (recommended for most use cases)
+        - Mode 2: Medium-density patterns (for higher contrast needs)
+        - Mode 3: Dense patterns (for maximum distinction)
+
+    Parameters
+    ----------
+    mode : int
+        Pattern density mode. Must be 1, 2, or 3.
+
+    Raises
+    ------
+    ValueError
+        If mode is not 1, 2, or 3.
+
+    Examples
+    --------
+    Set to sparse patterns (mode 1):
+    >>> import prettyplot as pp
+    >>> pp.set_hatch_mode(1)
+    >>> fig, ax = pp.barplot(data=df, x='x', y='y', hue='category')
+
+    Set to dense patterns for small figures:
+    >>> pp.set_hatch_mode(3)
+    >>> fig, ax = pp.barplot(data=df, x='x', y='y', hue='category',
+    ...                       figsize=(3, 2))
+
+    Notes
+    -----
+    This is a global setting that persists across function calls within
+    the same session. To reset to the default, call set_hatch_mode() with
+    the value from config.DEFAULT_HATCH_MODE.
+    """
+    global _current_hatch_mode
+
+    if mode not in [1, 2, 3]:
+        raise ValueError(
+            f"Invalid hatch mode {mode}. Mode must be 1 (sparse), "
+            "2 (medium), or 3 (dense)."
+        )
+
+    _current_hatch_mode = mode
+
+
+def get_hatch_mode() -> int:
+    """
+    Get the current global hatch pattern density mode.
+
+    Returns the mode that will be used for hatch pattern generation.
+    If no mode has been explicitly set, returns DEFAULT_HATCH_MODE from config.
+
+    Returns
+    -------
+    int
+        Current hatch mode (1, 2, or 3).
+
+    Examples
+    --------
+    Check current mode:
+    >>> import prettyplot as pp
+    >>> pp.get_hatch_mode()
+    1
+
+    Change and verify mode:
+    >>> pp.set_hatch_mode(3)
+    >>> pp.get_hatch_mode()
+    3
+
+    See Also
+    --------
+    set_hatch_mode : Set the global hatch mode
+    get_hatch_patterns : Get patterns for a specific mode
+    """
+    global _current_hatch_mode
+
+    if _current_hatch_mode is None:
+        # Import here to avoid circular dependency
+        from prettyplot.config import DEFAULT_HATCH_MODE
+        _current_hatch_mode = DEFAULT_HATCH_MODE
+
+    return _current_hatch_mode
+
+
+def reset_hatch_mode() -> None:
+    """
+    Reset the hatch mode to the default value from config.
+
+    This function restores the hatch mode to DEFAULT_HATCH_MODE,
+    effectively undoing any calls to set_hatch_mode().
+
+    Examples
+    --------
+    Change mode and reset:
+    >>> import prettyplot as pp
+    >>> pp.set_hatch_mode(3)
+    >>> pp.get_hatch_mode()
+    3
+    >>> pp.reset_hatch_mode()
+    >>> pp.get_hatch_mode()
+    1
+
+    See Also
+    --------
+    set_hatch_mode : Set the global hatch mode
+    get_hatch_mode : Get the current hatch mode
+    """
+    global _current_hatch_mode
+    from prettyplot.config import DEFAULT_HATCH_MODE
+    _current_hatch_mode = DEFAULT_HATCH_MODE
+
+
+# =============================================================================
+# Pattern Resolution Functions
+# =============================================================================
+
+def resolve_hatches(
+    hatches: Optional[List[str]] = None,
+    n_hatches: Optional[int] = None,
+    reverse: bool = False,
+    mode: Optional[int] = None
+) -> List[str]:
+    """
+    Resolve hatch patterns for plotting.
+
+    This is a helper function that standardizes hatch pattern specifications
+    into a concrete list of patterns. It handles pattern cycling for arbitrary
+    numbers of categories and supports pattern reversal.
+
+    Parameters
+    ----------
+    hatches : list of str, optional
+        List of hatch patterns to use. If None, uses default patterns from
+        get_hatch_patterns() based on the current or specified mode.
+    n_hatches : int, optional
+        Number of hatch patterns to return. If provided, patterns will be
+        cycled to reach this count. If None, returns all patterns.
+    reverse : bool, default=False
+        Whether to reverse the pattern order. Useful for changing visual
+        hierarchy or matching reversed color palettes.
+    mode : int, optional
+        Pattern density mode (1, 2, or 3). If None, uses current global mode.
+        Only applicable when hatches is None.
+
+    Returns
+    -------
+    List[str]
+        List of resolved hatch pattern strings.
+
+    Examples
+    --------
+    Get default patterns:
+    >>> patterns = resolve_hatches()
+    >>> len(patterns)
+    8
+
+    Get exactly 5 patterns with cycling:
+    >>> patterns = resolve_hatches(n_hatches=5)
+    >>> len(patterns)
+    5
+
+    Use custom patterns:
+    >>> patterns = resolve_hatches(hatches=['///', '|||', 'xxx'], n_hatches=7)
+
+    Get reversed patterns:
+    >>> patterns = resolve_hatches(n_hatches=4, reverse=True)
+
+    Use specific mode:
+    >>> patterns = resolve_hatches(mode=3, n_hatches=5)  # Dense patterns
+
+    See Also
+    --------
+    resolve_hatch_mapping : Create a mapping from values to patterns
+    get_hatch_patterns : Get patterns for a specific mode
+    """
+    # Get default patterns if not provided
     if hatches is None:
-        hatches = HATCH_PATTERNS
+        hatches = get_hatch_patterns(mode=mode)
 
+    # Cycle patterns if n_hatches specified
     if n_hatches is not None:
-        hatches = [ hatches[i % len(hatches)] for i in range(n_hatches) ]
+        hatches = [hatches[i % len(hatches)] for i in range(n_hatches)]
 
+    # Reverse if requested
     if reverse:
         hatches = hatches[::-1]
 
     return hatches
 
+
 def resolve_hatch_mapping(
-        values: Optional[List[str]] = None,
-        hatch_mapping: Optional[Dict[str, str]] = None,
-        reverse: bool = False
-    ) -> Dict[str, str]:
+    values: Optional[List[str]] = None,
+    hatch_mapping: Optional[Union[Dict[str, str], List[str]]] = None,
+    reverse: bool = False,
+    mode: Optional[int] = None
+) -> Dict[str, str]:
     """
-    Resolve a hatch mapping to actual hatch patterns.
+    Create a mapping from category values to hatch patterns.
+
+    This function creates a dictionary that maps category names to specific
+    hatch patterns, which is useful for categorical plots like barplots.
+    It ensures consistent pattern assignment across multiple plots.
 
     Parameters
     ----------
-    values : list
-        List of values to resolve hatch patterns for.
-    hatch_mapping : dict, optional
-        Mapping from hatch values to hatch patterns.
-    reverse : bool, optional
-        Reverse the hatch mapping.
+    values : list of str, optional
+        List of category values to map to patterns. If None, returns empty dict.
+    hatch_mapping : dict or list, optional
+        Hatch pattern specification:
+        - dict: Explicit mapping from values to patterns (returned as-is)
+        - list: List of patterns to cycle through for values
+        - None: Uses default patterns from get_hatch_patterns()
+    reverse : bool, default=False
+        Whether to reverse the pattern assignment order. Only applicable
+        when hatch_mapping is a list or None.
+    mode : int, optional
+        Pattern density mode (1, 2, or 3). If None, uses current global mode.
+        Only applicable when hatch_mapping is None.
+
+    Returns
+    -------
+    Dict[str, str]
+        Mapping from category values to hatch pattern strings.
+
+    Examples
+    --------
+    Create mapping for categories:
+    >>> categories = ['A', 'B', 'C', 'D']
+    >>> mapping = resolve_hatch_mapping(values=categories)
+    >>> mapping['A']
+    ''
+    >>> mapping['B']
+    '///'
+
+    Use custom patterns:
+    >>> mapping = resolve_hatch_mapping(
+    ...     values=['cat', 'dog', 'bird'],
+    ...     hatch_mapping=['///', '|||', 'xxx']
+    ... )
+
+    Use explicit mapping:
+    >>> mapping = resolve_hatch_mapping(
+    ...     values=['A', 'B'],
+    ...     hatch_mapping={'A': '///', 'B': '|||'}
+    ... )
+    >>> mapping
+    {'A': '///', 'B': '|||'}
+
+    Use dense patterns:
+    >>> mapping = resolve_hatch_mapping(values=['A', 'B', 'C'], mode=3)
+
+    See Also
+    --------
+    resolve_hatches : Resolve patterns without creating a mapping
+    get_hatch_patterns : Get patterns for a specific mode
     """
+    # Return empty dict if no values provided
     if values is None:
         return {}
 
+    # If already a dict, return as-is
     if isinstance(hatch_mapping, dict):
         return hatch_mapping
 
-    hatches = resolve_hatches(hatch_mapping, n_hatches=len(values), reverse=reverse)
+    # Resolve patterns and create mapping
+    hatches = resolve_hatches(
+        hatches=hatch_mapping,
+        n_hatches=len(values),
+        reverse=reverse,
+        mode=mode
+    )
+
     return {value: hatch for value, hatch in zip(values, hatches)}
+
+
+# =============================================================================
+# Legacy Compatibility
+# =============================================================================
+
+# For backward compatibility, maintain HATCH_PATTERNS as the default mode 1 patterns
+HATCH_PATTERNS: List[str] = BASE_HATCH_PATTERNS
+"""
+Legacy constant for backward compatibility.
+
+This is equivalent to BASE_HATCH_PATTERNS (mode 1). For new code, prefer
+using get_hatch_patterns() which respects the current hatch mode setting.
+
+Deprecated: Use get_hatch_patterns() instead for mode-aware pattern selection.
+"""
+
+
+# =============================================================================
+# Utility Functions
+# =============================================================================
+
+def list_hatch_patterns(mode: Optional[int] = None) -> None:
+    """
+    Print available hatch patterns for visual inspection.
+
+    Displays all available hatch patterns for the specified mode,
+    which can help in choosing appropriate patterns for your plots.
+
+    Parameters
+    ----------
+    mode : int, optional
+        Pattern density mode (1, 2, or 3). If None, uses current global mode.
+
+    Examples
+    --------
+    List current mode patterns:
+    >>> import prettyplot as pp
+    >>> pp.list_hatch_patterns()
+    Hatch Patterns (Mode 1):
+      0: '' (no hatch)
+      1: '///'
+      2: '\\\\\\'
+      ...
+
+    List specific mode:
+    >>> pp.list_hatch_patterns(mode=3)
+    Hatch Patterns (Mode 3):
+      0: '' (no hatch)
+      1: '/////////'
+      ...
+    """
+    if mode is None:
+        mode = get_hatch_mode()
+
+    patterns = get_hatch_patterns(mode=mode)
+
+    print(f"Hatch Patterns (Mode {mode}):")
+    for i, pattern in enumerate(patterns):
+        if pattern == "":
+            print(f"  {i}: '' (no hatch)")
+        else:
+            print(f"  {i}: '{pattern}'")
