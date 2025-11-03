@@ -21,7 +21,7 @@ from prettyplot.base.scatter import scatterplot
 from prettyplot.base.heatmap import circle_heatmap
 
 # Advanced plotting functions
-from prettyplot.advanced.venn import venn_diagram
+from prettyplot.advanced.venn import venn
 
 # Utilities
 from prettyplot.utils.io import savefig, save_multiple, close_all
@@ -46,6 +46,12 @@ from prettyplot.themes.markers import (
     STANDARD_MARKERS,
     HATCH_PATTERNS,
 )
+from prettyplot.themes.hatches import (
+    set_hatch_mode,
+    get_hatch_mode,
+    get_hatch_patterns,
+    list_hatch_patterns,
+)
 
 __all__ = [
     "__version__",
@@ -55,7 +61,7 @@ __all__ = [
     "scatterplot",
     "circle_heatmap",
     # Advanced plots
-    "venn_diagram",
+    "venn",
     # I/O utilities
     "savefig",
     "save_multiple",
@@ -80,6 +86,11 @@ __all__ = [
     # Marker functions
     "get_marker_cycle",
     "get_hatch_cycle",
+    # Hatch functions
+    "set_hatch_mode",
+    "get_hatch_mode",
+    "get_hatch_patterns",
+    "list_hatch_patterns",
     # Constants
     "STANDARD_MARKERS",
     "HATCH_PATTERNS",

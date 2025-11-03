@@ -9,7 +9,7 @@ from typing import Tuple
 
 # Default figure settings
 DEFAULT_DPI: int = 300
-DEFAULT_FORMAT: str = 'png'
+DEFAULT_FORMAT: str = 'pdf'
 DEFAULT_FIGSIZE: Tuple[float, float] = (6, 4)
 
 # Default styling
@@ -24,6 +24,9 @@ DEFAULT_CAPSIZE: float = 0.0
 
 # Color settings
 DEFAULT_PALETTE: str = 'pastel_categorical'
+
+# Hatch settings
+DEFAULT_HATCH_MODE: int = 1
 
 # Marker settings
 DEFAULT_MARKER_SIZE: Tuple[float, float] = (50, 1000)

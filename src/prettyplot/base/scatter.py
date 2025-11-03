@@ -15,6 +15,7 @@ from typing import Optional, Tuple, Union, Dict, List
 
 from prettyplot.config import DEFAULT_FIGSIZE, DEFAULT_ALPHA, DEFAULT_LINEWIDTH
 from prettyplot.themes.colors import resolve_palette, DEFAULT_COLOR
+from prettyplot.utils import is_categorical, is_numeric
 
 
 def scatterplot(
@@ -31,13 +32,13 @@ def scatterplot(
     alpha: float = DEFAULT_ALPHA,
     linewidth: float = DEFAULT_LINEWIDTH,
     edgecolor: Optional[str] = None,
-    style: str = "double",
     figsize: Tuple[float, float] = DEFAULT_FIGSIZE,
     ax: Optional[Axes] = None,
     title: str = "",
     xlabel: str = "",
     ylabel: str = "",
     legend: Union[bool, str] = "auto",
+    margins: Union[float, Tuple[float, float]] = 0.1,
     **kwargs
 ) -> Tuple[plt.Figure, Axes]:
     """
@@ -83,8 +84,6 @@ def scatterplot(
         Width of marker edges.
     edgecolor : str, optional
         Color for marker edges. If None, uses same color as fill.
-    style : str, default='double'
-        Marker style: 'double' for filled + edge layers, 'single' for standard.
     figsize : tuple, default=(6, 4)
         Figure size (width, height) if creating new figure.
     ax : Axes, optional
@@ -97,6 +96,10 @@ def scatterplot(
         Y-axis label. If empty, uses y column name.
     legend : bool or str, default='auto'
         Whether to show legend. Options: True, False, 'auto' (show if hue or size used).
+    margins : float or tuple, default=0.1
+        Margins around the plot for categorical axes. 
+        If a float, sets both x and y margins to the same value.
+        If a tuple, sets x and y margins separately.
     **kwargs
         Additional keyword arguments passed to seaborn.scatterplot().
 
@@ -132,11 +135,6 @@ def scatterplot(
     Categorical scatterplot (positions on grid):
     >>> fig, ax = pp.scatterplot(data=df, x='category', y='condition',
     ...                           size='pvalue', hue='log2fc')
-
-    See Also
-    --------
-    circle_heatmap : Specialized scatterplot for categorical heatmaps with
-                     extensive legend customization.
     """
     # Validate required columns
     required_cols = [x, y]
@@ -159,12 +157,8 @@ def scatterplot(
         fig = ax.get_figure()
 
     # Determine if x and y are categorical
-    x_is_categorical = pd.api.types.is_categorical_dtype(plot_data[x]) or \
-                       pd.api.types.is_object_dtype(plot_data[x]) or \
-                       isinstance(plot_data[x].iloc[0], str)
-    y_is_categorical = pd.api.types.is_categorical_dtype(plot_data[y]) or \
-                       pd.api.types.is_object_dtype(plot_data[y]) or \
-                       isinstance(plot_data[y].iloc[0], str)
+    x_is_categorical = is_categorical(plot_data[x])
+    y_is_categorical = is_categorical(plot_data[y])
 
     # Handle categorical positioning
     if x_is_categorical or y_is_categorical:
@@ -186,10 +180,7 @@ def scatterplot(
     else:
         # Hue encoding - use palette
         # Determine if hue is continuous
-        is_continuous_hue = (
-            hue_norm is not None or
-            pd.api.types.is_numeric_dtype(plot_data[hue])
-        )
+        is_continuous_hue = hue_norm is not None or is_numeric(plot_data[hue])
 
         if palette is None:
             # Use default palette
@@ -249,41 +240,31 @@ def scatterplot(
     # Merge with user kwargs
     scatter_kwargs.update(kwargs)
 
-    # Create the plot based on style
-    if style == 'double':
-        # Double marker style (fill + edge)
-        # Layer 1: Filled markers with transparency
-        fill_kwargs = scatter_kwargs.copy()
-        fill_kwargs['alpha'] = alpha
-        fill_kwargs['edgecolor'] = 'none'
-        fill_kwargs['linewidth'] = 0
-        fill_kwargs['zorder'] = 2
-        sns.scatterplot(**fill_kwargs)
+    # Layer 1: Filled markers with transparency
+    fill_kwargs = scatter_kwargs.copy()
+    fill_kwargs['alpha'] = alpha
+    fill_kwargs['edgecolor'] = 'none'
+    fill_kwargs['linewidth'] = 0
+    fill_kwargs['zorder'] = 2
+    sns.scatterplot(**fill_kwargs)
 
-        # Layer 2: Edge-only markers
-        edge_kwargs = scatter_kwargs.copy()
-        edge_kwargs['alpha'] = 1.0
-        edge_kwargs['linewidth'] = linewidth
-        edge_kwargs['zorder'] = 3
-        sns.scatterplot(**edge_kwargs)
+    # Layer 2: Edge-only markers
+    edge_kwargs = scatter_kwargs.copy()
+    edge_kwargs['alpha'] = 1.0
+    edge_kwargs['linewidth'] = linewidth
+    edge_kwargs['zorder'] = 3
+    sns.scatterplot(**edge_kwargs)
 
-        # Make second layer hollow
-        collections = ax.collections
-        if len(collections) >= 2:
-            edge_collection = collections[-1]
-            face_collection = collections[-2]
-            edge_collection.set_facecolors('none')
-            edge_collection.set_edgecolors(
-                edgecolor if edgecolor else face_collection.get_facecolors()
-            )
-            edge_collection.set_linewidths(linewidth)
-    else:
-        # Single marker style (standard)
-        scatter_kwargs['alpha'] = alpha if alpha > 0.1 else 0.6
-        scatter_kwargs['linewidth'] = linewidth
-        if edgecolor:
-            scatter_kwargs['edgecolor'] = edgecolor
-        sns.scatterplot(**scatter_kwargs)
+    # Make second layer hollow
+    collections = ax.collections
+    if len(collections) >= 2:
+        edge_collection = collections[-1]
+        face_collection = collections[-2]
+        edge_collection.set_facecolors('none')
+        edge_collection.set_edgecolors(
+            edgecolor if edgecolor else face_collection.get_facecolors()
+        )
+        edge_collection.set_linewidths(linewidth)
 
     # Handle categorical axis labels
     if x_labels is not None:
@@ -309,6 +290,15 @@ def scatterplot(
         if handles:
             ax.legend(handles, labels, bbox_to_anchor=(1.01, 1), loc='upper left',
                      frameon=False)
+
+    # Set margins for categorical axes automatically
+    if x_is_categorical or y_is_categorical:
+        if isinstance(margins, (float, int)):
+            margins = (margins, margins)
+        ax.margins(
+            x=margins[0] if x_is_categorical else None, 
+            y=margins[1] if y_is_categorical else None
+        )
 
     return fig, ax
 
