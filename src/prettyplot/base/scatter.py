@@ -12,10 +12,11 @@ from matplotlib.colors import Normalize
 import pandas as pd
 import numpy as np
 from typing import Optional, Tuple, Union, Dict, List
-
-from prettyplot.config import DEFAULT_FIGSIZE, DEFAULT_ALPHA, DEFAULT_LINEWIDTH
-from prettyplot.themes.colors import resolve_palette, DEFAULT_COLOR, resolve_palette_mapping
+from prettyplot.utils.legend import LegendBuilder
+from prettyplot.config import DEFAULT_FIGSIZE, DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_COLOR
+from prettyplot.themes.colors import resolve_palette_mapping
 from prettyplot.utils import is_categorical, is_numeric, create_legend_handles, legend as pp_legend
+from matplotlib.cm import ScalarMappable
 from matplotlib.legend import Legend
 
 
@@ -39,6 +40,7 @@ def scatterplot(
     xlabel: str = "",
     ylabel: str = "",
     legend: bool = True,
+    legend_kws: Optional[Dict] = None,
     margins: Union[float, Tuple[float, float]] = 0.1,
     **kwargs
 ) -> Tuple[plt.Figure, Axes]:
@@ -95,6 +97,14 @@ def scatterplot(
         X-axis label. If empty, uses x column name.
     ylabel : str, default=""
         Y-axis label. If empty, uses y column name.
+    legend_kws : dict, optional
+        Keyword arguments for legend builder:
+        - hue_title : str, optional
+            Title for the hue legend. If None, uses hue column name.
+        - size_title : str, optional
+            Title for the size legend. If None, uses size column name.
+        - size_reverse : bool, default=True
+            Whether to reverse the size legend (descending order).
     legend : bool, default=True
         Whether to show legend.
     margins : float or tuple, default=0.1
@@ -261,13 +271,16 @@ def scatterplot(
         _legend(
             ax=ax,
             hue=hue,
+            size=size,
             color=color,
             palette=palette,
             alpha=alpha,
             linewidth=linewidth,
+            hue_norm=hue_norm,
+            size_norm=size_norm,
+            kwargs=legend_kws,
         )
 
-        
     # Set margins for categorical axes automatically
     if x_is_categorical or y_is_categorical:
         if isinstance(margins, (float, int)):
@@ -342,33 +355,58 @@ def _handle_categorical_axes(
 
     
 def _legend(
-    ax: Axes,
-    hue: Optional[str],
-    alpha: float,
-    linewidth: float,
-    color: Optional[str],
-    palette: Optional[Union[str, Dict, List]],
-) -> Legend:
+        ax: Axes,
+        hue: Optional[str],
+        size: Optional[str],
+        color: Optional[str],
+        palette: Optional[Union[str, Dict, List]],
+        hue_norm: Optional[Normalize],
+        size_norm: Optional[Normalize],
+        kwargs: Optional[Dict] = None,
+        alpha: float = DEFAULT_ALPHA,
+        linewidth: float = DEFAULT_LINEWIDTH,
+    ) -> None:
     """
     Create legend handles for scatter plot.
     """
+    kwargs = kwargs or {}
 
     if hue is None:
         return
 
     if palette is None:
         return
-    
-    if not isinstance(palette, dict):
-        # TODO: Handle continuous palette
-        return
 
-    handles = create_legend_handles(
-        labels=palette.keys(),
-        colors=palette.values(),
-        color=color,
+    legend_builder = LegendBuilder(
+        ax=ax, 
+        fig=ax.get_figure(), 
     )
-    kwargs = dict(alpha=alpha, linewidth=linewidth, style="circle")
-    return pp_legend(ax=ax, handles=handles, **kwargs)
 
-    # TODO: Size legend
+    hue_label = kwargs.pop("hue_label", hue)
+    
+    if isinstance(palette, dict):
+        # categorical legend
+        legend_builder.add_legend(
+            handles=create_legend_handles(
+                labels=palette.keys(),
+                colors=palette.values(),
+                color=color,
+                alpha=alpha,
+                linewidth=linewidth,
+            ),
+            style="circle",
+            title=hue_label,
+        )
+
+    else: # continuous colorbar
+        mappable = ScalarMappable(norm=hue_norm, cmap=palette)
+        legend_builder.add_colorbar(
+            mappable=mappable, 
+            label=hue_label,
+            height=kwargs.pop("hue_height", 0.2),
+            width=kwargs.pop("hue_width", 0.05),
+        )
+    if size is not None:
+        # TODO: Add size legend
+        # based on size_norm ticks
+        pass

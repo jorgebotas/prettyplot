@@ -35,8 +35,9 @@ from prettyplot.utils.legend import (
     HandlerCircle,
     HandlerRectangle,
     get_legend_handler_map,
-    legend,
     create_legend_handles,
+    LegendBuilder,
+    create_legend_builder,
 )
 
 # Theming
@@ -82,8 +83,9 @@ __all__ = [
     "HandlerCircle",
     "HandlerRectangle",
     "get_legend_handler_map",
-    "legend",
     "create_legend_handles",
+    "LegendBuilder",
+    "create_legend_builder",
     # Color/palette functions
     "get_palette",
     "list_palettes",

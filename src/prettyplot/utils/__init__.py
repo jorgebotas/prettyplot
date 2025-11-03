@@ -49,8 +49,9 @@ from prettyplot.utils.legend import (
     HandlerCircle,
     HandlerRectangle,
     get_legend_handler_map,
-    legend,
     create_legend_handles,
+    LegendBuilder,
+    create_legend_builder,
 )
 
 # Register fonts globally
@@ -92,6 +93,7 @@ __all__ = [
     "HandlerCircle",
     "HandlerRectangle",
     "get_legend_handler_map",
-    "legend",
     "create_legend_handles",
+    "LegendBuilder",
+    "create_legend_builder",
 ]
