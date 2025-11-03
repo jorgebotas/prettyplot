@@ -14,8 +14,9 @@ import numpy as np
 from typing import Optional, Tuple, Union, Dict, List
 
 from prettyplot.config import DEFAULT_FIGSIZE, DEFAULT_ALPHA, DEFAULT_LINEWIDTH
-from prettyplot.themes.colors import resolve_palette, DEFAULT_COLOR
+from prettyplot.themes.colors import resolve_palette, DEFAULT_COLOR, resolve_palette_mapping
 from prettyplot.utils import is_categorical, is_numeric, create_legend_handles, legend as pp_legend
+from matplotlib.legend import Legend
 
 
 def scatterplot(
@@ -27,8 +28,8 @@ def scatterplot(
     color: Optional[str] = None,
     palette: Optional[Union[str, Dict, List]] = None,
     sizes: Optional[Tuple[float, float]] = None,
-    size_norm: Optional[Tuple[float, float]] = None,
-    hue_norm: Optional[Tuple[float, float]] = None,
+    size_norm: Optional[Union[Tuple[float, float], Normalize]] = None,
+    hue_norm: Optional[Union[Tuple[float, float], Normalize]] = None,
     alpha: float = DEFAULT_ALPHA,
     linewidth: float = DEFAULT_LINEWIDTH,
     edgecolor: Optional[str] = None,
@@ -148,7 +149,7 @@ def scatterplot(
         raise ValueError(f"Missing columns in data: {missing_cols}")
 
     # Copy data to avoid modifying original
-    plot_data = data.copy()
+    data = data.copy()
 
     # Create figure if not provided
     if ax is None:
@@ -157,103 +158,79 @@ def scatterplot(
         fig = ax.get_figure()
 
     # Determine if x and y are categorical
-    x_is_categorical = is_categorical(plot_data[x])
-    y_is_categorical = is_categorical(plot_data[y])
+    x_is_categorical = is_categorical(data[x])
+    y_is_categorical = is_categorical(data[y])
 
     # Handle categorical positioning
     if x_is_categorical or y_is_categorical:
-        plot_data, x_col, y_col, x_labels, y_labels = _handle_categorical_axes(
-            plot_data, x, y, x_is_categorical, y_is_categorical
+        data, x_col, y_col, x_labels, y_labels = _handle_categorical_axes(
+            data, x, y, x_is_categorical, y_is_categorical
         )
     else:
         x_col, y_col = x, y
         x_labels, y_labels = None, None
 
     # Determine color/palette to use
-    plot_color = None
-    plot_palette = None
-    plot_hue = hue
-
-    # TODO: Should be in resolve_palette_mapping
-    if hue is None:
-        # No hue encoding - use single color
-        plot_color = color if color is not None else DEFAULT_COLOR
-    else:
-        # Hue encoding - use palette
-        # Determine if hue is continuous
-        is_continuous_hue = hue_norm is not None or is_numeric(plot_data[hue])
-
-        if palette is None:
-            # Use default palette
-            if is_continuous_hue:
-                plot_palette = "viridis"
-            else:
-                n_colors = plot_data[hue].nunique()
-                plot_palette = resolve_palette(None, n_colors=n_colors)
-        elif isinstance(palette, str):
-            # Resolve string palette
-            if is_continuous_hue:
-                plot_palette = palette
-            else:
-                n_colors = plot_data[hue].nunique()
-                plot_palette = resolve_palette(palette, n_colors=n_colors)
-        else:
-            # Use provided palette as-is (dict or list)
-            plot_palette = palette
+    color = color if color is not None else DEFAULT_COLOR
+    palette = resolve_palette_mapping(
+        values=data[hue].unique() if hue is not None else None,
+        palette=palette,
+    ) if hue is not None else None
 
     # Set default sizes
     if sizes is None:
-        if size is not None:
-            sizes = (50, 500)
-        else:
-            sizes = (100, 100)
+        sizes = (100, 100) if size is None else (50, 500)
+
+    # Set default size normalization
+    if size is not None and is_numeric(data[size]):
+        if size_norm is None:
+            size_norm = (data[size].min(), data[size].max())
+        if isinstance(size_norm, tuple):
+            size_norm = Normalize(vmin=size_norm[0], vmax=size_norm[1])
 
     # Create normalization for hue if needed
-    if hue is not None and hue_norm is not None:
-        hue_norm_obj = Normalize(vmin=hue_norm[0], vmax=hue_norm[1])
-    else:
-        hue_norm_obj = None
+    if hue is not None and is_numeric(data[hue]):
+        if hue_norm is None:
+            hue_norm = (data[hue].min(), data[hue].max())
+        if isinstance(hue_norm, tuple):
+            hue_norm = Normalize(vmin=hue_norm[0], vmax=hue_norm[1])
 
     # Prepare kwargs for seaborn scatterplot
     scatter_kwargs = {
-        "data": plot_data,
+        "data": data,
         "x": x_col,
         "y": y_col,
+        "hue": hue,
+        "hue_norm": hue_norm,
+        "size": size,
+        "sizes": sizes,
+        "size_norm": size_norm,
         "ax": ax,
-        "legend": False,  # We"ll handle legend ourselves
+        "color": color,
+        "palette": palette,
+        "legend": False,
     }
-
-    # Add optional parameters
-    if size is not None:
-        scatter_kwargs["size"] = size
-        scatter_kwargs["sizes"] = sizes
-    else:
-        scatter_kwargs["s"] = sizes[0]
-
-    if plot_hue is not None:
-        scatter_kwargs["hue"] = plot_hue
-        scatter_kwargs["palette"] = plot_palette
-        if hue_norm_obj is not None:
-            scatter_kwargs["hue_norm"] = hue_norm_obj
-    else:
-        scatter_kwargs["color"] = plot_color
 
     # Merge with user kwargs
     scatter_kwargs.update(kwargs)
 
     # Layer 1: Filled markers with transparency
     fill_kwargs = scatter_kwargs.copy()
-    fill_kwargs["alpha"] = alpha
-    fill_kwargs["edgecolor"] = "none"
-    fill_kwargs["linewidth"] = 0
-    fill_kwargs["zorder"] = 2
+    fill_kwargs.update({
+        "alpha": alpha,
+        "edgecolor": "none",
+        "linewidth": 0,
+        "zorder": 2,
+    })
     sns.scatterplot(**fill_kwargs)
 
     # Layer 2: Edge-only markers
     edge_kwargs = scatter_kwargs.copy()
-    edge_kwargs["alpha"] = 1.0
-    edge_kwargs["linewidth"] = linewidth
-    edge_kwargs["zorder"] = 3
+    edge_kwargs.update({
+        "alpha": 1.0,
+        "linewidth": linewidth,
+        "zorder": 3,
+    })
     sns.scatterplot(**edge_kwargs)
 
     # Make second layer hollow
@@ -280,7 +257,15 @@ def scatterplot(
     ax.set_ylabel(ylabel if ylabel else y)
     ax.set_title(title)
 
-    # TODO: Handle legend from pp.utils.legend
+    if legend:
+        _legend(
+            ax=ax,
+            hue=hue,
+            color=color,
+            palette=palette,
+            alpha=alpha,
+            linewidth=linewidth,
+        )
 
         
     # Set margins for categorical axes automatically
@@ -354,3 +339,36 @@ def _handle_categorical_axes(
         y_labels = None
 
     return data, x_col, y_col, x_labels, y_labels
+
+    
+def _legend(
+    ax: Axes,
+    hue: Optional[str],
+    alpha: float,
+    linewidth: float,
+    color: Optional[str],
+    palette: Optional[Union[str, Dict, List]],
+) -> Legend:
+    """
+    Create legend handles for scatter plot.
+    """
+
+    if hue is None:
+        return
+
+    if palette is None:
+        return
+    
+    if not isinstance(palette, dict):
+        # TODO: Handle continuous palette
+        return
+
+    handles = create_legend_handles(
+        labels=palette.keys(),
+        colors=palette.values(),
+        color=color,
+    )
+    kwargs = dict(alpha=alpha, linewidth=linewidth, style="circle")
+    return pp_legend(ax=ax, handles=handles, **kwargs)
+
+    # TODO: Size legend

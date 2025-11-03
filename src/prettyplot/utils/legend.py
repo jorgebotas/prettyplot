@@ -409,6 +409,7 @@ def get_legend_handler_map(
     linewidth: float = DEFAULT_LINEWIDTH,
     circle_markersize: Optional[float] = None,
     edgecolor: Optional[str] = None,
+    style: str = "rectangle",
 ) -> Dict[type, HandlerBase]:
     """
     Get a handler map for automatic legend styling.
@@ -450,23 +451,21 @@ def get_legend_handler_map(
     HandlerCircle : Handler for scatterplot markers
     HandlerRectangle : Handler for barplot markers
     """
+    handler_circle = HandlerCircle(
+        alpha=alpha,
+        linewidth=linewidth,
+        markersize=circle_markersize,
+        edgecolor=edgecolor
+    )
+    handler_rectangle = HandlerRectangle(
+        alpha=alpha,
+        linewidth=linewidth,
+        edgecolor=edgecolor
+    )
     return {
-        PathCollection: HandlerCircle(
-            alpha=alpha,
-            linewidth=linewidth,
-            markersize=circle_markersize,
-            edgecolor=edgecolor
-        ),
-        Rectangle: HandlerRectangle(
-            alpha=alpha,
-            linewidth=linewidth,
-            edgecolor=edgecolor
-        ),
-        Patch: HandlerRectangle(
-            alpha=alpha,
-            linewidth=linewidth,
-            edgecolor=edgecolor
-        ),
+        PathCollection: handler_circle,
+        Rectangle: handler_rectangle,
+        Patch: handler_circle if style == "circle" else handler_rectangle,
     }
 
 
@@ -476,6 +475,7 @@ def legend(
     linewidth: float = DEFAULT_LINEWIDTH,
     circle_markersize: Optional[float] = None,
     edgecolor: Optional[str] = None,
+    style: str = "rectangle",
     handler_map: Optional[Dict[type, HandlerBase]] = None,
     **kwargs
 ) -> Legend:
@@ -499,6 +499,8 @@ def legend(
         Size of circle markers in legend. If None, uses default based on fontsize.
     edgecolor : str, optional
         Color for edges. If None, uses same color as fill.
+    style : str, default='rectangle'
+        Style of legend markers: 'rectangle' or 'circle'.
     handler_map : dict, optional
         Custom handler map. If provided, merged with default handlers.
     **kwargs
@@ -548,7 +550,8 @@ def legend(
         alpha=alpha,
         linewidth=linewidth,
         circle_markersize=circle_markersize,
-        edgecolor=edgecolor
+        edgecolor=edgecolor,
+        style=style,
     )
 
     # Merge with user-provided handler map
@@ -556,7 +559,13 @@ def legend(
         default_handler_map.update(handler_map)
 
     # Create legend with custom handlers
-    return ax.legend(handler_map=default_handler_map, **kwargs)
+    return ax.legend(
+        handler_map=default_handler_map,
+        bbox_to_anchor=(1.01, 1),
+        loc="upper left",
+        frameon=False,
+        **kwargs
+    )
 
 
 # =============================================================================
@@ -568,7 +577,8 @@ def create_legend_handles(
     labels: List[str],
     colors: Optional[List[str]],
     hatches: Optional[List[str]] = None,
-    style: str = 'rectangle'
+    style: str = "rectangle",
+    color: Optional[str] = None
 ) -> List[Patch]:
     """
     Create custom legend handles for manual legend creation.
@@ -619,7 +629,7 @@ def create_legend_handles(
     handles = []
 
     if colors is None:
-        colors = [DEFAULT_COLOR] * len(labels)
+        colors = [color if color is not None else DEFAULT_COLOR] * len(labels)
 
     # Ensure hatches list matches length of labels if provided
     if hatches is None or len(hatches) == 0:
@@ -634,7 +644,7 @@ def create_legend_handles(
             facecolor=color,
             edgecolor=color,
             label=label,
-            hatch=hatch if style == 'rectangle' else None,
+            hatch=hatch if style == "rectangle" else None,
         )
         handles.append(handle)
 

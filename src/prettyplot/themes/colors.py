@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from prettyplot.config import DEFAULT_COLOR
+from prettyplot.utils import is_categorical
 
 # =============================================================================
 # Color Palettes
@@ -422,6 +423,8 @@ def resolve_palette_mapping(
         return {}
     if isinstance(palette, dict):
         return palette
+    if not is_categorical(values):
+        return palette # continuous mapping
     palette = resolve_palette(palette, n_colors=len(values))
     return {value: palette[i % len(palette)] for i, value in enumerate(values)}
 

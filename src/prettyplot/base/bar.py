@@ -418,7 +418,6 @@ def _legend(
             labels=values,
             colors=[palette[v] for v in values],
             hatches=[hatch_mapping[v] for v in values],
-            **kwargs,
         ))
 
     elif hue == categorical_axis:
@@ -447,7 +446,7 @@ def _legend(
         if hatch_mapping is not None and len(hatch_mapping) > 0:
             handles.extend(create_legend_handles(
                 labels=hatch_mapping.keys(),
-                colors=[color or DEFAULT_COLOR for _ in hatch_mapping.keys()],
+                colors=["gray" for _ in hatch_mapping.keys()],
                 hatches=[hatch_mapping[v] for v in hatch_mapping.keys()]
             ))
 
