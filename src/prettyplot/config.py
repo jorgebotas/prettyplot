@@ -16,6 +16,7 @@ DEFAULT_FIGSIZE: Tuple[float, float] = (6, 4)
 DEFAULT_FONT: str = 'Arial'
 DEFAULT_FONT_SCALE: float = 1.6
 DEFAULT_STYLE: str = 'white'
+DEFAULT_COLOR: str = '#5d83c3' # slate blue
 
 # Default plot parameters
 DEFAULT_LINEWIDTH: float = 2.0

@@ -10,13 +10,14 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
 import seaborn as sns
+from matplotlib.legend import Legend
 import pandas as pd
 import numpy as np
 
 from prettyplot.config import DEFAULT_LINEWIDTH, DEFAULT_ALPHA, DEFAULT_CAPSIZE, DEFAULT_FIGSIZE
 from prettyplot.themes.colors import resolve_palette_mapping, DEFAULT_COLOR
 from prettyplot.themes.hatches import resolve_hatch_mapping
-from prettyplot.utils import is_categorical
+from prettyplot.utils import is_categorical, create_legend_handles, legend as pp_legend
 
 _SPLIT_SEPARATOR = "---"
 
@@ -235,17 +236,18 @@ def barplot(
         )
 
     # Add legend if hue or hatch is used
-    # if legend:
-    #     _create_barplot_legend(
-    #         ax=ax,
-    #         data=data,
-    #         hue=hue,
-    #         hatch=hatch,
-    #         palette=palette,
-    #         hatch_mapping=hatch_mapping,
-    #         alpha=alpha,
-    #         linewidth=linewidth
-    #     )
+    if legend:
+        _legend(
+            ax=ax,
+            hue=hue,
+            hatch=hatch,
+            categorical_axis=categorical_axis,
+            alpha=alpha,
+            linewidth=linewidth,
+            color=color,
+            palette=palette,
+            hatch_mapping=hatch_mapping,
+        )
 
     # Set labels
     if xlabel is not None: ax.set_xlabel(xlabel)
@@ -386,3 +388,68 @@ def _apply_hatches_and_override_colors(
             # for the outline bars (errorbar = None for fill bars)
             if bar_idx < len(errorbars):
                 errorbars[bar_idx].set_color(color)
+
+def _legend(
+    ax: Axes,
+    hue: Optional[str],
+    hatch: str,
+    categorical_axis: str,
+    alpha: float,
+    linewidth: float,
+    color: Optional[str],
+    palette: Optional[Union[str, Dict, List]],
+    hatch_mapping: Optional[Dict[str, str]],
+) -> Legend:
+    """
+    Create legend handles for bar plot. 
+    If hue or hatch is the same as the categorical axis, we can skip corresponding legend.
+    If matching hatch and hue, we need to create a legend for the combined hue and hatch.
+    If double split, we need to create a legend for the hue and hatch separately.
+    Otherwise, we need to create a legend for the hue and hatch (same as double split)
+    """
+    handles = []
+    kwargs = dict(alpha=alpha, linewidth=linewidth)
+    
+    if hue == hatch:
+        # combined legend for hue and hatch
+        # make sure order is correct in palette and hatch_mapping
+        values = list(palette.keys())
+        handles.extend(create_legend_handles(
+            labels=values,
+            colors=[palette[v] for v in values],
+            hatches=[hatch_mapping[v] for v in values],
+            **kwargs,
+        ))
+
+    elif hue == categorical_axis:
+        # legend for hatch
+        handles.extend(create_legend_handles(
+            labels=hatch_mapping.keys(),
+            colors=[color or DEFAULT_COLOR for _ in hatch_mapping.keys()],
+            hatches=[hatch_mapping[v] for v in hatch_mapping.keys()],
+        ))
+
+    elif hatch == categorical_axis:
+        # legend for hue
+        handles = create_legend_handles(
+            labels=palette.keys(),
+            colors=[palette[v] for v in palette.keys()],
+            hatches=None,
+        )
+    else:
+        # legend for hue and hatch separately
+        if palette is not None and len(palette) > 0:
+            handles.extend(create_legend_handles(
+                labels=palette.keys(),
+                colors=[palette[v] for v in palette.keys()],
+                hatches=None,
+            ))
+        if hatch_mapping is not None and len(hatch_mapping) > 0:
+            handles.extend(create_legend_handles(
+                labels=hatch_mapping.keys(),
+                colors=[color or DEFAULT_COLOR for _ in hatch_mapping.keys()],
+                hatches=[hatch_mapping[v] for v in hatch_mapping.keys()]
+            ))
+
+    if handles:
+        return pp_legend(ax=ax, handles=handles, **kwargs)

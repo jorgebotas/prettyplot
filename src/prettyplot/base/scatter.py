@@ -15,7 +15,7 @@ from typing import Optional, Tuple, Union, Dict, List
 
 from prettyplot.config import DEFAULT_FIGSIZE, DEFAULT_ALPHA, DEFAULT_LINEWIDTH
 from prettyplot.themes.colors import resolve_palette, DEFAULT_COLOR
-from prettyplot.utils import is_categorical, is_numeric
+from prettyplot.utils import is_categorical, is_numeric, create_legend_handles, legend as pp_legend
 
 
 def scatterplot(
@@ -37,7 +37,7 @@ def scatterplot(
     title: str = "",
     xlabel: str = "",
     ylabel: str = "",
-    legend: Union[bool, str] = "auto",
+    legend: bool = True,
     margins: Union[float, Tuple[float, float]] = 0.1,
     **kwargs
 ) -> Tuple[plt.Figure, Axes]:
@@ -63,10 +63,10 @@ def scatterplot(
         If None, uses DEFAULT_COLOR or the value from `color` parameter.
     color : str, optional
         Fixed color for all markers (only used when hue is None).
-        Overrides DEFAULT_COLOR. Example: '#ff0000' or 'red'.
+        Overrides DEFAULT_COLOR. Example: "#ff0000" or "red".
     palette : str, dict, list, or None
         Color palette for hue values:
-        - str: palette name (e.g., 'viridis', 'pastel_categorical')
+        - str: palette name (e.g., "viridis", "pastel_categorical")
         - dict: mapping of hue values to colors (categorical only)
         - list: list of colors
         - None: uses default palette
@@ -94,8 +94,8 @@ def scatterplot(
         X-axis label. If empty, uses x column name.
     ylabel : str, default=""
         Y-axis label. If empty, uses y column name.
-    legend : bool or str, default='auto'
-        Whether to show legend. Options: True, False, 'auto' (show if hue or size used).
+    legend : bool, default=True
+        Whether to show legend.
     margins : float or tuple, default=0.1
         Margins around the plot for categorical axes. 
         If a float, sets both x and y margins to the same value.
@@ -113,28 +113,28 @@ def scatterplot(
     Examples
     --------
     Simple scatterplot with continuous data:
-    >>> fig, ax = pp.scatterplot(data=df, x='time', y='value')
+    >>> fig, ax = pp.scatterplot(data=df, x="time", y="value")
 
     Scatterplot with size encoding:
-    >>> fig, ax = pp.scatterplot(data=df, x='time', y='value',
-    ...                           size='magnitude', sizes=(50, 500))
+    >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
+    ...                           size="magnitude", sizes=(50, 500))
 
     Scatterplot with categorical color encoding:
-    >>> fig, ax = pp.scatterplot(data=df, x='time', y='value',
-    ...                           hue='group', palette='pastel_categorical')
+    >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
+    ...                           hue="group", palette="pastel_categorical")
 
     Scatterplot with continuous color encoding:
-    >>> fig, ax = pp.scatterplot(data=df, x='time', y='value',
-    ...                           hue='score', palette='viridis',
+    >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
+    ...                           hue="score", palette="viridis",
     ...                           hue_norm=(0, 100))
 
     Scatterplot with custom single color:
-    >>> fig, ax = pp.scatterplot(data=df, x='time', y='value',
-    ...                           color='#e67e7e')
+    >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
+    ...                           color="#e67e7e")
 
     Categorical scatterplot (positions on grid):
-    >>> fig, ax = pp.scatterplot(data=df, x='category', y='condition',
-    ...                           size='pvalue', hue='log2fc')
+    >>> fig, ax = pp.scatterplot(data=df, x="category", y="condition",
+    ...                           size="pvalue", hue="log2fc")
     """
     # Validate required columns
     required_cols = [x, y]
@@ -174,6 +174,7 @@ def scatterplot(
     plot_palette = None
     plot_hue = hue
 
+    # TODO: Should be in resolve_palette_mapping
     if hue is None:
         # No hue encoding - use single color
         plot_color = color if color is not None else DEFAULT_COLOR
@@ -185,7 +186,7 @@ def scatterplot(
         if palette is None:
             # Use default palette
             if is_continuous_hue:
-                plot_palette = 'viridis'
+                plot_palette = "viridis"
             else:
                 n_colors = plot_data[hue].nunique()
                 plot_palette = resolve_palette(None, n_colors=n_colors)
@@ -215,44 +216,44 @@ def scatterplot(
 
     # Prepare kwargs for seaborn scatterplot
     scatter_kwargs = {
-        'data': plot_data,
-        'x': x_col,
-        'y': y_col,
-        'ax': ax,
-        'legend': False,  # We'll handle legend ourselves
+        "data": plot_data,
+        "x": x_col,
+        "y": y_col,
+        "ax": ax,
+        "legend": False,  # We"ll handle legend ourselves
     }
 
     # Add optional parameters
     if size is not None:
-        scatter_kwargs['size'] = size
-        scatter_kwargs['sizes'] = sizes
+        scatter_kwargs["size"] = size
+        scatter_kwargs["sizes"] = sizes
     else:
-        scatter_kwargs['s'] = sizes[0]
+        scatter_kwargs["s"] = sizes[0]
 
     if plot_hue is not None:
-        scatter_kwargs['hue'] = plot_hue
-        scatter_kwargs['palette'] = plot_palette
+        scatter_kwargs["hue"] = plot_hue
+        scatter_kwargs["palette"] = plot_palette
         if hue_norm_obj is not None:
-            scatter_kwargs['hue_norm'] = hue_norm_obj
+            scatter_kwargs["hue_norm"] = hue_norm_obj
     else:
-        scatter_kwargs['color'] = plot_color
+        scatter_kwargs["color"] = plot_color
 
     # Merge with user kwargs
     scatter_kwargs.update(kwargs)
 
     # Layer 1: Filled markers with transparency
     fill_kwargs = scatter_kwargs.copy()
-    fill_kwargs['alpha'] = alpha
-    fill_kwargs['edgecolor'] = 'none'
-    fill_kwargs['linewidth'] = 0
-    fill_kwargs['zorder'] = 2
+    fill_kwargs["alpha"] = alpha
+    fill_kwargs["edgecolor"] = "none"
+    fill_kwargs["linewidth"] = 0
+    fill_kwargs["zorder"] = 2
     sns.scatterplot(**fill_kwargs)
 
     # Layer 2: Edge-only markers
     edge_kwargs = scatter_kwargs.copy()
-    edge_kwargs['alpha'] = 1.0
-    edge_kwargs['linewidth'] = linewidth
-    edge_kwargs['zorder'] = 3
+    edge_kwargs["alpha"] = 1.0
+    edge_kwargs["linewidth"] = linewidth
+    edge_kwargs["zorder"] = 3
     sns.scatterplot(**edge_kwargs)
 
     # Make second layer hollow
@@ -260,7 +261,7 @@ def scatterplot(
     if len(collections) >= 2:
         edge_collection = collections[-1]
         face_collection = collections[-2]
-        edge_collection.set_facecolors('none')
+        edge_collection.set_facecolors("none")
         edge_collection.set_edgecolors(
             edgecolor if edgecolor else face_collection.get_facecolors()
         )
@@ -279,18 +280,9 @@ def scatterplot(
     ax.set_ylabel(ylabel if ylabel else y)
     ax.set_title(title)
 
-    # Handle legend
-    show_legend = legend
-    if legend == 'auto':
-        show_legend = (hue is not None) or (size is not None)
+    # TODO: Handle legend from pp.utils.legend
 
-    if show_legend and (hue is not None or size is not None):
-        # Let seaborn create default legend
-        handles, labels = ax.get_legend_handles_labels()
-        if handles:
-            ax.legend(handles, labels, bbox_to_anchor=(1.01, 1), loc='upper left',
-                     frameon=False)
-
+        
     # Set margins for categorical axes automatically
     if x_is_categorical or y_is_categorical:
         if isinstance(margins, (float, int)):
@@ -344,8 +336,8 @@ def _handle_categorical_axes(
     if x_is_categorical:
         x_cats = sorted(data[x].unique())
         x_positions = {cat: i for i, cat in enumerate(x_cats)}
-        data['_x_pos'] = data[x].map(x_positions)
-        x_col = '_x_pos'
+        data["_x_pos"] = data[x].map(x_positions)
+        x_col = "_x_pos"
         x_labels = x_cats
     else:
         x_col = x
@@ -354,8 +346,8 @@ def _handle_categorical_axes(
     if y_is_categorical:
         y_cats = sorted(data[y].unique())
         y_positions = {cat: i for i, cat in enumerate(y_cats)}
-        data['_y_pos'] = data[y].map(y_positions)
-        y_col = '_y_pos'
+        data["_y_pos"] = data[y].map(y_positions)
+        y_col = "_y_pos"
         y_labels = y_cats
     else:
         y_col = y

@@ -19,7 +19,7 @@ from matplotlib.collections import PathCollection
 from matplotlib.axes import Axes
 from matplotlib.legend import Legend
 
-from prettyplot.config import DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_MARKER_SIZE
+from prettyplot.config import DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_MARKER_SIZE, DEFAULT_COLOR
 
 
 # =============================================================================
@@ -356,6 +356,7 @@ class HandlerRectangle(HandlerPatch):
             linewidth=self.linewidth,
             transform=trans,
             hatch=hatch_pattern,  # Hatch only on edge layer
+            hatch_linewidth=self.linewidth,
             zorder=3
         )
 
@@ -565,7 +566,7 @@ def legend(
 
 def create_legend_handles(
     labels: List[str],
-    colors: List[str],
+    colors: Optional[List[str]],
     hatches: Optional[List[str]] = None,
     style: str = 'rectangle'
 ) -> List[Patch]:
@@ -617,8 +618,11 @@ def create_legend_handles(
     """
     handles = []
 
+    if colors is None:
+        colors = [DEFAULT_COLOR] * len(labels)
+
     # Ensure hatches list matches length of labels if provided
-    if hatches is None:
+    if hatches is None or len(hatches) == 0:
         hatches = [''] * len(labels)
     elif len(hatches) != len(labels):
         # Cycle hatches to match labels length
@@ -630,7 +634,7 @@ def create_legend_handles(
             facecolor=color,
             edgecolor=color,
             label=label,
-            hatch=hatch if style == 'rectangle' else None
+            hatch=hatch if style == 'rectangle' else None,
         )
         handles.append(handle)
 

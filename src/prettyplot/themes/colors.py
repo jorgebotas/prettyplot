@@ -10,22 +10,12 @@ from typing import Dict, List, Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 
+from prettyplot.config import DEFAULT_COLOR
 
 # =============================================================================
-# Default Color
+# Color Palettes
 # =============================================================================
 
-DEFAULT_COLOR: str = "#5d83c3"
-"""
-Default color for single-color plots.
-
-This slate blue color is used as the default when no palette or color
-is specified. It provides a professional, publication-ready appearance
-while being distinct and visually appealing.
-"""
-
-
-# =============================================================================
 # Categorical Palettes
 # =============================================================================
 
