@@ -15,18 +15,19 @@ from scipy.stats import hypergeom
 import numpy as np
 import seaborn as sns
 
+from prettyplot.config import DEFAULT_ALPHA, DEFAULT_FIGSIZE
 from prettyplot.themes.colors import get_palette
 
 
-def venn_diagram(
+def venn(
     sets: Union[List[set], Dict[str, set]],
     labels: Optional[List[str]] = None,
     colors: Optional[List[str]] = None,
     universe_size: Optional[int] = None,
     weighted: bool = False,
     include_size_in_label: bool = True,
-    alpha: float = 0.3,
-    figsize: Tuple[float, float] = (10, 6),
+    alpha: float = DEFAULT_ALPHA,
+    figsize: Tuple[float, float] = DEFAULT_FIGSIZE,
     ax: Optional[Axes] = None,
 ) -> Tuple[plt.Figure, Axes, Dict]:
     """
@@ -72,16 +73,16 @@ def venn_diagram(
     Simple 2-way Venn diagram:
     >>> set1 = {1, 2, 3, 4, 5}
     >>> set2 = {4, 5, 6, 7, 8}
-    >>> fig, ax, stats = pp.venn_diagram([set1, set2],
+    >>> fig, ax, stats = pp.venn([set1, set2],
     ...                                   labels=['Group A', 'Group B'])
 
     3-way Venn with custom colors:
     >>> sets_dict = {'A': set1, 'B': set2, 'C': set3}
     >>> colors = pp.get_palette('pastel_categorical', n_colors=3)
-    >>> fig, ax, stats = pp.venn_diagram(sets_dict, colors=colors)
+    >>> fig, ax, stats = pp.venn(sets_dict, colors=colors)
 
     With statistical testing:
-    >>> fig, ax, stats = pp.venn_diagram([set1, set2], universe_size=1000)
+    >>> fig, ax, stats = pp.venn([set1, set2], universe_size=1000)
     >>> print(f"P-value: {stats['p_value']:.4f}")
 
     Notes

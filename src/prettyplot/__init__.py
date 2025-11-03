@@ -21,7 +21,7 @@ from prettyplot.base.scatter import scatterplot
 from prettyplot.base.heatmap import circle_heatmap
 
 # Advanced plotting functions
-from prettyplot.advanced.venn import venn_diagram
+from prettyplot.advanced.venn import venn
 
 # Utilities
 from prettyplot.utils.io import savefig, save_multiple, close_all
@@ -61,7 +61,7 @@ __all__ = [
     "scatterplot",
     "circle_heatmap",
     # Advanced plots
-    "venn_diagram",
+    "venn",
     # I/O utilities
     "savefig",
     "save_multiple",

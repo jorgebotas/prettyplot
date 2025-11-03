@@ -18,7 +18,7 @@ from prettyplot.themes.colors import resolve_palette_mapping, DEFAULT_COLOR
 from prettyplot.themes.hatches import resolve_hatch_mapping
 from prettyplot.utils import is_categorical
 
-SPLIT_SEPARATOR = "---"
+_SPLIT_SEPARATOR = "---"
 
 def barplot(
     data: pd.DataFrame,
@@ -175,7 +175,7 @@ def barplot(
             sns_hue = f"{hue}_{hatch}"
             # Color bars by 
             sns_palette = {
-                x: palette[x.split(SPLIT_SEPARATOR)[0]] for x in data[f"{hue}_{hatch}"].cat.categories
+                x: palette[x.split(_SPLIT_SEPARATOR)[0]] for x in data[f"{hue}_{hatch}"].cat.categories
             }
         else:
             # Only need to split by hatch
@@ -189,7 +189,7 @@ def barplot(
         "x": x,
         "y": y,
         "hue": sns_hue,
-        "palette": sns_palette,
+        "palette": sns_palette if sns_hue else None,
         "color": color,
         "fill": False,
         "linewidth": linewidth,
@@ -307,7 +307,7 @@ def _prepare_split_data(
     
     if prepareA and prepareB:
         # Create a combined column that seaborn will use to separate bars
-        data[f"{colA}_{colB}"] = data[colA].astype(str) + SPLIT_SEPARATOR + data[colB].astype(str)
+        data[f"{colA}_{colB}"] = data[colA].astype(str) + _SPLIT_SEPARATOR + data[colB].astype(str)
         data[f"{colA}_{colB}"] = pd.Categorical(
             data[f"{colA}_{colB}"],
             categories=data[f"{colA}_{colB}"].unique(),

@@ -9,7 +9,7 @@ from typing import Tuple
 
 # Default figure settings
 DEFAULT_DPI: int = 300
-DEFAULT_FORMAT: str = 'png'
+DEFAULT_FORMAT: str = 'pdf'
 DEFAULT_FIGSIZE: Tuple[float, float] = (6, 4)
 
 # Default styling
@@ -27,14 +27,6 @@ DEFAULT_PALETTE: str = 'pastel_categorical'
 
 # Hatch settings
 DEFAULT_HATCH_MODE: int = 1
-"""
-Default hatch pattern density mode (1, 2, or 3).
-
-Base patterns are simple single-character patterns that get multiplied:
-    Mode 1: base × 3 (e.g., '/', '.' → '///', '...')
-    Mode 2: base × 6 (e.g., '/', '.' → '//////', '......')
-    Mode 3: base × 9 (e.g., '/', '.' → '/////////', '.........')
-"""
 
 # Marker settings
 DEFAULT_MARKER_SIZE: Tuple[float, float] = (50, 1000)

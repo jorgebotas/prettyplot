@@ -40,8 +40,31 @@ def is_categorical(
     >>> is_categorical(pd.Series([1, 2, 3], dtype="category"))
     True
     """
-    return isinstance(values, pd.Categorical) or not pd.api.types.is_numeric_dtype(values)
+    return isinstance(values, pd.Categorical) or not is_numeric(values)
 
+
+def is_numeric(values: Union[pd.Series, pd.Categorical, np.ndarray, list, tuple]) -> bool:
+    """
+    Check if values are numeric.
+
+    Parameters
+    ----------
+    values : Union[pd.Series, pd.Categorical, np.ndarray, list, tuple]
+        Values to check.
+
+    Returns
+    -------
+    bool
+        True if values are numeric, False otherwise.
+
+    Examples
+    --------
+    >>> is_numeric(pd.Series([1, 2, 3]))
+    True
+    >>> is_numeric(pd.Series([1, 2, 3], dtype="category"))
+    False
+    """
+    return pd.api.types.is_numeric_dtype(values)
 
 def validate_data(
     data: Union[pd.DataFrame, np.ndarray, None],
