@@ -44,6 +44,16 @@ from prettyplot.utils.fonts import (
     _register_fonts,
     list_registered_fonts,
 )
+
+from prettyplot.utils.legend import (
+    HandlerCircle,
+    HandlerRectangle,
+    get_legend_handler_map,
+    create_legend_handles,
+    LegendBuilder,
+    create_legend_builder,
+)
+
 # Register fonts globally
 _register_fonts()
 
@@ -79,4 +89,11 @@ __all__ = [
     "check_required_columns",
     # Fonts functions
     "list_registered_fonts",
+    # Legend functions
+    "HandlerCircle",
+    "HandlerRectangle",
+    "get_legend_handler_map",
+    "create_legend_handles",
+    "LegendBuilder",
+    "create_legend_builder",
 ]

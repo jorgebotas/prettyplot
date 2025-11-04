@@ -9,13 +9,15 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
-import pandas as pd
+from matplotlib.cm import ScalarMappable
+from matplotlib.ticker import MaxNLocator
 import numpy as np
+import pandas as pd
 from typing import Optional, Tuple, Union, Dict, List
 
-from prettyplot.config import DEFAULT_FIGSIZE, DEFAULT_ALPHA, DEFAULT_LINEWIDTH
-from prettyplot.themes.colors import resolve_palette, DEFAULT_COLOR
-from prettyplot.utils import is_categorical, is_numeric
+from prettyplot.config import DEFAULT_FIGSIZE, DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_COLOR
+from prettyplot.themes.colors import resolve_palette_mapping
+from prettyplot.utils import is_categorical, is_numeric, create_legend_handles, create_legend_builder
 
 
 def scatterplot(
@@ -27,8 +29,8 @@ def scatterplot(
     color: Optional[str] = None,
     palette: Optional[Union[str, Dict, List]] = None,
     sizes: Optional[Tuple[float, float]] = None,
-    size_norm: Optional[Tuple[float, float]] = None,
-    hue_norm: Optional[Tuple[float, float]] = None,
+    size_norm: Optional[Union[Tuple[float, float], Normalize]] = None,
+    hue_norm: Optional[Union[Tuple[float, float], Normalize]] = None,
     alpha: float = DEFAULT_ALPHA,
     linewidth: float = DEFAULT_LINEWIDTH,
     edgecolor: Optional[str] = None,
@@ -37,7 +39,8 @@ def scatterplot(
     title: str = "",
     xlabel: str = "",
     ylabel: str = "",
-    legend: Union[bool, str] = "auto",
+    legend: bool = True,
+    legend_kws: Optional[Dict] = None,
     margins: Union[float, Tuple[float, float]] = 0.1,
     **kwargs
 ) -> Tuple[plt.Figure, Axes]:
@@ -63,10 +66,10 @@ def scatterplot(
         If None, uses DEFAULT_COLOR or the value from `color` parameter.
     color : str, optional
         Fixed color for all markers (only used when hue is None).
-        Overrides DEFAULT_COLOR. Example: '#ff0000' or 'red'.
+        Overrides DEFAULT_COLOR. Example: "#ff0000" or "red".
     palette : str, dict, list, or None
         Color palette for hue values:
-        - str: palette name (e.g., 'viridis', 'pastel_categorical')
+        - str: palette name (e.g., "viridis", "pastel_categorical")
         - dict: mapping of hue values to colors (categorical only)
         - list: list of colors
         - None: uses default palette
@@ -94,8 +97,16 @@ def scatterplot(
         X-axis label. If empty, uses x column name.
     ylabel : str, default=""
         Y-axis label. If empty, uses y column name.
-    legend : bool or str, default='auto'
-        Whether to show legend. Options: True, False, 'auto' (show if hue or size used).
+    legend_kws : dict, optional
+        Keyword arguments for legend builder:
+        - hue_title : str, optional
+            Title for the hue legend. If None, uses hue column name.
+        - size_title : str, optional
+            Title for the size legend. If None, uses size column name.
+        - size_reverse : bool, default=True
+            Whether to reverse the size legend (descending order).
+    legend : bool, default=True
+        Whether to show legend.
     margins : float or tuple, default=0.1
         Margins around the plot for categorical axes. 
         If a float, sets both x and y margins to the same value.
@@ -113,28 +124,28 @@ def scatterplot(
     Examples
     --------
     Simple scatterplot with continuous data:
-    >>> fig, ax = pp.scatterplot(data=df, x='time', y='value')
+    >>> fig, ax = pp.scatterplot(data=df, x="time", y="value")
 
     Scatterplot with size encoding:
-    >>> fig, ax = pp.scatterplot(data=df, x='time', y='value',
-    ...                           size='magnitude', sizes=(50, 500))
+    >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
+    ...                           size="magnitude", sizes=(50, 500))
 
     Scatterplot with categorical color encoding:
-    >>> fig, ax = pp.scatterplot(data=df, x='time', y='value',
-    ...                           hue='group', palette='pastel_categorical')
+    >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
+    ...                           hue="group", palette="pastel_categorical")
 
     Scatterplot with continuous color encoding:
-    >>> fig, ax = pp.scatterplot(data=df, x='time', y='value',
-    ...                           hue='score', palette='viridis',
+    >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
+    ...                           hue="score", palette="viridis",
     ...                           hue_norm=(0, 100))
 
     Scatterplot with custom single color:
-    >>> fig, ax = pp.scatterplot(data=df, x='time', y='value',
-    ...                           color='#e67e7e')
+    >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
+    ...                           color="#e67e7e")
 
     Categorical scatterplot (positions on grid):
-    >>> fig, ax = pp.scatterplot(data=df, x='category', y='condition',
-    ...                           size='pvalue', hue='log2fc')
+    >>> fig, ax = pp.scatterplot(data=df, x="category", y="condition",
+    ...                           size="pvalue", hue="log2fc")
     """
     # Validate required columns
     required_cols = [x, y]
@@ -148,7 +159,7 @@ def scatterplot(
         raise ValueError(f"Missing columns in data: {missing_cols}")
 
     # Copy data to avoid modifying original
-    plot_data = data.copy()
+    data = data.copy()
 
     # Create figure if not provided
     if ax is None:
@@ -157,114 +168,97 @@ def scatterplot(
         fig = ax.get_figure()
 
     # Determine if x and y are categorical
-    x_is_categorical = is_categorical(plot_data[x])
-    y_is_categorical = is_categorical(plot_data[y])
+    x_is_categorical = is_categorical(data[x])
+    y_is_categorical = is_categorical(data[y])
 
     # Handle categorical positioning
     if x_is_categorical or y_is_categorical:
-        plot_data, x_col, y_col, x_labels, y_labels = _handle_categorical_axes(
-            plot_data, x, y, x_is_categorical, y_is_categorical
+        data, x_col, y_col, x_labels, y_labels = _handle_categorical_axes(
+            data, x, y, x_is_categorical, y_is_categorical
         )
     else:
         x_col, y_col = x, y
         x_labels, y_labels = None, None
 
     # Determine color/palette to use
-    plot_color = None
-    plot_palette = None
-    plot_hue = hue
-
-    if hue is None:
-        # No hue encoding - use single color
-        plot_color = color if color is not None else DEFAULT_COLOR
-    else:
-        # Hue encoding - use palette
-        # Determine if hue is continuous
-        is_continuous_hue = hue_norm is not None or is_numeric(plot_data[hue])
-
-        if palette is None:
-            # Use default palette
-            if is_continuous_hue:
-                plot_palette = 'viridis'
-            else:
-                n_colors = plot_data[hue].nunique()
-                plot_palette = resolve_palette(None, n_colors=n_colors)
-        elif isinstance(palette, str):
-            # Resolve string palette
-            if is_continuous_hue:
-                plot_palette = palette
-            else:
-                n_colors = plot_data[hue].nunique()
-                plot_palette = resolve_palette(palette, n_colors=n_colors)
-        else:
-            # Use provided palette as-is (dict or list)
-            plot_palette = palette
+    color = color if color is not None else DEFAULT_COLOR
+    palette = resolve_palette_mapping(
+        values=data[hue].unique() if hue is not None else None,
+        palette=palette,
+    ) if hue is not None else None
 
     # Set default sizes
     if sizes is None:
-        if size is not None:
-            sizes = (50, 500)
-        else:
-            sizes = (100, 100)
+        sizes = (100, 100) if size is None else (50, 500)
+
+    # Set default size normalization
+    if size is not None and is_numeric(data[size]):
+        if size_norm is None:
+            size_norm = (data[size].min(), data[size].max())
+        if isinstance(size_norm, tuple):
+            size_norm = Normalize(vmin=size_norm[0], vmax=size_norm[1])
 
     # Create normalization for hue if needed
-    if hue is not None and hue_norm is not None:
-        hue_norm_obj = Normalize(vmin=hue_norm[0], vmax=hue_norm[1])
-    else:
-        hue_norm_obj = None
+    if hue is not None and is_numeric(data[hue]):
+        if hue_norm is None:
+            hue_norm = (data[hue].min(), data[hue].max())
+        if isinstance(hue_norm, tuple):
+            hue_norm = Normalize(vmin=hue_norm[0], vmax=hue_norm[1])
 
     # Prepare kwargs for seaborn scatterplot
     scatter_kwargs = {
-        'data': plot_data,
-        'x': x_col,
-        'y': y_col,
-        'ax': ax,
-        'legend': False,  # We'll handle legend ourselves
+        "data": data,
+        "x": x_col,
+        "y": y_col,
+        "hue": hue,
+        "hue_norm": hue_norm,
+        "size": size,
+        "sizes": sizes if size is not None else None,
+        "size_norm": size_norm if size is not None else None,
+        "ax": ax,
+        "color": color,
+        "palette": palette,
+        "legend": False,
     }
-
-    # Add optional parameters
-    if size is not None:
-        scatter_kwargs['size'] = size
-        scatter_kwargs['sizes'] = sizes
-    else:
-        scatter_kwargs['s'] = sizes[0]
-
-    if plot_hue is not None:
-        scatter_kwargs['hue'] = plot_hue
-        scatter_kwargs['palette'] = plot_palette
-        if hue_norm_obj is not None:
-            scatter_kwargs['hue_norm'] = hue_norm_obj
-    else:
-        scatter_kwargs['color'] = plot_color
 
     # Merge with user kwargs
     scatter_kwargs.update(kwargs)
 
     # Layer 1: Filled markers with transparency
     fill_kwargs = scatter_kwargs.copy()
-    fill_kwargs['alpha'] = alpha
-    fill_kwargs['edgecolor'] = 'none'
-    fill_kwargs['linewidth'] = 0
-    fill_kwargs['zorder'] = 2
+    fill_kwargs.update({
+        "alpha": alpha,
+        "edgecolor": "none",
+        "linewidth": 0,
+        "zorder": 2,
+    })
     sns.scatterplot(**fill_kwargs)
 
     # Layer 2: Edge-only markers
     edge_kwargs = scatter_kwargs.copy()
-    edge_kwargs['alpha'] = 1.0
-    edge_kwargs['linewidth'] = linewidth
-    edge_kwargs['zorder'] = 3
+    edge_kwargs.update({
+        "alpha": 1.0,
+        "linewidth": linewidth,
+        "zorder": 3,
+    })
     sns.scatterplot(**edge_kwargs)
 
     # Make second layer hollow
     collections = ax.collections
-    if len(collections) >= 2:
-        edge_collection = collections[-1]
-        face_collection = collections[-2]
-        edge_collection.set_facecolors('none')
-        edge_collection.set_edgecolors(
-            edgecolor if edgecolor else face_collection.get_facecolors()
-        )
-        edge_collection.set_linewidths(linewidth)
+    face_collection = collections[0]
+    edge_collection = collections[1]
+    edge_collection.set_facecolors("none")
+    edge_collection.set_edgecolors(
+        edgecolor if edgecolor else face_collection.get_facecolors()
+    )
+    edge_collection.set_linewidths(linewidth)
+    # Set colormap and normalization for face collection
+    # Could be used by legend builder to create colorbar
+    if hue is not None:
+        face_collection.set_label(hue)
+        if hue_norm is not None:
+            face_collection.set_cmap(palette) # is a string or cmap
+            face_collection.set_norm(hue_norm)
 
     # Handle categorical axis labels
     if x_labels is not None:
@@ -279,17 +273,21 @@ def scatterplot(
     ax.set_ylabel(ylabel if ylabel else y)
     ax.set_title(title)
 
-    # Handle legend
-    show_legend = legend
-    if legend == 'auto':
-        show_legend = (hue is not None) or (size is not None)
-
-    if show_legend and (hue is not None or size is not None):
-        # Let seaborn create default legend
-        handles, labels = ax.get_legend_handles_labels()
-        if handles:
-            ax.legend(handles, labels, bbox_to_anchor=(1.01, 1), loc='upper left',
-                     frameon=False)
+    if legend:
+        _legend(
+            ax=ax,
+            data=data,
+            hue=hue,
+            size=size,
+            color=color,
+            palette=palette,
+            alpha=alpha,
+            linewidth=linewidth,
+            hue_norm=hue_norm,
+            size_norm=size_norm,
+            sizes=sizes,
+            kwargs=legend_kws,
+        )
 
     # Set margins for categorical axes automatically
     if x_is_categorical or y_is_categorical:
@@ -301,7 +299,6 @@ def scatterplot(
         )
 
     return fig, ax
-
 
 def _handle_categorical_axes(
     data: pd.DataFrame,
@@ -344,8 +341,8 @@ def _handle_categorical_axes(
     if x_is_categorical:
         x_cats = sorted(data[x].unique())
         x_positions = {cat: i for i, cat in enumerate(x_cats)}
-        data['_x_pos'] = data[x].map(x_positions)
-        x_col = '_x_pos'
+        data["_x_pos"] = data[x].map(x_positions)
+        x_col = "_x_pos"
         x_labels = x_cats
     else:
         x_col = x
@@ -354,11 +351,148 @@ def _handle_categorical_axes(
     if y_is_categorical:
         y_cats = sorted(data[y].unique())
         y_positions = {cat: i for i, cat in enumerate(y_cats)}
-        data['_y_pos'] = data[y].map(y_positions)
-        y_col = '_y_pos'
+        data["_y_pos"] = data[y].map(y_positions)
+        y_col = "_y_pos"
         y_labels = y_cats
     else:
         y_col = y
         y_labels = None
 
     return data, x_col, y_col, x_labels, y_labels
+
+def _get_size_ticks(
+        values: np.ndarray,
+        sizes: Tuple[float, float],
+        size_norm: Normalize,
+        nbins: int = 4,
+        min_n_ticks: int = 3,
+        include_min_max: bool = False,
+    ) -> Tuple[List[str], List[float]]:
+    """
+    Get size ticks for size legend.
+    Uses MaxNLocator to generate ticks.
+    Includes actual min and max from data.
+    Rounds to reasonable precision.
+    Falls back to min and max if no ticks are generated.
+
+    Parameters
+    ----------
+    values : np.ndarray
+        Values to get size ticks for.
+    sizes : Tuple[float, float]
+        (min_size, max_size) in points^2.
+    size_norm : Normalize
+        Size normalization object.
+    nbins : int, default=4
+        Number of bins used by MaxNLocator.
+    min_n_ticks : int, default=3
+        Minimum number of ticks to generate.
+    include_min_max : bool, default=False
+        Whether to include actual min and max from data.
+        If True, the first and last tick will be the actual min and max.
+        This is useful if the data is very small and the min and max are not representive.
+    Returns
+    -------
+    tick_labels : List[str]
+        Tick labels.
+    tick_sizes : List[float]
+        Tick sizes.
+    """
+    unique_vals = np.unique(values[~np.isnan(values)])
+    v_min, v_max = size_norm.vmin, size_norm.vmax
+    
+    if len(unique_vals) <= 4:
+        # If few unique values, show them all
+        ticks = unique_vals
+    else:
+        # Use MaxNLocator but ensure we capture extremes
+        locator = MaxNLocator(nbins=nbins, min_n_ticks=min_n_ticks)
+        ticks = locator.tick_values(v_min, v_max)
+        ticks = ticks[(ticks >= v_min) & (ticks <= v_max)]
+        
+        # Include actual min and max from data
+        if include_min_max:
+            ticks = np.unique(np.concatenate([[v_min], ticks, [v_max]]))
+    
+    # Round to reasonable precision
+    if v_max - v_min > 10:
+        ticks = np.array([int(np.round(t)) for t in ticks])
+        ticks = np.unique(ticks)
+    else:
+        ticks = np.unique(np.round(ticks, 1))
+    
+    if ticks.size == 0:  # Fallback
+        ticks = np.array([v_min, v_max])
+    
+    def _get_markersize(size: float) -> float:
+        normalized_size = size_norm(size)
+        actual_size = min(sizes[0] + normalized_size * (sizes[1] - sizes[0]), sizes[1]) 
+        # Convert to markersize for legend
+        return np.sqrt(actual_size / np.pi) * 2
+
+    return [str(t) for t in ticks], [_get_markersize(t) for t in ticks]
+    
+def _legend(
+        ax: Axes,
+        data: pd.DataFrame, # for size legend
+        hue: Optional[str],
+        size: Optional[str],
+        color: Optional[str],
+        palette: Optional[Union[str, Dict, List]],
+        hue_norm: Optional[Normalize],
+        size_norm: Optional[Normalize],
+        sizes: Tuple[float, float],
+        alpha: float = DEFAULT_ALPHA,
+        linewidth: float = DEFAULT_LINEWIDTH,
+        kwargs: Optional[Dict] = None,
+    ) -> None:
+    """
+    Create legend handles for scatter plot.
+    """
+    kwargs = kwargs or {}
+    handle_kwargs = dict(alpha=alpha, linewidth=linewidth, color=color, style="circle")
+    builder = create_legend_builder(ax=ax)
+
+    # Add hue legend
+    if hue is not None:
+        hue_label = kwargs.pop("hue_label", hue)
+        if isinstance(palette, dict):  # categorical legend
+            builder.add_legend(
+                handles=create_legend_handles(
+                    labels=palette.keys(),
+                    colors=palette.values(),
+                    **handle_kwargs
+                ),
+                title=hue_label,
+            )
+
+        else:  # continuous colorbar
+            mappable = ScalarMappable(norm=hue_norm, cmap=palette)
+            builder.add_colorbar(
+                mappable=mappable, 
+                label=hue_label,
+                height=kwargs.pop("hue_height", 0.2),
+                width=kwargs.pop("hue_width", 0.05),
+            )
+
+    # Add size legend
+    if size is not None:
+        tick_color = color if hue is None else "gray"
+        handle_kwargs["color"] = tick_color
+        tick_labels, tick_sizes = _get_size_ticks(
+            values=data[size].dropna().values,
+            sizes=sizes,
+            size_norm=size_norm,
+            nbins=kwargs.pop("size_nbins", 4),
+            min_n_ticks=kwargs.pop("size_min_n_ticks", 3),
+            include_min_max=kwargs.pop("size_include_min_max", False),
+        )
+        builder.add_legend(
+            handles=create_legend_handles(
+                labels=tick_labels,
+                sizes=tick_sizes,
+                **handle_kwargs
+            ),
+            title=kwargs.pop("size_label", size),
+            labelspacing=kwargs.pop("labelspacing", 1/3 * max(1, sizes[1] / 200)),
+        )

@@ -41,7 +41,8 @@ DEFAULT_GRID_KWS = dict(
 )
 
 
-class HandlerDoubleCircle(HandlerBase):
+from matplotlib.legend_handler import HandlerBase
+class HandlerCircle(HandlerBase):
     """
     Custom legend handler for double-layer circle markers.
     
@@ -89,7 +90,7 @@ class HandlerDoubleCircle(HandlerBase):
             size = (
                 orig_handle.get_markersize() 
                 if hasattr(orig_handle, "get_markersize") 
-                else 10
+                else DEFAULT_MARKER_SIZE
             )
         
         # Create filled circle with transparency

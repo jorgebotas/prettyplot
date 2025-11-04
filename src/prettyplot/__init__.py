@@ -31,6 +31,14 @@ from prettyplot.utils.axes import (
     set_axis_labels,
     add_reference_line,
 )
+from prettyplot.utils.legend import (
+    HandlerCircle,
+    HandlerRectangle,
+    get_legend_handler_map,
+    create_legend_handles,
+    LegendBuilder,
+    create_legend_builder,
+)
 
 # Theming
 from prettyplot.themes.colors import get_palette, list_palettes, show_palette, resolve_palette, DEFAULT_COLOR
@@ -71,6 +79,13 @@ __all__ = [
     "add_grid",
     "set_axis_labels",
     "add_reference_line",
+    # Legend utilities
+    "HandlerCircle",
+    "HandlerRectangle",
+    "get_legend_handler_map",
+    "create_legend_handles",
+    "LegendBuilder",
+    "create_legend_builder",
     # Color/palette functions
     "get_palette",
     "list_palettes",

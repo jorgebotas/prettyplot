@@ -25,6 +25,7 @@ PUBLICATION_STYLE: Dict[str, Any] = {
     "xtick.labelsize": 10,
     "ytick.labelsize": 10,
     "legend.fontsize": 10,
+    "legend.title_fontsize": 12,
     "figure.titlesize": 14,
 
     # PDF settings (for vector graphics)
@@ -111,6 +112,7 @@ POSTER_STYLE: Dict[str, Any] = {
     "xtick.labelsize": 14,
     "ytick.labelsize": 14,
     "legend.fontsize": 14,
+    "legend.title_fontsize": 16,
     "figure.titlesize": 22,
     "figure.figsize": (8, 6),
     "lines.linewidth": 3.0,
