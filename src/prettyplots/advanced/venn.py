@@ -15,8 +15,8 @@ from scipy.stats import hypergeom
 import numpy as np
 import seaborn as sns
 
-from prettyplot.config import DEFAULT_ALPHA, DEFAULT_FIGSIZE
-from prettyplot.themes.colors import get_palette
+from prettyplots.config import DEFAULT_ALPHA, DEFAULT_FIGSIZE
+from prettyplots.themes.colors import get_palette
 
 
 def venn(

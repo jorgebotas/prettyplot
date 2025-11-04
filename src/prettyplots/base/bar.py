@@ -11,10 +11,10 @@ from matplotlib.axes import Axes
 import seaborn as sns
 import pandas as pd
 
-from prettyplot.config import DEFAULT_LINEWIDTH, DEFAULT_ALPHA, DEFAULT_CAPSIZE, DEFAULT_FIGSIZE
-from prettyplot.themes.colors import resolve_palette_mapping, DEFAULT_COLOR
-from prettyplot.themes.hatches import resolve_hatch_mapping
-from prettyplot.utils import is_categorical, create_legend_handles, create_legend_builder
+from prettyplots.config import DEFAULT_LINEWIDTH, DEFAULT_ALPHA, DEFAULT_CAPSIZE, DEFAULT_FIGSIZE
+from prettyplots.themes.colors import resolve_palette_mapping, DEFAULT_COLOR
+from prettyplots.themes.hatches import resolve_hatch_mapping
+from prettyplots.utils import is_categorical, create_legend_handles, create_legend_builder
 
 _SPLIT_SEPARATOR = "---"
 

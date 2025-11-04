@@ -16,7 +16,7 @@ from matplotlib.legend_handler import HandlerBase, HandlerPatch
 from matplotlib.patches import Circle, Rectangle, Patch
 import matplotlib.pyplot as plt
 
-from prettyplot.config import DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_COLOR
+from prettyplots.config import DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_COLOR
 
 
 # =============================================================================

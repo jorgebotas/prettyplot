@@ -31,7 +31,7 @@ Use case: When plotting multiple categories in scatter plots or line plots
 where shape needs to distinguish groups in addition to or instead of color.
 
 Example:
-    >>> import prettyplot as pp
+    >>> import prettyplots as pp
     >>> markers = pp.STANDARD_MARKERS
     >>> for i, category in enumerate(categories):
     ...     pp.scatterplot(data[data.cat==category], marker=markers[i])
@@ -131,7 +131,7 @@ or black-and-white printing), hatch patterns provide an additional visual
 encoding dimension.
 
 Example:
-    >>> import prettyplot as pp
+    >>> import prettyplots as pp
     >>> hatches = pp.HATCH_PATTERNS
     >>> pp.barplot(data, x='group', y='value', hatch=hatches[1])
 """

@@ -10,8 +10,8 @@ from typing import Dict, List, Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 
-from prettyplot.config import DEFAULT_COLOR
-from prettyplot.utils import is_categorical
+from prettyplots.config import DEFAULT_COLOR
+from prettyplots.utils import is_categorical
 
 # =============================================================================
 # Color Palettes
@@ -42,7 +42,7 @@ Works well for bar plots, scatter plots with categorical hue, and legends.
 Colors are designed to be distinguishable while maintaining a soft, cohesive look.
 
 Example:
-    >>> import prettyplot as pp
+    >>> import prettyplots as pp
     >>> colors = pp.get_palette('pastel_categorical', n_colors=5)
     >>> pp.scatterplot(data=df, x='x', y='y', hue='category', palette=colors)
 """
@@ -371,7 +371,7 @@ def resolve_palette(
     ['#ff0000', '#00ff00', '#0000ff']
     """
     import seaborn as sns
-    from prettyplot.config import DEFAULT_PALETTE
+    from prettyplots.config import DEFAULT_PALETTE
 
     # Handle None: use default palette for multiple colors, default color for single
     if palette is None:

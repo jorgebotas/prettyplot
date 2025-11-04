@@ -1,10 +1,10 @@
-# PrettyPlot
+# PrettyPlots
 
 Publication-ready plotting with a clean, modular API.
 
 ## Overview
 
-PrettyPlot is a Python visualization library that provides beautiful, publication-ready plots with a seaborn-like API. It focuses on:
+PrettyPlots is a Python visualization library that provides beautiful, publication-ready plots with a seaborn-like API. It focuses on:
 
 - **Beautiful defaults**: Carefully designed pastel color palettes and styles
 - **Intuitive API**: Follows seaborn conventions for ease of use
@@ -17,8 +17,8 @@ PrettyPlot is a Python visualization library that provides beautiful, publicatio
 ### From source (development)
 
 ```bash
-git clone https://github.com/jorgebotas/prettyplot.git
-cd prettyplot
+git clone https://github.com/jorgebotas/prettyplots.git
+cd prettyplots
 pip install -e .
 ```
 
@@ -28,8 +28,8 @@ If you're using [uv](https://github.com/astral-sh/uv) for Python environment man
 
 ```bash
 # Clone the repository
-git clone https://github.com/jorgebotas/prettyplot.git
-cd prettyplot
+git clone https://github.com/jorgebotas/prettyplots.git
+cd prettyplots
 
 # Create a new uv environment with Python 3.11 (or your preferred version)
 uv venv --python 3.11
@@ -46,25 +46,25 @@ uv pip install -e .
 uv pip install ipykernel
 
 # Register the environment as a Jupyter kernel
-python -m ipykernel install --user --name=prettyplot --display-name="Python (prettyplot)"
+python -m ipykernel install --user --name=prettyplots --display-name="Python (prettyplots)"
 ```
 
-Now you can select the "Python (prettyplot)" kernel in Jupyter Lab or Jupyter Notebook and import prettyplot:
+Now you can select the "Python (prettyplots)" kernel in Jupyter Lab or Jupyter Notebook and import prettyplots:
 
 ```python
-import prettyplot as pp
+import prettyplots as pp
 ```
 
 ### From PyPI (coming soon)
 
 ```bash
-pip install prettyplot
+pip install prettyplots
 ```
 
 ## Quick Start
 
 ```python
-import prettyplot as pp
+import prettyplots as pp
 import pandas as pd
 
 # Apply publication style globally
@@ -108,11 +108,11 @@ pp.savefig(fig, 'figure.png', dpi=300)
 
 ## Documentation
 
-Full documentation is available at [github.com/jorgebotas/prettyplot](https://github.com/jorgebotas/prettyplot)
+Full documentation is available at [github.com/jorgebotas/prettyplots](https://github.com/jorgebotas/prettyplots)
 
 ## Development Status
 
-PrettyPlot is currently in active development (v0.1.0). The API may change in future releases.
+PrettyPlots is currently in active development (v0.1.0). The API may change in future releases.
 
 ## Contributing
 
@@ -120,11 +120,11 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 
 ## Citation
 
-If you use PrettyPlot in your research, please cite:
+If you use PrettyPlots in your research, please cite:
 
 ```
-Botas, J. (2025). PrettyPlot: Publication-ready plotting for Python.
-GitHub: https://github.com/jorgebotas/prettyplot
+Botas, J. (2025). PrettyPlots: Publication-ready plotting for Python.
+GitHub: https://github.com/jorgebotas/prettyplots
 ```
 
 ## License

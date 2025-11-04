@@ -15,9 +15,9 @@ import numpy as np
 import pandas as pd
 from typing import Optional, Tuple, Union, Dict, List
 
-from prettyplot.config import DEFAULT_FIGSIZE, DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_COLOR
-from prettyplot.themes.colors import resolve_palette_mapping
-from prettyplot.utils import is_categorical, is_numeric, create_legend_handles, create_legend_builder
+from prettyplots.config import DEFAULT_FIGSIZE, DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_COLOR
+from prettyplots.themes.colors import resolve_palette_mapping
+from prettyplots.utils import is_categorical, is_numeric, create_legend_handles, create_legend_builder
 
 
 def scatterplot(
