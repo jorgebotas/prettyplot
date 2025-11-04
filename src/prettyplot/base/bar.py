@@ -429,7 +429,7 @@ def _legend(
 
     builder = create_legend_builder(ax=ax)
 
-    handle_kwargs = dict(alpha=alpha, linewidth=linewidth, color=color)
+    handle_kwargs = dict(alpha=alpha, linewidth=linewidth, color=color, style="rectangle")
     hue_label = kwargs.pop("hue_label", hue)
     hatch_label = kwargs.pop("hatch_label", hatch)
     
@@ -443,7 +443,6 @@ def _legend(
                 hatches=[hatch_mapping[v] for v in values],
                 **handle_kwargs
             ),
-            style="rectangle",
             title=hue_label,
         )
 
@@ -456,7 +455,6 @@ def _legend(
                 hatches=list(hatch_mapping.values()),
                 **handle_kwargs
             ),
-            style="rectangle",
             title=hatch_label,
         )
 
@@ -469,7 +467,6 @@ def _legend(
                 hatches=None,
                 **handle_kwargs
             ),
-            style="rectangle",
             title=hue_label,
         )
     else:
@@ -483,7 +480,6 @@ def _legend(
                     hatches=None,
                     **handle_kwargs
                 ),
-                style="rectangle",
                 title=hue_label,
             )
         
@@ -498,6 +494,5 @@ def _legend(
                     hatches=list(hatch_mapping.values()),
                     **handle_kwargs
                 ),
-                style="rectangle",
                 title=hatch_label,
             )

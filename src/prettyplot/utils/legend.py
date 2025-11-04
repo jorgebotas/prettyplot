@@ -9,10 +9,8 @@ visual style of scatterplots and barplots.
 
 from typing import List, Dict, Optional, Tuple, Any, Union
 from matplotlib.axes import Axes
-from matplotlib.collections import PathCollection
 from matplotlib.cm import ScalarMappable
 from matplotlib.colorbar import Colorbar
-from matplotlib.figure import Figure
 from matplotlib.legend import Legend
 from matplotlib.legend_handler import HandlerBase, HandlerPatch
 from matplotlib.patches import Circle, Rectangle, Patch
@@ -25,6 +23,31 @@ from prettyplot.config import DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_COLOR
 # Custom Legend Handlers
 # =============================================================================
 
+class RectanglePatch(Patch):
+    """
+    Custom rectangle patch object for legend handles.
+    """
+    def __init__(self, **kwargs):
+        if "markersize" in kwargs:
+            del kwargs["markersize"]
+        super().__init__(**kwargs)
+class CirclePatch(Patch):
+    """
+    Custom circle patch object for legend handles.
+    Embeds markersize property.
+    """
+    def __init__(self, **kwargs):
+        markersize = kwargs.pop("markersize", plt.rcParams["lines.markersize"])
+        self.markersize = markersize
+        super().__init__(**kwargs)
+
+    def get_markersize(self) -> float:
+        return self.markersize
+
+    def set_markersize(self, markersize: float):
+        if markersize is None or markersize == 0:
+            markersize = plt.rcParams["lines.markersize"]
+        self.markersize = markersize
 
 class HandlerCircle(HandlerBase):
     """
@@ -103,63 +126,18 @@ class HandlerCircle(HandlerBase):
         edgecolor = None
 
         # Extract from Patch (created by create_legend_handles)
-        if isinstance(orig_handle, Patch):
+        if isinstance(orig_handle, CirclePatch):
             color = orig_handle.get_facecolor()
             edgecolor = orig_handle.get_edgecolor()
             alpha = orig_handle.get_alpha() if orig_handle.get_alpha() is not None else alpha
             linewidth = orig_handle.get_linewidth() if orig_handle.get_linewidth() else linewidth
-            
-        # Extract from PathCollection (scatterplot)
-        elif isinstance(orig_handle, PathCollection):
-            facecolors = orig_handle.get_facecolors()
-            if len(facecolors) > 0:
-                color = facecolors[0]
-            
-            edgecolors = orig_handle.get_edgecolors()
-            if len(edgecolors) > 0:
-                edgecolor = edgecolors[0]
-            
-            # Get size from sizes array
-            sizes = orig_handle.get_sizes()
-            if len(sizes) > 0:
-                size = (sizes[0] ** 0.5) / 2
-            
-            # Get alpha and linewidth if available
-            if hasattr(orig_handle, "get_alpha") and orig_handle.get_alpha():
-                alpha = orig_handle.get_alpha()
-            if hasattr(orig_handle, "get_linewidths"):
-                lws = orig_handle.get_linewidths()
-                if len(lws) > 0:
-                    linewidth = lws[0]
+            size = orig_handle.get_markersize() if orig_handle.get_markersize() is not None else size
         
-        # Handle tuple format (color, size, alpha, linewidth)
-        elif isinstance(orig_handle, tuple):
-            if len(orig_handle) >= 1:
-                color = orig_handle[0]
-            if len(orig_handle) >= 2:
-                size = orig_handle[1]
-            if len(orig_handle) >= 3:
-                alpha = orig_handle[2]
-            if len(orig_handle) >= 4:
-                linewidth = orig_handle[3]
-        
-        # Fallback: try generic extraction
-        else:
-            if hasattr(orig_handle, "get_facecolor"):
-                color = orig_handle.get_facecolor()
-            if hasattr(orig_handle, "get_edgecolor"):
-                edgecolor = orig_handle.get_edgecolor()
-            if hasattr(orig_handle, "get_alpha") and orig_handle.get_alpha():
-                alpha = orig_handle.get_alpha()
-            if hasattr(orig_handle, "get_linewidth") and orig_handle.get_linewidth():
-                linewidth = orig_handle.get_linewidth()
-
         # Use face color as edge color if not specified
         if edgecolor is None:
             edgecolor = color
 
         return color, size, alpha, linewidth, edgecolor
-
 
 class HandlerRectangle(HandlerPatch):
     """
@@ -276,14 +254,9 @@ class HandlerRectangle(HandlerPatch):
 # =============================================================================
 
 
-def get_legend_handler_map(style: str = "auto") -> Dict[type, HandlerBase]:
+def get_legend_handler_map() -> Dict[type, HandlerBase]:
     """
     Get a handler map for automatic legend styling.
-    
-    Parameters
-    ----------
-    style : str, default="auto"
-        Style of legend markers: "rectangle", "circle", or "auto" (determines from context).
     
     Returns
     -------
@@ -294,16 +267,16 @@ def get_legend_handler_map(style: str = "auto") -> Dict[type, HandlerBase]:
     handler_rectangle = HandlerRectangle()
     
     return {
-        PathCollection: handler_circle,
         Rectangle: handler_rectangle,
-        Patch: handler_circle if style == "circle" else handler_rectangle,
+        CirclePatch: handler_circle,
+        Patch: handler_rectangle,
     }
-
 
 def create_legend_handles(
     labels: List[str],
     colors: Optional[List[str]] = None,
     hatches: Optional[List[str]] = None,
+    sizes: Optional[List[float]] = None,
     alpha: float = DEFAULT_ALPHA,
     linewidth: float = DEFAULT_LINEWIDTH,
     style: str = "rectangle",
@@ -320,6 +293,8 @@ def create_legend_handles(
         Colors for each legend entry.
     hatches : List[str], optional
         Hatch patterns for each legend entry.
+    sizes : List[float], optional
+        Sizes for each legend entry.
     alpha : float, default=DEFAULT_ALPHA
         Transparency level for fill layers.
     linewidth : float, default=DEFAULT_LINEWIDTH
@@ -334,26 +309,27 @@ def create_legend_handles(
     List[Patch]
         List of Patch objects with embedded properties.
     """
-    handles = []
 
     if colors is None:
         colors = [color if color is not None else DEFAULT_COLOR] * len(labels)
 
-    # Ensure hatches list matches length of labels if provided
-    if hatches is None or len(hatches) == 0:
+    if hatches is None or len(hatches) == 0 or style == "circle":
         hatches = [""] * len(labels)
-    elif len(hatches) != len(labels):
-        hatches = [hatches[i % len(hatches)] for i in range(len(labels))]
 
-    # Create handles with properties embedded
-    for label, col, hatch in zip(labels, colors, hatches):
-        handle = Patch(
+    if sizes is None or len(sizes) == 0:
+        sizes = [plt.rcParams["lines.markersize"]] * len(labels)
+
+    handles = []
+    patch = CirclePatch if style == "circle" else RectanglePatch
+    for label, col, hatch, size in zip(labels, colors, hatches, sizes):
+        handle = patch(
             facecolor=col,
             edgecolor=col,
             alpha=alpha,  # Store alpha in handle
             linewidth=linewidth,  # Store linewidth in handle
             label=label,
-            hatch=hatch if style == "rectangle" else None,
+            hatch=hatch,
+            markersize=size
         )
         handles.append(handle)
 
@@ -400,7 +376,6 @@ class LegendBuilder:
         handles: List,
         title: str = "",
         frameon: bool = False,
-        style: str = "rectangle",
         **kwargs
     ) -> Legend:
         """
@@ -414,8 +389,6 @@ class LegendBuilder:
             Legend title.
         frameon : bool
             Whether to show frame.
-        style : str, default="rectangle"
-            Style: "rectangle", "circle".
         **kwargs
             Additional kwargs for ax.legend().
         
@@ -424,9 +397,6 @@ class LegendBuilder:
         Legend
             The created legend object.
         """
-        # Get appropriate handler map
-        handler_map = get_legend_handler_map(style=style)
-        
         default_kwargs = {
             "loc": "upper left",
             "bbox_to_anchor": (self.x_offset, self.current_y),
@@ -438,7 +408,7 @@ class LegendBuilder:
             "handletextpad": 0.5,
             "labelspacing": 0.3,
             "alignment": "left",
-            "handler_map": handler_map,  # Apply custom handlers
+            "handler_map": kwargs.pop("handler_map", get_legend_handler_map())
         }
         default_kwargs.update(kwargs)
         

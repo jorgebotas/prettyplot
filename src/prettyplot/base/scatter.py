@@ -9,12 +9,15 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
+from matplotlib.cm import ScalarMappable
+from matplotlib.ticker import MaxNLocator
+import numpy as np
 import pandas as pd
 from typing import Optional, Tuple, Union, Dict, List
+
 from prettyplot.config import DEFAULT_FIGSIZE, DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_COLOR
 from prettyplot.themes.colors import resolve_palette_mapping
 from prettyplot.utils import is_categorical, is_numeric, create_legend_handles, create_legend_builder
-from matplotlib.cm import ScalarMappable
 
 
 def scatterplot(
@@ -210,8 +213,8 @@ def scatterplot(
         "hue": hue,
         "hue_norm": hue_norm,
         "size": size,
-        "sizes": sizes,
-        "size_norm": size_norm,
+        "sizes": sizes if size is not None else None,
+        "size_norm": size_norm if size is not None else None,
         "ax": ax,
         "color": color,
         "palette": palette,
@@ -273,6 +276,7 @@ def scatterplot(
     if legend:
         _legend(
             ax=ax,
+            data=data,
             hue=hue,
             size=size,
             color=color,
@@ -281,6 +285,7 @@ def scatterplot(
             linewidth=linewidth,
             hue_norm=hue_norm,
             size_norm=size_norm,
+            sizes=sizes,
             kwargs=legend_kws,
         )
 
@@ -294,7 +299,6 @@ def scatterplot(
         )
 
     return fig, ax
-
 
 def _handle_categorical_axes(
     data: pd.DataFrame,
@@ -356,43 +360,113 @@ def _handle_categorical_axes(
 
     return data, x_col, y_col, x_labels, y_labels
 
+def _get_size_ticks(
+        values: np.ndarray,
+        sizes: Tuple[float, float],
+        size_norm: Normalize,
+        nbins: int = 4,
+        min_n_ticks: int = 3,
+        include_min_max: bool = False,
+    ) -> Tuple[List[str], List[float]]:
+    """
+    Get size ticks for size legend.
+    Uses MaxNLocator to generate ticks.
+    Includes actual min and max from data.
+    Rounds to reasonable precision.
+    Falls back to min and max if no ticks are generated.
+
+    Parameters
+    ----------
+    values : np.ndarray
+        Values to get size ticks for.
+    sizes : Tuple[float, float]
+        (min_size, max_size) in points^2.
+    size_norm : Normalize
+        Size normalization object.
+    nbins : int, default=4
+        Number of bins used by MaxNLocator.
+    min_n_ticks : int, default=3
+        Minimum number of ticks to generate.
+    include_min_max : bool, default=False
+        Whether to include actual min and max from data.
+        If True, the first and last tick will be the actual min and max.
+        This is useful if the data is very small and the min and max are not representive.
+    Returns
+    -------
+    tick_labels : List[str]
+        Tick labels.
+    tick_sizes : List[float]
+        Tick sizes.
+    """
+    unique_vals = np.unique(values[~np.isnan(values)])
+    v_min, v_max = size_norm.vmin, size_norm.vmax
+    
+    if len(unique_vals) <= 4:
+        # If few unique values, show them all
+        ticks = unique_vals
+    else:
+        # Use MaxNLocator but ensure we capture extremes
+        locator = MaxNLocator(nbins=nbins, min_n_ticks=min_n_ticks)
+        ticks = locator.tick_values(v_min, v_max)
+        ticks = ticks[(ticks >= v_min) & (ticks <= v_max)]
+        
+        # Include actual min and max from data
+        if include_min_max:
+            ticks = np.unique(np.concatenate([[v_min], ticks, [v_max]]))
+    
+    # Round to reasonable precision
+    if v_max - v_min > 10:
+        ticks = np.array([int(np.round(t)) for t in ticks])
+        ticks = np.unique(ticks)
+    else:
+        ticks = np.unique(np.round(ticks, 1))
+    
+    if ticks.size == 0:  # Fallback
+        ticks = np.array([v_min, v_max])
+    
+    def _get_markersize(size: float) -> float:
+        normalized_size = size_norm(size)
+        actual_size = min(sizes[0] + normalized_size * (sizes[1] - sizes[0]), sizes[1]) 
+        # Convert to markersize for legend
+        return np.sqrt(actual_size / np.pi) * 2
+
+    return [str(t) for t in ticks], [_get_markersize(t) for t in ticks]
     
 def _legend(
         ax: Axes,
+        data: pd.DataFrame, # for size legend
         hue: Optional[str],
         size: Optional[str],
         color: Optional[str],
         palette: Optional[Union[str, Dict, List]],
         hue_norm: Optional[Normalize],
         size_norm: Optional[Normalize],
-        kwargs: Optional[Dict] = None,
+        sizes: Tuple[float, float],
         alpha: float = DEFAULT_ALPHA,
         linewidth: float = DEFAULT_LINEWIDTH,
+        kwargs: Optional[Dict] = None,
     ) -> None:
     """
     Create legend handles for scatter plot.
     """
     kwargs = kwargs or {}
+    handle_kwargs = dict(alpha=alpha, linewidth=linewidth, color=color, style="circle")
     builder = create_legend_builder(ax=ax)
 
-    # Add hue legend if hue is not None
+    # Add hue legend
     if hue is not None:
         hue_label = kwargs.pop("hue_label", hue)
-        if isinstance(palette, dict):
-            # categorical legend
+        if isinstance(palette, dict):  # categorical legend
             builder.add_legend(
                 handles=create_legend_handles(
                     labels=palette.keys(),
                     colors=palette.values(),
-                    color=color,
-                    alpha=alpha,
-                    linewidth=linewidth,
+                    **handle_kwargs
                 ),
-                style="circle",
                 title=hue_label,
             )
 
-        else: # continuous colorbar
+        else:  # continuous colorbar
             mappable = ScalarMappable(norm=hue_norm, cmap=palette)
             builder.add_colorbar(
                 mappable=mappable, 
@@ -400,7 +474,25 @@ def _legend(
                 height=kwargs.pop("hue_height", 0.2),
                 width=kwargs.pop("hue_width", 0.05),
             )
+
+    # Add size legend
     if size is not None:
-        # TODO: Add size legend
-        # based on size_norm ticks
-        pass
+        tick_color = color if hue is None else "gray"
+        handle_kwargs["color"] = tick_color
+        tick_labels, tick_sizes = _get_size_ticks(
+            values=data[size].dropna().values,
+            sizes=sizes,
+            size_norm=size_norm,
+            nbins=kwargs.pop("size_nbins", 4),
+            min_n_ticks=kwargs.pop("size_min_n_ticks", 3),
+            include_min_max=kwargs.pop("size_include_min_max", False),
+        )
+        builder.add_legend(
+            handles=create_legend_handles(
+                labels=tick_labels,
+                sizes=tick_sizes,
+                **handle_kwargs
+            ),
+            title=kwargs.pop("size_label", size),
+            labelspacing=kwargs.pop("labelspacing", 1/3 * max(1, sizes[1] / 200)),
+        )
