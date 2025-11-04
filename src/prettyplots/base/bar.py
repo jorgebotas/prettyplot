@@ -1,5 +1,5 @@
 """
-Bar plot functions for prettyplot.
+Bar plot functions for prettyplots.
 
 This module provides publication-ready bar plot visualizations with
 flexible styling and grouping options.
@@ -11,10 +11,10 @@ from matplotlib.axes import Axes
 import seaborn as sns
 import pandas as pd
 
-from prettyplot.config import DEFAULT_LINEWIDTH, DEFAULT_ALPHA, DEFAULT_CAPSIZE, DEFAULT_FIGSIZE
-from prettyplot.themes.colors import resolve_palette_mapping, DEFAULT_COLOR
-from prettyplot.themes.hatches import resolve_hatch_mapping
-from prettyplot.utils import is_categorical, create_legend_handles, create_legend_builder
+from prettyplots.config import DEFAULT_LINEWIDTH, DEFAULT_ALPHA, DEFAULT_CAPSIZE, DEFAULT_FIGSIZE
+from prettyplots.themes.colors import resolve_palette_mapping, DEFAULT_COLOR
+from prettyplots.themes.hatches import resolve_hatch_mapping
+from prettyplots.utils import is_categorical, create_legend_handles, create_legend_builder
 
 _SPLIT_SEPARATOR = "---"
 
@@ -85,7 +85,7 @@ def barplot(
         Figure size (width, height) if creating new figure.
     palette : str, dict, or list, optional
         Color palette. Can be:
-        - str: seaborn palette name or prettyplot palette name
+        - str: seaborn palette name or prettyplots palette name
         - dict: mapping from hue values to colors
         - list: list of colors
     hatch_mapping : dict, optional

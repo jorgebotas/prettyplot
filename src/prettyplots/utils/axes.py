@@ -1,5 +1,5 @@
 """
-Axis manipulation utilities for prettyplot.
+Axis manipulation utilities for prettyplots.
 
 This module provides functions for manipulating axes appearance,
 including spines, grids, labels, and limits.
@@ -28,7 +28,7 @@ def adjust_spines(
         Which spines to show. Can be:
         - 'all': Show all spines
         - 'none': Hide all spines
-        - 'left-bottom': Show only left and bottom (default for prettyplot)
+        - 'left-bottom': Show only left and bottom (default for prettyplots)
         - 'box': Show all four spines (box around plot)
         - List of spine names: ['left', 'bottom', 'right', 'top']
     color : str, default='0.2'

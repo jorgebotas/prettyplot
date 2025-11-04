@@ -1,5 +1,5 @@
 """
-Marker definitions and utilities for prettyplot.
+Marker definitions and utilities for prettyplots.
 
 This module provides standard marker sets and utilities for consistent
 marker usage across visualizations.
@@ -31,7 +31,7 @@ Use case: When plotting multiple categories in scatter plots or line plots
 where shape needs to distinguish groups in addition to or instead of color.
 
 Example:
-    >>> import prettyplot as pp
+    >>> import prettyplots as pp
     >>> markers = pp.STANDARD_MARKERS
     >>> for i, category in enumerate(categories):
     ...     pp.scatterplot(data[data.cat==category], marker=markers[i])
@@ -87,7 +87,7 @@ MARKER_SIZES: Dict[str, float] = {
 Recommended marker sizes for scatter plots (in points^2).
 
 Use case: Provides consistent sizing across plots. These sizes are
-calibrated to work well with prettyplot's default styling.
+calibrated to work well with prettyplots's default styling.
 
 Example:
     >>> pp.scatterplot(data, x='x', y='y', s=pp.MARKER_SIZES['medium'])
@@ -131,7 +131,7 @@ or black-and-white printing), hatch patterns provide an additional visual
 encoding dimension.
 
 Example:
-    >>> import prettyplot as pp
+    >>> import prettyplots as pp
     >>> hatches = pp.HATCH_PATTERNS
     >>> pp.barplot(data, x='group', y='value', hatch=hatches[1])
 """
