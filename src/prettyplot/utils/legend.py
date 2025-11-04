@@ -125,9 +125,9 @@ class HandlerCircle(HandlerBase):
                 size = (sizes[0] ** 0.5) / 2
             
             # Get alpha and linewidth if available
-            if hasattr(orig_handle, 'get_alpha') and orig_handle.get_alpha():
+            if hasattr(orig_handle, "get_alpha") and orig_handle.get_alpha():
                 alpha = orig_handle.get_alpha()
-            if hasattr(orig_handle, 'get_linewidths'):
+            if hasattr(orig_handle, "get_linewidths"):
                 lws = orig_handle.get_linewidths()
                 if len(lws) > 0:
                     linewidth = lws[0]
@@ -283,7 +283,7 @@ def get_legend_handler_map(style: str = "auto") -> Dict[type, HandlerBase]:
     Parameters
     ----------
     style : str, default="auto"
-        Style of legend markers: 'rectangle', 'circle', or 'auto' (determines from context).
+        Style of legend markers: "rectangle", "circle", or "auto" (determines from context).
     
     Returns
     -------
@@ -324,8 +324,8 @@ def create_legend_handles(
         Transparency level for fill layers.
     linewidth : float, default=DEFAULT_LINEWIDTH
         Width of edge lines.
-    style : str, default='rectangle'
-        Style of legend markers: 'rectangle' or 'circle'.
+    style : str, default="rectangle"
+        Style of legend markers: "rectangle" or "circle".
     color : str, optional
         Single color for all entries if colors not provided.
     
@@ -341,7 +341,7 @@ def create_legend_handles(
 
     # Ensure hatches list matches length of labels if provided
     if hatches is None or len(hatches) == 0:
-        hatches = [''] * len(labels)
+        hatches = [""] * len(labels)
     elif len(hatches) != len(labels):
         hatches = [hatches[i % len(hatches)] for i in range(len(labels))]
 
@@ -375,7 +375,6 @@ class LegendBuilder:
     def __init__(
         self,
         ax: Axes,
-        fig: Figure,
         x_offset: float = 1.02,
         spacing: float = 0.03,
     ):
@@ -384,15 +383,13 @@ class LegendBuilder:
         ----------
         ax : Axes
             Main plot axes.
-        fig : Figure
-            Figure object.
         x_offset : float
             Horizontal offset from right edge of axes (in axes coordinates).
         spacing : float
             Vertical spacing between elements (in axes coordinates).
         """
         self.ax = ax
-        self.fig = fig
+        self.fig = ax.get_figure()
         self.x_offset = x_offset
         self.spacing = spacing
         self.current_y = 1.0
@@ -418,7 +415,7 @@ class LegendBuilder:
         frameon : bool
             Whether to show frame.
         style : str, default="rectangle"
-            Style: 'rectangle', 'circle'.
+            Style: "rectangle", "circle".
         **kwargs
             Additional kwargs for ax.legend().
         
@@ -431,26 +428,28 @@ class LegendBuilder:
         handler_map = get_legend_handler_map(style=style)
         
         default_kwargs = {
-            'loc': 'upper left',
-            'bbox_to_anchor': (self.x_offset, self.current_y),
-            'bbox_transform': self.ax.transAxes,
-            'title': title,
-            'frameon': frameon,
-            'borderaxespad': 0,
-            'borderpad': 0,
-            'handletextpad': 0.5,
-            'labelspacing': 0.3,
-            'alignment': 'left',
-            'handler_map': handler_map,  # Apply custom handlers
+            "loc": "upper left",
+            "bbox_to_anchor": (self.x_offset, self.current_y),
+            "bbox_transform": self.ax.transAxes,
+            "title": title,
+            "frameon": frameon,
+            "borderaxespad": 0,
+            "borderpad": 0,
+            "handletextpad": 0.5,
+            "labelspacing": 0.3,
+            "alignment": "left",
+            "handler_map": handler_map,  # Apply custom handlers
         }
         default_kwargs.update(kwargs)
         
+        existing_legends = [e[1] for e in self.elements if e[0] == "legend"]
         leg = self.ax.legend(handles=handles, **default_kwargs)
+        leg.set_clip_on(False)
         
-        if self.elements:
-            self.ax.add_artist(leg)
-        
-        self.elements.append(('legend', leg))
+        for existing_legend in existing_legends:
+            self.ax.add_artist(existing_legend)
+
+        self.elements.append(("legend", leg))
         self._update_position_after_legend(leg)
         
         return leg
@@ -461,7 +460,7 @@ class LegendBuilder:
         label: str = "",
         height: float = 0.2,
         width: float = 0.05,
-        title_position: str = 'top',  # 'top' or 'right'
+        title_position: str = "top",  # "top" or "right"
         title_pad: float = 0.05,
         **kwargs
     ) -> Colorbar:
@@ -479,8 +478,8 @@ class LegendBuilder:
         width : float
             Width of colorbar (in axes coordinates).
         title_position : str
-            Position of title: 'top' (horizontal, above colorbar) or 
-            'right' (vertical, default matplotlib style).
+            Position of title: "top" (horizontal, above colorbar) or 
+            "right" (vertical, default matplotlib style).
         title_pad : float
             Padding between title and colorbar.
         **kwargs
@@ -495,17 +494,17 @@ class LegendBuilder:
         # Calculate colorbar position
         ax_pos = self.ax.get_position()
 
-        if title_position == 'top' and label:
+        if title_position == "top" and label:
             # Add title text at current_y
             title_text = self.ax.text(
                 self.x_offset, 
                 self.current_y,
                 label,
                 transform=self.ax.transAxes,
-                ha='left',
-                va='top',  # Align top of text with current_y
-                fontsize=plt.rcParams.get('legend.title_fontsize', plt.rcParams['font.size']),
-                fontweight='normal'
+                ha="left",
+                va="top",  # Align top of text with current_y
+                fontsize=plt.rcParams.get("legend.title_fontsize", plt.rcParams["font.size"]),
+                fontweight="normal"
             )
             
             # Force draw to measure title height
@@ -541,13 +540,13 @@ class LegendBuilder:
         default_kwargs.update(kwargs)
         
         cbar = self.fig.colorbar(mappable, cax=cbar_ax, **default_kwargs)
-        cbar.set_label("" if title_position == 'top' else label)
+        cbar.set_label("" if title_position == "top" else label)
         
-        self.elements.append(('colorbar', cbar))
+        self.elements.append(("colorbar", cbar))
         
         # Update position for next element
         # Add extra spacing for the title if on top
-        title_extra_space = 0.04 if title_position == 'top' and label else 0
+        title_extra_space = 0.04 if title_position == "top" and label else 0
         self.current_y -= (height + self.spacing + title_extra_space)
         
         return cbar
@@ -571,11 +570,10 @@ class LegendBuilder:
 
 
 def create_legend_builder(
-    ax: Axes,
-    fig: Optional[Figure] = None,
-    x_offset: float = 1.02,
-    spacing: float = 0.03,
-) -> LegendBuilder:
+        ax: Axes,
+        x_offset: float = 1.02,
+        spacing: float = 0.03,
+    ) -> LegendBuilder:
     """
     Create a LegendBuilder for modular legend construction.
     
@@ -585,8 +583,6 @@ def create_legend_builder(
     ----------
     ax : Axes
         Main plot axes.
-    fig : Figure, optional
-        Figure object. If None, extracted from ax.
     x_offset : float
         Horizontal offset from right edge of axes.
     spacing : float
@@ -599,22 +595,18 @@ def create_legend_builder(
     
     Examples
     --------
-    >>> fig, ax = pp.scatterplot(data=df, x='x', y='y', hue='temp', legend=False)
-    >>> builder = pp.legend_builder(ax)
-    >>> builder.add_colorbar(label='Temperature', title_position='top')
-    >>> builder.add_legend(size_handles, title='Size')
+    >>> fig, ax = pp.scatterplot(data=df, x="x", y="y", hue="temp", legend=False)
+    >>> builder = pp.create_legend_builder(ax)
+    >>> builder.add_colorbar(label="Temperature", title_position="top")
+    >>> builder.add_legend(size_handles, title="Size")
     """
-    if fig is None:
-        fig = ax.get_figure()
-    
-    return LegendBuilder(ax, fig, x_offset=x_offset, spacing=spacing)
-
+    return LegendBuilder(ax, x_offset=x_offset, spacing=spacing)
 
 __all__ = [
-    'HandlerCircle',
-    'HandlerRectangle',
-    'get_legend_handler_map',
-    'create_legend_handles',
-    'LegendBuilder',
-    'legend_builder',
+    "HandlerCircle",
+    "HandlerRectangle",
+    "get_legend_handler_map",
+    "create_legend_handles",
+    "LegendBuilder",
+    "create_legend_builder",
 ]

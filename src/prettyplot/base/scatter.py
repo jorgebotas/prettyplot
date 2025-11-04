@@ -10,14 +10,11 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 import pandas as pd
-import numpy as np
 from typing import Optional, Tuple, Union, Dict, List
-from prettyplot.utils.legend import LegendBuilder
 from prettyplot.config import DEFAULT_FIGSIZE, DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_COLOR
 from prettyplot.themes.colors import resolve_palette_mapping
-from prettyplot.utils import is_categorical, is_numeric, create_legend_handles, legend as pp_legend
+from prettyplot.utils import is_categorical, is_numeric, create_legend_handles, create_legend_builder
 from matplotlib.cm import ScalarMappable
-from matplotlib.legend import Legend
 
 
 def scatterplot(
@@ -245,14 +242,20 @@ def scatterplot(
 
     # Make second layer hollow
     collections = ax.collections
-    if len(collections) >= 2:
-        edge_collection = collections[-1]
-        face_collection = collections[-2]
-        edge_collection.set_facecolors("none")
-        edge_collection.set_edgecolors(
-            edgecolor if edgecolor else face_collection.get_facecolors()
-        )
-        edge_collection.set_linewidths(linewidth)
+    face_collection = collections[0]
+    edge_collection = collections[1]
+    edge_collection.set_facecolors("none")
+    edge_collection.set_edgecolors(
+        edgecolor if edgecolor else face_collection.get_facecolors()
+    )
+    edge_collection.set_linewidths(linewidth)
+    # Set colormap and normalization for face collection
+    # Could be used by legend builder to create colorbar
+    if hue is not None:
+        face_collection.set_label(hue)
+        if hue_norm is not None:
+            face_collection.set_cmap(palette) # is a string or cmap
+            face_collection.set_norm(hue_norm)
 
     # Handle categorical axis labels
     if x_labels is not None:
@@ -370,42 +373,33 @@ def _legend(
     Create legend handles for scatter plot.
     """
     kwargs = kwargs or {}
+    builder = create_legend_builder(ax=ax)
 
-    if hue is None:
-        return
+    # Add hue legend if hue is not None
+    if hue is not None:
+        hue_label = kwargs.pop("hue_label", hue)
+        if isinstance(palette, dict):
+            # categorical legend
+            builder.add_legend(
+                handles=create_legend_handles(
+                    labels=palette.keys(),
+                    colors=palette.values(),
+                    color=color,
+                    alpha=alpha,
+                    linewidth=linewidth,
+                ),
+                style="circle",
+                title=hue_label,
+            )
 
-    if palette is None:
-        return
-
-    legend_builder = LegendBuilder(
-        ax=ax, 
-        fig=ax.get_figure(), 
-    )
-
-    hue_label = kwargs.pop("hue_label", hue)
-    
-    if isinstance(palette, dict):
-        # categorical legend
-        legend_builder.add_legend(
-            handles=create_legend_handles(
-                labels=palette.keys(),
-                colors=palette.values(),
-                color=color,
-                alpha=alpha,
-                linewidth=linewidth,
-            ),
-            style="circle",
-            title=hue_label,
-        )
-
-    else: # continuous colorbar
-        mappable = ScalarMappable(norm=hue_norm, cmap=palette)
-        legend_builder.add_colorbar(
-            mappable=mappable, 
-            label=hue_label,
-            height=kwargs.pop("hue_height", 0.2),
-            width=kwargs.pop("hue_width", 0.05),
-        )
+        else: # continuous colorbar
+            mappable = ScalarMappable(norm=hue_norm, cmap=palette)
+            builder.add_colorbar(
+                mappable=mappable, 
+                label=hue_label,
+                height=kwargs.pop("hue_height", 0.2),
+                width=kwargs.pop("hue_width", 0.05),
+            )
     if size is not None:
         # TODO: Add size legend
         # based on size_norm ticks

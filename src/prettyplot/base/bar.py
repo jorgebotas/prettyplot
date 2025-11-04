@@ -8,16 +8,13 @@ flexible styling and grouping options.
 from typing import Optional, List, Dict, Tuple, Union
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
-from matplotlib.collections import LineCollection
 import seaborn as sns
-from matplotlib.legend import Legend
 import pandas as pd
-import numpy as np
 
 from prettyplot.config import DEFAULT_LINEWIDTH, DEFAULT_ALPHA, DEFAULT_CAPSIZE, DEFAULT_FIGSIZE
 from prettyplot.themes.colors import resolve_palette_mapping, DEFAULT_COLOR
 from prettyplot.themes.hatches import resolve_hatch_mapping
-from prettyplot.utils import is_categorical, create_legend_handles, legend as pp_legend
+from prettyplot.utils import is_categorical, create_legend_handles, create_legend_builder
 
 _SPLIT_SEPARATOR = "---"
 
@@ -39,8 +36,10 @@ def barplot(
     palette: Optional[Union[str, Dict, List]] = None,
     hatch_mapping: Optional[Dict[str, str]] = None,
     legend: bool = True,
+    legend_kws: Optional[Dict] = None,
     errorbar: str = "se",
     gap: float = 0.1,
+    order: Optional[List[str]] = None,
     hue_order: Optional[List[str]] = None,
     hatch_order: Optional[List[str]] = None,
     **kwargs
@@ -99,6 +98,8 @@ def barplot(
         "ci" (confidence interval), or None for no error bars.
     gap : float, default=0.1
         Gap between bar groups (0-1).
+    order : list, optional
+        Order of x/y-axis categories. If provided, determines bar order.
     hue_order : list, optional
         Hue order. If provided, determines bar order within groups.
     hatch_order : list, optional
@@ -151,21 +152,26 @@ def barplot(
         hatch_mapping=hatch_mapping,
     )
 
+
+    # Fint out categorical axis
+    categorical_axis = x if is_categorical(data[x]) else y
+
+    prepareA = hue is not None and (hue != categorical_axis)
+    prepareB = hatch is not None and (hatch != categorical_axis)
     data = _prepare_split_data(
         data, 
         hue, 
         hatch, 
-        orderA=hue_order or list(palette.keys()) if hue is not None else None, 
-        orderB=hatch_order or list(hatch_mapping.keys()) if hatch is not None else None
+        categorical_axis,
+        orderA=(hue_order or list(palette.keys())) if prepareA else None,
+        orderB=(hatch_order or list(hatch_mapping.keys())) if prepareB else None,
+        order_categorical_axis=order,
     )
 
     # Determine the strategy for handling hatch and hue
     # Key insight: use hue=hatch for splitting when needed, then override colors
     sns_hue = hue
     sns_palette = palette
-
-    # Fint out categorical axis
-    categorical_axis = x if is_categorical(data[x]) else y
 
     # hatch split only needed if hatch is not the same as the categorical axis
     split_by_hatch = hatch is not None and hatch != categorical_axis
@@ -190,8 +196,8 @@ def barplot(
         "x": x,
         "y": y,
         "hue": sns_hue,
+        "color": color if sns_hue is None else None,
         "palette": sns_palette if sns_hue else None,
-        "color": color,
         "fill": False,
         "linewidth": linewidth,
         "capsize": capsize,
@@ -247,6 +253,7 @@ def barplot(
             color=color,
             palette=palette,
             hatch_mapping=hatch_mapping,
+            kwargs=legend_kws,
         )
 
     # Set labels
@@ -266,8 +273,10 @@ def _prepare_split_data(
         data: pd.DataFrame, 
         colA: str,
         colB: str,
+        categorical_axis: str,
         orderA: Optional[List[str]] = None,
         orderB: Optional[List[str]] = None,
+        order_categorical_axis: Optional[List[str]] = None,
     ) -> pd.DataFrame:
     """
     Prepare data for split bar plotting by creating a combined column.
@@ -280,6 +289,7 @@ def _prepare_split_data(
         Column name for first split
     colB : str
         Column name for second split
+    
     orderA : list, optional
         Order of column A values. If provided, data will be sorted to match this order.
     orderB : list, optional
@@ -305,6 +315,13 @@ def _prepare_split_data(
 
     # Sort the data by the columns in the order of the columns
     columns = ([colA] if prepareA else []) + ([colB] if prepareB else [])
+    if order_categorical_axis is not None:
+        data[categorical_axis] = pd.Categorical(
+            data[categorical_axis], 
+            categories=order_categorical_axis, 
+            ordered=True
+        )
+        columns.insert(0, categorical_axis)
     data.sort_values(columns, inplace=True)
     
     if prepareA and prepareB:
@@ -390,16 +407,17 @@ def _apply_hatches_and_override_colors(
                 errorbars[bar_idx].set_color(color)
 
 def _legend(
-    ax: Axes,
-    hue: Optional[str],
-    hatch: str,
-    categorical_axis: str,
-    alpha: float,
-    linewidth: float,
-    color: Optional[str],
-    palette: Optional[Union[str, Dict, List]],
-    hatch_mapping: Optional[Dict[str, str]],
-) -> Legend:
+        ax: Axes,
+        hue: Optional[str],
+        hatch: str,
+        categorical_axis: str,
+        alpha: float,
+        linewidth: float,
+        color: Optional[str],
+        palette: Optional[Union[str, Dict, List]],
+        hatch_mapping: Optional[Dict[str, str]],
+        kwargs: Optional[Dict] = None,
+    ) -> None:
     """
     Create legend handles for bar plot. 
     If hue or hatch is the same as the categorical axis, we can skip corresponding legend.
@@ -407,48 +425,79 @@ def _legend(
     If double split, we need to create a legend for the hue and hatch separately.
     Otherwise, we need to create a legend for the hue and hatch (same as double split)
     """
-    handles = []
-    kwargs = dict(alpha=alpha, linewidth=linewidth)
+    kwargs = kwargs or {}
+
+    builder = create_legend_builder(ax=ax)
+
+    handle_kwargs = dict(alpha=alpha, linewidth=linewidth, color=color)
+    hue_label = kwargs.pop("hue_label", hue)
+    hatch_label = kwargs.pop("hatch_label", hatch)
     
     if hue == hatch:
         # combined legend for hue and hatch
-        # make sure order is correct in palette and hatch_mapping
         values = list(palette.keys())
-        handles.extend(create_legend_handles(
-            labels=values,
-            colors=[palette[v] for v in values],
-            hatches=[hatch_mapping[v] for v in values],
-        ))
+        builder.add_legend(
+            handles=create_legend_handles(
+                labels=values,
+                colors=[palette[v] for v in values],
+                hatches=[hatch_mapping[v] for v in values],
+                **handle_kwargs
+            ),
+            style="rectangle",
+            title=hue_label,
+        )
 
     elif hue == categorical_axis:
-        # legend for hatch
-        handles.extend(create_legend_handles(
-            labels=hatch_mapping.keys(),
-            colors=[color or DEFAULT_COLOR for _ in hatch_mapping.keys()],
-            hatches=[hatch_mapping[v] for v in hatch_mapping.keys()],
-        ))
+        # legend for hatch only
+        builder.add_legend(
+            handles=create_legend_handles(
+                labels=list(hatch_mapping.keys()),
+                colors=[color or DEFAULT_COLOR] * len(hatch_mapping),
+                hatches=list(hatch_mapping.values()),
+                **handle_kwargs
+            ),
+            style="rectangle",
+            title=hatch_label,
+        )
 
     elif hatch == categorical_axis:
-        # legend for hue
-        handles = create_legend_handles(
-            labels=palette.keys(),
-            colors=[palette[v] for v in palette.keys()],
-            hatches=None,
-        )
-    else:
-        # legend for hue and hatch separately
-        if palette is not None and len(palette) > 0:
-            handles.extend(create_legend_handles(
-                labels=palette.keys(),
+        # legend for hue only
+        builder.add_legend(
+            handles=create_legend_handles(
+                labels=list(palette.keys()),
                 colors=[palette[v] for v in palette.keys()],
                 hatches=None,
-            ))
+                **handle_kwargs
+            ),
+            style="rectangle",
+            title=hue_label,
+        )
+    else:
+        # legend for hue and hatch separately (DOUBLE SPLIT)
+        # Add hue legend first
+        if palette is not None and len(palette) > 0:
+            builder.add_legend(
+                handles=create_legend_handles(
+                    labels=list(palette.keys()),
+                    colors=[palette[v] for v in palette.keys()],
+                    hatches=None,
+                    **handle_kwargs
+                ),
+                style="rectangle",
+                title=hue_label,
+            )
+        
+        # Add hatch legend second
         if hatch_mapping is not None and len(hatch_mapping) > 0:
-            handles.extend(create_legend_handles(
-                labels=hatch_mapping.keys(),
-                colors=["gray" for _ in hatch_mapping.keys()],
-                hatches=[hatch_mapping[v] for v in hatch_mapping.keys()]
-            ))
-
-    if handles:
-        return pp_legend(ax=ax, handles=handles, **kwargs)
+            # Use gray for hatch legend if hue exists, otherwise use color
+            hatch_color = "gray" if hue is not None else (color or DEFAULT_COLOR)
+            builder.add_legend(
+                handles=create_legend_handles(
+                    labels=list(hatch_mapping.keys()),
+                    colors=[hatch_color] * len(hatch_mapping),
+                    hatches=list(hatch_mapping.values()),
+                    **handle_kwargs
+                ),
+                style="rectangle",
+                title=hatch_label,
+            )
