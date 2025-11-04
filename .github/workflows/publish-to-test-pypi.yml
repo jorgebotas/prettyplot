@@ -1,0 +1,50 @@
+name: Publish to Test PyPI
+
+on:
+  push:
+    tags:
+      - 'v*-test'  # Trigger on tags like v0.1.0-test
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build-and-publish:
+    name: Build and publish to Test PyPI
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for trusted publishing
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system build pytest pytest-cov
+          uv pip install --system -e .
+
+      - name: Run tests
+        run: |
+          pytest --cov=src/prettyplot --cov-report=term-missing
+
+      - name: Build package
+        run: |
+          uv build
+
+      - name: Publish to Test PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: dist/
+          # Uses trusted publishing - no API token needed if configured
+          # See: https://docs.pypi.org/trusted-publishers/
