@@ -1,8 +1,8 @@
 """
-Legend handlers for prettyplot.
+Legend handlers for prettyplots.
 
 This module provides custom legend handlers for creating publication-ready legends
-that match the double-layer plotting style used in prettyplot (transparent fill +
+that match the double-layer plotting style used in prettyplots (transparent fill +
 solid edge). The handlers automatically create legend markers that match the
 visual style of scatterplots and barplots.
 """
@@ -16,7 +16,7 @@ from matplotlib.legend_handler import HandlerBase, HandlerPatch
 from matplotlib.patches import Circle, Rectangle, Patch
 import matplotlib.pyplot as plt
 
-from prettyplot.config import DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_COLOR
+from prettyplots.config import DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_COLOR
 
 
 # =============================================================================
@@ -345,7 +345,7 @@ class LegendBuilder:
     """
     Modular legend builder for stacking multiple legend types.
     
-    This is the primary interface for creating legends in prettyplot.
+    This is the primary interface for creating legends in prettyplots.
     """
     
     def __init__(
@@ -547,7 +547,7 @@ def create_legend_builder(
     """
     Create a LegendBuilder for modular legend construction.
     
-    This is the primary way to create legends in prettyplot.
+    This is the primary way to create legends in prettyplots.
     
     Parameters
     ----------

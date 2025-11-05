@@ -1,11 +1,11 @@
 """
-Utility functions for prettyplot.
+Utility functions for prettyplots.
 
 This module provides helper functions for file I/O, axis manipulation,
 and input validation.
 """
 
-from prettyplot.utils.io import (
+from prettyplots.utils.io import (
     savefig,
     save_multiple,
     close_all,
@@ -13,7 +13,7 @@ from prettyplot.utils.io import (
     set_figure_size,
 )
 
-from prettyplot.utils.axes import (
+from prettyplots.utils.axes import (
     adjust_spines,
     add_grid,
     remove_grid,
@@ -27,7 +27,7 @@ from prettyplot.utils.axes import (
     tighten_layout,
 )
 
-from prettyplot.utils.validation import (
+from prettyplots.utils.validation import (
     is_categorical,
     is_numeric,
     validate_data,
@@ -40,12 +40,12 @@ from prettyplot.utils.validation import (
     check_required_columns,
 )
 
-from prettyplot.utils.fonts import (
+from prettyplots.utils.fonts import (
     _register_fonts,
     list_registered_fonts,
 )
 
-from prettyplot.utils.legend import (
+from prettyplots.utils.legend import (
     HandlerCircle,
     HandlerRectangle,
     get_legend_handler_map,

@@ -1,5 +1,5 @@
 """
-File I/O utilities for prettyplot.
+File I/O utilities for prettyplots.
 
 This module provides functions for saving figures with publication-ready
 defaults and other file operations.
@@ -10,7 +10,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-from prettyplot.config import DEFAULT_DPI, DEFAULT_FORMAT
+from prettyplots.config import DEFAULT_DPI, DEFAULT_FORMAT
 
 
 def savefig(
@@ -61,7 +61,7 @@ def savefig(
     Examples
     --------
     Save a figure with default settings:
-    >>> import prettyplot as pp
+    >>> import prettyplots as pp
     >>> fig, ax = pp.scatterplot(data, x='x', y='y')
     >>> pp.savefig(fig, 'output.png')
 
