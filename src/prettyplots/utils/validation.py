@@ -1,5 +1,5 @@
 """
-Input validation utilities for prettyplot.
+Input validation utilities for prettyplots.
 
 This module provides functions for validating and preprocessing inputs
 to plotting functions, ensuring robust error handling.

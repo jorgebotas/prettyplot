@@ -1,12 +1,12 @@
 """
-PrettyPlot: Publication-ready plotting with a clean, modular API.
+PrettyPlots: Publication-ready plotting with a clean, modular API.
 
-PrettyPlot provides a seaborn-like interface for creating beautiful,
+PrettyPlots provides a seaborn-like interface for creating beautiful,
 publication-ready visualizations with sensible defaults and extensive
 customization options.
 
 Basic usage:
-    >>> import prettyplot as pp
+    >>> import prettyplots as pp
     >>> pp.set_publication_style()
     >>> fig, ax = pp.barplot(data=df, x='category', y='value')
     >>> pp.savefig(fig, 'output.png')
@@ -16,22 +16,22 @@ __version__ = "0.1.0"
 __author__ = "Jorge Botas"
 
 # Core plotting functions (base)
-from prettyplot.base.bar import barplot
-from prettyplot.base.scatter import scatterplot
-from prettyplot.base.heatmap import circle_heatmap
+from prettyplots.base.bar import barplot
+from prettyplots.base.scatter import scatterplot
+from prettyplots.base.heatmap import circle_heatmap
 
 # Advanced plotting functions
-from prettyplot.advanced.venn import venn
+from prettyplots.advanced.venn import venn
 
 # Utilities
-from prettyplot.utils.io import savefig, save_multiple, close_all
-from prettyplot.utils.axes import (
+from prettyplots.utils.io import savefig, save_multiple, close_all
+from prettyplots.utils.axes import (
     adjust_spines,
     add_grid,
     set_axis_labels,
     add_reference_line,
 )
-from prettyplot.utils.legend import (
+from prettyplots.utils.legend import (
     HandlerCircle,
     HandlerRectangle,
     get_legend_handler_map,
@@ -41,20 +41,20 @@ from prettyplot.utils.legend import (
 )
 
 # Theming
-from prettyplot.themes.colors import get_palette, list_palettes, show_palette, resolve_palette, DEFAULT_COLOR
-from prettyplot.themes.styles import (
+from prettyplots.themes.colors import get_palette, list_palettes, show_palette, resolve_palette, DEFAULT_COLOR
+from prettyplots.themes.styles import (
     set_publication_style,
     set_minimal_style,
     set_poster_style,
     reset_style,
 )
-from prettyplot.themes.markers import (
+from prettyplots.themes.markers import (
     get_marker_cycle,
     get_hatch_cycle,
     STANDARD_MARKERS,
     HATCH_PATTERNS,
 )
-from prettyplot.themes.hatches import (
+from prettyplots.themes.hatches import (
     set_hatch_mode,
     get_hatch_mode,
     get_hatch_patterns,

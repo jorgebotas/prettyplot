@@ -1,5 +1,5 @@
 """
-Venn diagram visualizations for prettyplot.
+Venn diagram visualizations for prettyplots.
 
 This module provides functions for creating 2-way and 3-way Venn diagrams
 with optional statistical analysis.
@@ -15,8 +15,8 @@ from scipy.stats import hypergeom
 import numpy as np
 import seaborn as sns
 
-from prettyplot.config import DEFAULT_ALPHA, DEFAULT_FIGSIZE
-from prettyplot.themes.colors import get_palette
+from prettyplots.config import DEFAULT_ALPHA, DEFAULT_FIGSIZE
+from prettyplots.themes.colors import get_palette
 
 
 def venn(
