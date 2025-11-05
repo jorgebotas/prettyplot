@@ -1,11 +1,11 @@
 """
-Theming system for prettyplots.
+Theming system for publiplots.
 
 This module provides color palettes, styles, and marker definitions
 for creating consistent, publication-ready visualizations.
 """
 
-from prettyplots.themes.colors import (
+from publiplots.themes.colors import (
     get_palette,
     list_palettes,
     show_palette,
@@ -22,7 +22,7 @@ from prettyplots.themes.colors import (
     PASTEL_POSITIVE_NEGATIVE,
 )
 
-from prettyplots.themes.styles import (
+from publiplots.themes.styles import (
     set_publication_style,
     set_minimal_style,
     set_poster_style,
@@ -31,7 +31,7 @@ from prettyplots.themes.styles import (
     apply_custom_style,
 )
 
-from prettyplots.themes.markers import (
+from publiplots.themes.markers import (
     get_marker_cycle,
     get_hatch_cycle,
     get_size_mapping,

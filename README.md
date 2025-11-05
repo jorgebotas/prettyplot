@@ -1,10 +1,10 @@
-# PrettyPlots
+# PubliPlots
 
-Publication-ready plotting with a clean, modular API.
+Publication-ready plots
 
 ## Overview
 
-PrettyPlots is a Python visualization library that provides beautiful, publication-ready plots with a seaborn-like API. It focuses on:
+PubliPlots is a Python visualization library that provides beautiful, publication-ready plots with a seaborn-like API. It focuses on:
 
 - **Beautiful defaults**: Carefully designed pastel color palettes and styles
 - **Intuitive API**: Follows seaborn conventions for ease of use
@@ -17,8 +17,8 @@ PrettyPlots is a Python visualization library that provides beautiful, publicati
 ### From source (development)
 
 ```bash
-git clone https://github.com/jorgebotas/prettyplots.git
-cd prettyplots
+git clone https://github.com/jorgebotas/publiplots.git
+cd publiplots
 pip install -e .
 ```
 
@@ -28,8 +28,8 @@ If you're using [uv](https://github.com/astral-sh/uv) for Python environment man
 
 ```bash
 # Clone the repository
-git clone https://github.com/jorgebotas/prettyplots.git
-cd prettyplots
+git clone https://github.com/jorgebotas/publiplots.git
+cd publiplots
 
 # Create a new uv environment with Python 3.11 (or your preferred version)
 uv venv --python 3.11
@@ -46,25 +46,25 @@ uv pip install -e .
 uv pip install ipykernel
 
 # Register the environment as a Jupyter kernel
-python -m ipykernel install --user --name=prettyplots --display-name="Python (prettyplots)"
+python -m ipykernel install --user --name=publiplots --display-name="Python (publiplots)"
 ```
 
-Now you can select the "Python (prettyplots)" kernel in Jupyter Lab or Jupyter Notebook and import prettyplots:
+Now you can select the "Python (publiplots)" kernel in Jupyter Lab or Jupyter Notebook and import publiplots:
 
 ```python
-import prettyplots as pp
+import publiplots as pp
 ```
 
 ### From PyPI (coming soon)
 
 ```bash
-pip install prettyplots
+pip install publiplots
 ```
 
 ## Quick Start
 
 ```python
-import prettyplots as pp
+import publiplots as pp
 import pandas as pd
 
 # Apply publication style globally
@@ -102,11 +102,11 @@ pp.savefig(fig, 'figure.pdf')
 
 ## Documentation
 
-Full documentation is available at [github.com/jorgebotas/prettyplots](https://github.com/jorgebotas/prettyplots)
+Full documentation is available at [github.com/jorgebotas/publiplots](https://github.com/jorgebotas/publiplots)
 
 ## Development Status
 
-PrettyPlots is currently in active development (v0.1.0). The API may change in future releases.
+PubliPlots is currently in active development (v0.1.0). The API may change in future releases.
 
 ## Contributing
 
@@ -114,11 +114,11 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 
 ## Citation
 
-If you use PrettyPlots in your research, please cite:
+If you use PubliPlots in your research, please cite:
 
 ```
-Botas, J. (2025). PrettyPlots: Publication-ready plotting for Python.
-GitHub: https://github.com/jorgebotas/prettyplots
+Botas, J. (2025). PubliPlots: Publication-ready plotting for Python.
+GitHub: https://github.com/jorgebotas/publiplots
 ```
 
 ## License

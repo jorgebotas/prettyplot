@@ -1,6 +1,6 @@
-# Publishing prettyplots to PyPI
+# Publishing publiplots to PyPI
 
-This guide covers how to publish the `prettyplots` package to PyPI using either automated GitHub Actions or manual publishing with `uv`.
+This guide covers how to publish the `publiplots` package to PyPI using either automated GitHub Actions or manual publishing with `uv`.
 
 ## Prerequisites
 
@@ -21,9 +21,9 @@ The repository includes a GitHub Actions workflow that automatically publishes t
    b. Scroll to "Add a new pending publisher"
 
    c. Fill in:
-      - **PyPI Project Name**: `prettyplots`
+      - **PyPI Project Name**: `publiplots`
       - **Owner**: `jorgebotas`
-      - **Repository name**: `prettyplots`
+      - **Repository name**: `publiplots`
       - **Workflow name**: `publish.yml`
       - **Environment name**: `pypi`
 
@@ -37,7 +37,7 @@ The repository includes a GitHub Actions workflow that automatically publishes t
    a. Generate an API token on PyPI:
       - Go to https://pypi.org/manage/account/token/
       - Create a new API token
-      - Scope it to the `prettyplots` project (after first upload)
+      - Scope it to the `publiplots` project (after first upload)
 
    b. Add the token as a GitHub secret:
       - Go to repository Settings → Secrets and variables → Actions
@@ -68,7 +68,7 @@ The repository includes a GitHub Actions workflow that automatically publishes t
 
 3. **Create a GitHub Release**:
 
-   a. Go to https://github.com/jorgebotas/prettyplots/releases/new
+   a. Go to https://github.com/jorgebotas/publiplots/releases/new
 
    b. Click "Choose a tag" and create a new tag (e.g., `v0.2.0`)
 
@@ -125,19 +125,19 @@ For local testing or if you prefer manual control:
    ```
 
    This creates distribution files in the `dist/` directory:
-   - `prettyplots-0.2.0.tar.gz` (source distribution)
-   - `prettyplots-0.2.0-py3-none-any.whl` (wheel)
+   - `publiplots-0.2.0.tar.gz` (source distribution)
+   - `publiplots-0.2.0-py3-none-any.whl` (wheel)
 
 4. **Inspect the build** (optional):
    ```bash
    ls -lh dist/
-   tar -tzf dist/prettyplots-*.tar.gz | head -20
+   tar -tzf dist/publiplots-*.tar.gz | head -20
    ```
 
 5. **Test installation locally**:
    ```bash
-   uv pip install dist/prettyplots-*.whl
-   python -c "import prettyplots; print(prettyplots.__version__)"
+   uv pip install dist/publiplots-*.whl
+   python -c "import publiplots; print(publiplots.__version__)"
    ```
 
 6. **Publish to TestPyPI** (recommended first time):
@@ -151,7 +151,7 @@ For local testing or if you prefer manual control:
    ```bash
    uv pip install --index-url https://test.pypi.org/simple/ \
      --extra-index-url https://pypi.org/simple/ \
-     prettyplots
+     publiplots
    ```
 
 7. **Publish to PyPI**:
@@ -162,10 +162,10 @@ For local testing or if you prefer manual control:
    Enter your PyPI credentials or API token when prompted.
 
 8. **Verify on PyPI**:
-   - Check https://pypi.org/project/prettyplots/
+   - Check https://pypi.org/project/publiplots/
    - Test installation:
      ```bash
-     uv pip install prettyplots
+     uv pip install publiplots
      ```
 
 ## Version Management
@@ -201,7 +201,7 @@ If users report missing dependencies, verify `dependencies` in `pyproject.toml`.
 Make sure the package structure in `pyproject.toml` is correct:
 ```toml
 [tool.hatch.build.targets.wheel]
-packages = ["src/prettyplots"]
+packages = ["src/publiplots"]
 ```
 
 ### Testing specific Python versions

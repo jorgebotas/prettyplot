@@ -1,8 +1,8 @@
 """
-Global configuration settings for prettyplots.
+Global configuration settings for publiplots.
 
 This module contains default settings that can be modified to change
-the behavior of prettyplots functions globally.
+the behavior of publiplots functions globally.
 """
 
 from typing import Tuple

@@ -1,5 +1,5 @@
 """
-Color palettes for prettyplots.
+Color palettes for publiplots.
 
 This module provides carefully curated color palettes optimized for
 publication-ready visualizations, with a focus on pastel colors that
@@ -10,8 +10,8 @@ from typing import Dict, List, Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 
-from prettyplots.config import DEFAULT_COLOR
-from prettyplots.utils import is_categorical
+from publiplots.config import DEFAULT_COLOR
+from publiplots.utils import is_categorical
 
 # =============================================================================
 # Color Palettes
@@ -42,7 +42,7 @@ Works well for bar plots, scatter plots with categorical hue, and legends.
 Colors are designed to be distinguishable while maintaining a soft, cohesive look.
 
 Example:
-    >>> import prettyplots as pp
+    >>> import publiplots as pp
     >>> colors = pp.get_palette('pastel_categorical', n_colors=5)
     >>> pp.scatterplot(data=df, x='x', y='y', hue='category', palette=colors)
 """
@@ -326,10 +326,10 @@ def resolve_palette(
     n_colors: Optional[int] = None
 ) -> Union[List[str], Dict[str, str]]:
     """
-    Resolve a palette to actual colors, supporting both prettyplots and seaborn palettes.
+    Resolve a palette to actual colors, supporting both publiplots and seaborn palettes.
 
     This helper function translates palette specifications to actual color values.
-    It checks if a string palette name is a prettyplots palette first, then falls
+    It checks if a string palette name is a publiplots palette first, then falls
     back to seaborn palettes if not found.
 
     Parameters
@@ -337,7 +337,7 @@ def resolve_palette(
     palette : str, list, dict, or None
         Palette specification:
         - None: Returns default palette (or default color for n_colors=1)
-        - str: Palette name (checks prettyplots first, then seaborn)
+        - str: Palette name (checks publiplots first, then seaborn)
         - list: List of color hex codes (returned as-is)
         - dict: Mapping from categories to colors (returned as-is)
     n_colors : int, optional
@@ -360,7 +360,7 @@ def resolve_palette(
     >>> len(colors)
     3
 
-    Resolve prettyplots palette:
+    Resolve publiplots palette:
     >>> colors = resolve_palette('pastel_categorical', n_colors=5)
 
     Resolve seaborn palette:
@@ -371,7 +371,7 @@ def resolve_palette(
     ['#ff0000', '#00ff00', '#0000ff']
     """
     import seaborn as sns
-    from prettyplots.config import DEFAULT_PALETTE
+    from publiplots.config import DEFAULT_PALETTE
 
     # Handle None: use default palette for multiple colors, default color for single
     if palette is None:
@@ -386,9 +386,9 @@ def resolve_palette(
     if isinstance(palette, (list, dict)):
         return palette
 
-    # Handle string: check prettyplots first, then seaborn
+    # Handle string: check publiplots first, then seaborn
     if isinstance(palette, str):
-        # Try prettyplots palette first
+        # Try publiplots palette first
         if palette in PALETTES:
             return get_palette(palette, n_colors=n_colors)
 
@@ -397,7 +397,7 @@ def resolve_palette(
                 return sns.color_palette(palette, n_colors=n_colors).as_hex()
         except Exception as e:
             raise ValueError(
-                f"Unknown palette '{palette}'. Not found in prettyplots palettes "
+                f"Unknown palette '{palette}'. Not found in publiplots palettes "
                 f"({', '.join(PALETTES.keys())}) or seaborn palettes. Error: {e}"
             )
 
@@ -415,7 +415,7 @@ def resolve_palette_mapping(
     palette : str, dict, or list, optional
         Palette specification:
         - None: Returns default palette (or default color for n_colors=1)
-        - str: Palette name (checks prettyplots first, then seaborn)
+        - str: Palette name (checks publiplots first, then seaborn)
         - list: List of color hex codes (returned as-is)
         - dict: Mapping from categories to colors (returned as-is)
     """
