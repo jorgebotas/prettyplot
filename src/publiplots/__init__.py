@@ -12,8 +12,13 @@ Basic usage:
     >>> pp.savefig(fig, 'output.png')
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "Jorge Botas"
+__license__ = "MIT"
+__copyright__ = "Copyright 2025, Jorge Botas"
+__url__ = "https://github.com/jorgebotas/publiplots"
+__email__ = "jorgebotas.github@gmail.com"
+__description__ = "Publication-ready plotting with a clean, modular API"
 
 # Core plotting functions (base)
 from publiplots.base.bar import barplot
