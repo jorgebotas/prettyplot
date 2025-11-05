@@ -18,7 +18,6 @@ __author__ = "Jorge Botas"
 # Core plotting functions (base)
 from publiplots.base.bar import barplot
 from publiplots.base.scatter import scatterplot
-from publiplots.base.heatmap import circle_heatmap
 
 # Advanced plotting functions
 from publiplots.advanced.venn import venn
@@ -67,7 +66,6 @@ __all__ = [
     # Base plots
     "barplot",
     "scatterplot",
-    "circle_heatmap",
     # Advanced plots
     "venn",
     # I/O utilities
