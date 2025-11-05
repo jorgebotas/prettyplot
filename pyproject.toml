@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
-    {name = "Jorge Botas", email = "jorge.botas@example.com"}
+    {name = "Jorge Botas", email = "jorgebotas.github@gmail.com"}
 ]
 keywords = ["plotting", "visualization", "matplotlib", "seaborn", "publication"]
 classifiers = [

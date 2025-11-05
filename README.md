@@ -80,7 +80,7 @@ fig, ax = pp.scatterplot(
 )
 
 # Save with publication-ready settings
-pp.savefig(fig, 'figure.png', dpi=300)
+pp.savefig(fig, 'figure.pdf')
 ```
 
 ## Features
@@ -89,16 +89,10 @@ pp.savefig(fig, 'figure.png', dpi=300)
 
 - `scatterplot()` - Scatter plots with flexible styling
 - `barplot()` - Bar plots with error bars and grouping
-- `lineplot()` - Line plots with confidence intervals
-- `heatmap()` - Heatmaps with annotations
-- `violinplot()` / `boxplot()` - Distribution visualizations
 
 ### Advanced Functions
 
-- `barplot_enrichment()` - Enrichment analysis with p-values
-- `venn_diagram()` - 2-way and 3-way Venn diagrams
-- `barplot_overlap()` - Overlap analysis between groups
-- `circle_heatmap()` - Circle-based heatmaps with size encoding
+- `venn()` - 2-way and 3-way Venn diagrams
 
 ### Theming
 
