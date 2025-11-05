@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "prettyplots"
+name = "publiplots"
 version = "0.1.0"
 description = "Publication-ready plotting with a clean, modular API"
 readme = "README.md"
@@ -44,13 +44,13 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/jorgebotas/prettyplots"
-Documentation = "https://github.com/jorgebotas/prettyplots"
-Repository = "https://github.com/jorgebotas/prettyplots"
-Issues = "https://github.com/jorgebotas/prettyplots/issues"
+Homepage = "https://github.com/jorgebotas/publiplots"
+Documentation = "https://github.com/jorgebotas/publiplots"
+Repository = "https://github.com/jorgebotas/publiplots"
+Issues = "https://github.com/jorgebotas/publiplots/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/prettyplots"]
+packages = ["src/publiplots"]
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -65,7 +65,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--cov=prettyplots --cov-report=html --cov-report=term-missing"
+addopts = "--cov=publiplots --cov-report=html --cov-report=term-missing"
 
 [tool.black]
 line-length = 88

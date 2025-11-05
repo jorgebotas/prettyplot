@@ -1,11 +1,11 @@
 """
-Utility functions for prettyplots.
+Utility functions for publiplots.
 
 This module provides helper functions for file I/O, axis manipulation,
 and input validation.
 """
 
-from prettyplots.utils.io import (
+from publiplots.utils.io import (
     savefig,
     save_multiple,
     close_all,
@@ -13,7 +13,7 @@ from prettyplots.utils.io import (
     set_figure_size,
 )
 
-from prettyplots.utils.axes import (
+from publiplots.utils.axes import (
     adjust_spines,
     add_grid,
     remove_grid,
@@ -27,7 +27,7 @@ from prettyplots.utils.axes import (
     tighten_layout,
 )
 
-from prettyplots.utils.validation import (
+from publiplots.utils.validation import (
     is_categorical,
     is_numeric,
     validate_data,
@@ -40,12 +40,12 @@ from prettyplots.utils.validation import (
     check_required_columns,
 )
 
-from prettyplots.utils.fonts import (
+from publiplots.utils.fonts import (
     _register_fonts,
     list_registered_fonts,
 )
 
-from prettyplots.utils.legend import (
+from publiplots.utils.legend import (
     HandlerCircle,
     HandlerRectangle,
     get_legend_handler_map,

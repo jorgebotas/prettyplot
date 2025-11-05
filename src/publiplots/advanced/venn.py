@@ -1,5 +1,5 @@
 """
-Venn diagram visualizations for prettyplots.
+Venn diagram visualizations for publiplots.
 
 This module provides functions for creating 2-way and 3-way Venn diagrams
 with optional statistical analysis.
@@ -15,8 +15,8 @@ from scipy.stats import hypergeom
 import numpy as np
 import seaborn as sns
 
-from prettyplots.config import DEFAULT_ALPHA, DEFAULT_FIGSIZE
-from prettyplots.themes.colors import get_palette
+from publiplots.config import DEFAULT_ALPHA, DEFAULT_FIGSIZE
+from publiplots.themes.colors import get_palette
 
 
 def venn(

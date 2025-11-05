@@ -1,5 +1,5 @@
 """
-Matplotlib style presets for prettyplots.
+Matplotlib style presets for publiplots.
 
 This module provides functions to apply consistent styling to matplotlib
 plots, optimized for publication-ready visualizations.
@@ -155,12 +155,12 @@ def set_publication_style(
     context : str, default='paper'
         Seaborn context: 'paper', 'notebook', 'talk', or 'poster'.
     palette : str, default='pastel_categorical'
-        Default color palette name from prettyplots.themes.colors.
+        Default color palette name from publiplots.themes.colors.
 
     Examples
     --------
     Apply default publication style:
-    >>> import prettyplots as pp
+    >>> import publiplots as pp
     >>> pp.set_publication_style()
 
     Use larger fonts for a presentation:
@@ -172,7 +172,7 @@ def set_publication_style(
     # Apply seaborn style first
     sns.set_theme(context=context, style="white", font=font, font_scale=font_scale)
 
-    # Apply prettyplots style
+    # Apply publiplots style
     for key, value in PUBLICATION_STYLE.items():
         rcParams[key] = value
 
@@ -187,7 +187,7 @@ def set_publication_style(
                 rcParams[key] = rcParams[key] * font_scale
 
     # Set default color palette
-    from prettyplots.themes.colors import get_palette
+    from publiplots.themes.colors import get_palette
     try:
         colors = get_palette(palette)
         if isinstance(colors, list):
@@ -212,7 +212,7 @@ def set_minimal_style(
 
     Examples
     --------
-    >>> import prettyplots as pp
+    >>> import publiplots as pp
     >>> pp.set_minimal_style()
     """
     sns.set_theme(context="paper", style="white", font=font, font_scale=font_scale)
@@ -248,7 +248,7 @@ def set_poster_style(
 
     Examples
     --------
-    >>> import prettyplots as pp
+    >>> import publiplots as pp
     >>> pp.set_poster_style()
     """
     sns.set_theme(context="poster", style="white", font=font, font_scale=font_scale)
@@ -264,7 +264,7 @@ def set_poster_style(
             if 'size' in key and isinstance(rcParams[key], (int, float)):
                 rcParams[key] = rcParams[key] * font_scale
 
-    from prettyplots.themes.colors import get_palette
+    from publiplots.themes.colors import get_palette
     try:
         colors = get_palette(palette)
         if isinstance(colors, list):
@@ -281,7 +281,7 @@ def reset_style() -> None:
 
     Examples
     --------
-    >>> import prettyplots as pp
+    >>> import publiplots as pp
     >>> pp.set_publication_style()
     >>> # ... create plots ...
     >>> pp.reset_style()  # Reset to defaults
@@ -303,7 +303,7 @@ def get_current_style() -> Dict[str, Any]:
 
     Examples
     --------
-    >>> import prettyplots as pp
+    >>> import publiplots as pp
     >>> pp.set_publication_style()
     >>> current = pp.get_current_style()
     >>> print(current['font.size'])
@@ -323,7 +323,7 @@ def apply_custom_style(style_dict: Dict[str, Any]) -> None:
 
     Examples
     --------
-    >>> import prettyplots as pp
+    >>> import publiplots as pp
     >>> custom = {'font.size': 14, 'lines.linewidth': 3}
     >>> pp.apply_custom_style(custom)
     """
