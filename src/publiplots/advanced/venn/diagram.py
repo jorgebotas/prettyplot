@@ -65,13 +65,13 @@ def _prepare_colors(colors, n_sets: int, alpha: float) -> List[Tuple[float, ...]
     return [to_rgba(color, alpha=alpha) for color in color_list]
 
 
-def _draw_venn_diagram(
+def _venn(
     *,
     petal_labels: Dict[str, str],
     dataset_labels: List[str],
     colors: List[Tuple[float, ...]],
     figsize: Tuple[float, float],
-    legend_loc: Optional[str],
+    legend: bool,
     ax: Optional[Axes]
 ) -> Axes:
     """
@@ -109,20 +109,17 @@ def _draw_venn_diagram(
             x, y = PETAL_LABEL_COORDS[n_sets][logic]
             draw_text(ax, x, y, petal_label, fontsize=plt.rcParams['font.size'])
 
-    # Add legend if requested (uses rcParams for font size)
-    if legend_loc is not None:
-        ax.legend(dataset_labels, loc=legend_loc)
+
 
     return ax
 
 
-def _draw_pseudovenn6(
+def _pseudovenn(
     *,
     petal_labels: Dict[str, str],
     dataset_labels: List[str],
     colors: List[Tuple[float, ...]],
     figsize: Tuple[float, float],
-    legend_loc: Optional[str],
     ax: Optional[Axes],
     hint_hidden: bool = True
 ) -> Axes:
@@ -181,8 +178,8 @@ def _draw_pseudovenn6(
         draw_text(ax, 0.5, -0.1, hint_text, fontsize=fontsize)
 
     # Add legend if requested
-    if legend_loc is not None:
-        ax.legend(dataset_labels, loc=legend_loc)
+    if legend:
+        ax.legend(dataset_labels, loc="upper right", bbox_to_anchor=(1, 1))
 
     return ax
 
@@ -200,7 +197,7 @@ def venn(
     alpha: float = DEFAULT_ALPHA,
     figsize: Tuple[float, float] = DEFAULT_FIGSIZE,
     ax: Optional[Axes] = None,
-    legend_loc: str = "upper right",
+    legend: bool = True,
     fmt: str = "{size}"
 ) -> Tuple[plt.Figure, Axes]:
     """
@@ -233,7 +230,7 @@ def venn(
         Figure size as (width, height) in inches.
     ax : Axes, optional
         Matplotlib axes object. If None, creates new figure.
-    legend_loc : str, default='upper right'
+    legend : bool, default=True
         Location for the legend. Standard matplotlib legend locations are supported.
         Set to None to hide the legend.
     fmt : str, default='{size}'
@@ -326,16 +323,15 @@ def venn(
         fig = ax.get_figure()
 
     # Draw the Venn diagram
-    ax = _draw_venn_diagram(
+    ax = _venn(
         petal_labels=petal_labels,
         dataset_labels=labels,
         colors=colors_rgba,
         figsize=figsize,
-        legend_loc=legend_loc,
-        ax=ax
+        ax=ax,
+        legend=legend
     )
 
-    plt.tight_layout()
     return fig, ax
 
 
@@ -346,7 +342,7 @@ def pseudovenn(
     alpha: float = DEFAULT_ALPHA,
     figsize: Tuple[float, float] = DEFAULT_FIGSIZE,
     ax: Optional[Axes] = None,
-    legend_loc: str = "upper right",
+    legend: bool = True,
     fmt: str = "{size}",
     hint_hidden: bool = True
 ) -> Tuple[plt.Figure, Axes]:
@@ -376,9 +372,8 @@ def pseudovenn(
         Figure size as (width, height) in inches.
     ax : Axes, optional
         Matplotlib axes object. If None, creates new figure.
-    legend_loc : str, default='upper right'
-        Location for the legend. Standard matplotlib legend locations are supported.
-        Set to None to hide the legend.
+    legend : bool, default=True
+        Whether to show the legend.
     fmt : str, default='{size}'
         Format string for region labels. Can only use '{size}' when hint_hidden=True.
         When hint_hidden=False, can also use:
@@ -470,15 +465,15 @@ def pseudovenn(
         fig = ax.get_figure()
 
     # Draw the pseudo-Venn diagram
-    ax = _draw_pseudovenn6(
+    ax = _pseudovenn(
         petal_labels=petal_labels,
         dataset_labels=labels,
         colors=colors_rgba,
         figsize=figsize,
-        legend_loc=legend_loc,
         ax=ax,
-        hint_hidden=hint_hidden
+        legend=legend,
+        fmt=fmt,
+        hint_hidden=hint_hidden,
     )
 
-    plt.tight_layout()
     return fig, ax

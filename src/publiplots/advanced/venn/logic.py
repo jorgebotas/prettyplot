@@ -143,43 +143,6 @@ def generate_petal_labels(
     return petal_labels
 
 
-def validate_dataset_dict(data: dict) -> bool:
-    """
-    Validate that the input data is a dictionary of sets.
-
-    This function checks whether the provided data structure is suitable for
-    generating Venn diagrams. It verifies that the data has dictionary-like
-    structure and that all values are sets.
-
-    Parameters
-    ----------
-    data : dict
-        Data structure to validate. Should be a dictionary mapping labels to sets.
-
-    Returns
-    -------
-    bool
-        True if data is a valid dictionary of sets, False otherwise
-
-    Examples
-    --------
-    >>> validate_dataset_dict({'A': {1, 2, 3}, 'B': {2, 3, 4}})
-    True
-
-    >>> validate_dataset_dict({'A': [1, 2, 3], 'B': {2, 3, 4}})  # Lists not allowed
-    False
-
-    >>> validate_dataset_dict([{1, 2}, {3, 4}])  # Not a dictionary
-    False
-    """
-    if not (hasattr(data, "keys") and hasattr(data, "values")):
-        return False
-    for dataset in data.values():
-        if not isinstance(dataset, set):
-            return False
-    return True
-
-
 def get_n_sets(petal_labels: Dict[str, str], dataset_labels: List[str]) -> int:
     """
     Infer and validate the number of sets from petal and dataset labels.

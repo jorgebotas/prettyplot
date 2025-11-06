@@ -30,7 +30,6 @@ from .core import (
 from .logic import (
     generate_logics,
     generate_petal_labels,
-    validate_dataset_dict,
     get_n_sets
 )
 
@@ -47,7 +46,6 @@ __all__ = [
     'less_transparent_color',
     'generate_logics',
     'generate_petal_labels',
-    'validate_dataset_dict',
     'get_n_sets',
     'SHAPE_COORDS',
     'SHAPE_DIMS',
