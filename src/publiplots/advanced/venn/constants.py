@@ -122,12 +122,42 @@ PSEUDOVENN_PETAL_COORDS = {
     }
 }
 
-# Coordinates for set labels (displayed on or near each set's shape)
-# These are positioned at the outer edge of each ellipse/triangle for clarity
+# Coordinates for set labels (displayed outside each set's shape)
+# Positioned to be clearly outside the circles/ellipses for readability
 SET_LABEL_COORDS = {
-    2: [(.20, .50), (.80, .50)],
-    3: [(.20, .75), (.80, .75), (.50, .15)],
-    4: [(.25, .35), (.38, .75), (.62, .75), (.75, .35)],
-    5: [(.35, .30), (.38, .70), (.62, .70), (.68, .30), (.50, .18)],
-    6: [(.50, .98), (.95, .77), (.95, .23), (.50, .02), (.05, .23), (.05, .77)]
+    # 2 sets: Below circles at same x-coordinate
+    2: [
+        (.375, .13),   # Set 0: Below left circle
+        (.625, .13)    # Set 1: Below right circle
+    ],
+    # 3 sets: Outside circle radius
+    3: [
+        (.333, .90),   # Set 0: Above top-left circle
+        (.666, .90),   # Set 1: Above top-right circle
+        (.500, .05)    # Set 2: Below bottom circle
+    ],
+    # 4 sets: Top two above, bottom two below ellipses
+    4: [
+        (.350, .10),   # Set 0: Below left ellipse
+        (.450, .80),   # Set 1: Above top-left ellipse
+        (.544, .80),   # Set 2: Above top-right ellipse
+        (.644, .10)    # Set 3: Below right ellipse
+    ],
+    # 5 sets: At outer edges of ellipse arrangement
+    5: [
+        (.30, .32),    # Set 0: Lower left outer edge
+        (.32, .75),    # Set 1: Upper left outer edge
+        (.68, .75),    # Set 2: Upper right outer edge
+        (.70, .32),    # Set 3: Lower right outer edge
+        (.50, .14)     # Set 4: Bottom center outer edge
+    ],
+    # 6 sets: Hexagonal pattern outside circle arrangement
+    6: [
+        (.50, .98),    # Set 0: Top
+        (.95, .77),    # Set 1: Upper right
+        (.95, .23),    # Set 2: Lower right
+        (.50, .02),    # Set 3: Bottom
+        (.05, .23),    # Set 4: Lower left
+        (.05, .77)     # Set 5: Upper left
+    ]
 }

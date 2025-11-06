@@ -127,6 +127,8 @@ def _pseudovenn(
     dataset_labels: List[str],
     colors: List[Tuple[float, ...]],
     figsize: Tuple[float, float],
+    set_labels: bool,
+    legend: bool,
     ax: Optional[Axes],
     hint_hidden: bool = True
 ) -> Axes:
@@ -487,10 +489,10 @@ def pseudovenn(
         dataset_labels=labels,
         colors=colors_rgba,
         figsize=figsize,
-        ax=ax,
+        set_labels=set_labels,
         legend=legend,
-        fmt=fmt,
-        hint_hidden=hint_hidden,
+        ax=ax,
+        hint_hidden=hint_hidden
     )
 
     return fig, ax
