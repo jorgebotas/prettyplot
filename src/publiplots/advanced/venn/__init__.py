@@ -9,10 +9,10 @@ The module exposes:
 - Internal implementation components for advanced use
 """
 
-# Import main API functions
-from .venn import venn, pseudovenn
+# Import main API functions from diagram
+from .diagram import venn, pseudovenn
 
-# Import internal components
+# Import internal components for advanced use
 from .constants import (
     SHAPE_COORDS,
     SHAPE_DIMS,
@@ -33,11 +33,6 @@ from .logic import (
     validate_dataset_dict,
     get_n_sets
 )
-from .diagram import (
-    draw_venn_diagram,
-    draw_pseudovenn6,
-    generate_colors
-)
 
 # Export public API
 __all__ = [
@@ -54,9 +49,6 @@ __all__ = [
     'generate_petal_labels',
     'validate_dataset_dict',
     'get_n_sets',
-    'draw_venn_diagram',
-    'draw_pseudovenn6',
-    'generate_colors',
     'SHAPE_COORDS',
     'SHAPE_DIMS',
     'SHAPE_ANGLES',

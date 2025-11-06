@@ -1,17 +1,24 @@
 """
-Main Venn diagram drawing functions.
+Venn diagram visualizations for publiplots.
 
-This module provides the high-level functions for drawing Venn diagrams and
-pseudovenn diagrams, coordinating the drawing primitives with set logic.
+This module provides functions for creating Venn diagrams for 2-6 sets
+using an implementation based on pyvenn by LankyCyril.
 
-Adapted from pyvenn by LankyCyril (https://github.com/LankyCyril/pyvenn)
+The module supports:
+- True Venn diagrams for 2-6 sets (using ellipses for 2-5 sets, triangles for 6 sets)
+- Pseudo-Venn diagrams for 6 sets (using overlapping circles)
+
+Based on pyvenn by LankyCyril: https://github.com/LankyCyril/pyvenn
 """
 
 from matplotlib.axes import Axes
 from matplotlib.colors import to_rgba
-from matplotlib.cm import ScalarMappable
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 from math import pi, sin, cos
+import matplotlib.pyplot as plt
+
+from publiplots.config import DEFAULT_ALPHA, DEFAULT_FIGSIZE
+from publiplots.themes.colors import get_palette
 
 from .constants import (
     SHAPE_COORDS,
@@ -21,109 +28,56 @@ from .constants import (
     PSEUDOVENN_PETAL_COORDS
 )
 from .core import init_axes, draw_ellipse, draw_triangle, draw_text
-from .logic import get_n_sets
+from .logic import get_n_sets, generate_petal_labels
 
 
-def generate_colors(cmap="viridis", n_colors: int = 6, alpha: float = 0.4) -> List[Tuple[float, ...]]:
+def _prepare_colors(colors, n_sets: int, alpha: float) -> List[Tuple[float, ...]]:
     """
-    Generate colors from matplotlib colormap or use provided color list.
-
-    This function creates a list of RGBA colors either by sampling from a matplotlib
-    colormap or by converting a provided list of colors to RGBA format with the
-    specified alpha value.
+    Prepare RGBA color tuples for Venn diagram sets.
 
     Parameters
     ----------
-    cmap : str or list, default='viridis'
-        If string: name of a matplotlib colormap to sample from
-        If list: list of color specifications to convert to RGBA
-    n_colors : int, default=6
-        Number of colors to generate (must be between 2 and 6)
-    alpha : float, default=0.4
-        Transparency level for the colors (0=transparent, 1=opaque)
+    colors : list, str, or None
+        Colors specification (list of colors, colormap name, or None)
+    n_sets : int
+        Number of sets (2-6)
+    alpha : float
+        Alpha transparency value
 
     Returns
     -------
     list of tuple
-        List of RGBA color tuples, each containing (red, green, blue, alpha)
-        values in the range [0, 1]
-
-    Raises
-    ------
-    ValueError
-        If n_colors is not an integer between 2 and 6
-
-    Examples
-    --------
-    >>> colors = generate_colors('viridis', n_colors=3, alpha=0.5)
-    >>> len(colors)
-    3
-
-    >>> colors = generate_colors(['red', 'blue', 'green'], n_colors=3, alpha=0.3)
-    >>> # Returns 3 RGBA tuples with alpha=0.3
+        List of RGBA color tuples
     """
-    if not isinstance(n_colors, int) or (n_colors < 2) or (n_colors > 6):
-        raise ValueError("n_colors must be an integer between 2 and 6")
-
-    if isinstance(cmap, list):
-        colors = [to_rgba(color, alpha=alpha) for color in cmap]
+    if colors is None:
+        # Use default publiplots palette
+        color_list = get_palette('pastel_categorical', n_colors=n_sets)
+    elif isinstance(colors, str):
+        # Use publiplots palette or colormap by name
+        color_list = get_palette(colors, n_colors=n_sets)
+    elif isinstance(colors, list):
+        # Use provided color list
+        color_list = colors[:n_sets]
     else:
-        scalar_mappable = ScalarMappable(cmap=cmap)
-        colors = scalar_mappable.to_rgba(range(n_colors), alpha=alpha).tolist()
+        raise TypeError("colors must be None, a string (palette/colormap name), or a list of colors")
 
-    return colors[:n_colors]
+    # Convert to RGBA with specified alpha
+    return [to_rgba(color, alpha=alpha) for color in color_list]
 
 
-def draw_venn_diagram(
+def _draw_venn_diagram(
     *,
     petal_labels: Dict[str, str],
     dataset_labels: List[str],
     colors: List[Tuple[float, ...]],
     figsize: Tuple[float, float],
-    fontsize: int,
     legend_loc: Optional[str],
     ax: Optional[Axes]
 ) -> Axes:
     """
     Draw a true Venn diagram with ellipses (2-5 sets) or triangles (6 sets).
 
-    This function creates the actual Venn diagram by drawing the shapes for each set
-    and annotating each region with its corresponding label (typically the size of
-    the intersection).
-
-    Parameters
-    ----------
-    petal_labels : dict
-        Dictionary mapping binary logic strings to label text for each region
-    dataset_labels : list of str
-        Names/labels for each dataset to show in the legend
-    colors : list of tuple
-        RGBA color tuples for each set
-    figsize : tuple of float
-        Figure size as (width, height) in inches
-    fontsize : int
-        Font size for labels in points
-    legend_loc : str or None
-        Location for the legend (e.g., 'upper right'). If None, no legend is drawn.
-    ax : matplotlib.axes.Axes or None
-        Axes to draw on. If None, new axes are created.
-
-    Returns
-    -------
-    matplotlib.axes.Axes
-        The axes containing the Venn diagram
-
-    Raises
-    ------
-    ValueError
-        If the number of sets is not between 2 and 6
-
-    Notes
-    -----
-    - For 2-5 sets: Uses ellipses as shapes
-    - For 6 sets: Uses triangles as shapes (true Venn diagram)
-    - Not all petal positions may be available in the PETAL_LABEL_COORDS,
-      in which case those labels are simply not drawn
+    Internal function that handles the actual drawing logic.
     """
     n_sets = get_n_sets(petal_labels, dataset_labels)
 
@@ -149,26 +103,25 @@ def draw_venn_diagram(
         draw_shape(ax, *coords, *dims, angle, color)
 
     # Draw labels for each petal (intersection region)
+    # Font size controlled by rcParams['font.size']
     for logic, petal_label in petal_labels.items():
-        # Some petals might not have predefined positions
         if logic in PETAL_LABEL_COORDS[n_sets]:
             x, y = PETAL_LABEL_COORDS[n_sets][logic]
-            draw_text(ax, x, y, petal_label, fontsize=fontsize)
+            draw_text(ax, x, y, petal_label, fontsize=plt.rcParams['font.size'])
 
-    # Add legend if requested
+    # Add legend if requested (uses rcParams for font size)
     if legend_loc is not None:
-        ax.legend(dataset_labels, loc=legend_loc, prop={"size": fontsize})
+        ax.legend(dataset_labels, loc=legend_loc)
 
     return ax
 
 
-def draw_pseudovenn6(
+def _draw_pseudovenn6(
     *,
     petal_labels: Dict[str, str],
     dataset_labels: List[str],
     colors: List[Tuple[float, ...]],
     figsize: Tuple[float, float],
-    fontsize: int,
     legend_loc: Optional[str],
     ax: Optional[Axes],
     hint_hidden: bool = True
@@ -176,47 +129,7 @@ def draw_pseudovenn6(
     """
     Draw a pseudo-Venn diagram for 6 sets using overlapping circles.
 
-    Unlike the true Venn diagram which uses triangles, this creates an intersection
-    of 6 circles. This is more visually intuitive but does not display all possible
-    intersections (63 total). Hidden intersections can be indicated with hints.
-
-    Parameters
-    ----------
-    petal_labels : dict
-        Dictionary mapping binary logic strings to label text for each region
-    dataset_labels : list of str
-        Names/labels for each dataset to show in the legend
-    colors : list of tuple
-        RGBA color tuples for each set
-    figsize : tuple of float
-        Figure size as (width, height) in inches
-    fontsize : int
-        Font size for labels in points
-    legend_loc : str or None
-        Location for the legend (e.g., 'upper right'). If None, no legend is drawn.
-    ax : matplotlib.axes.Axes or None
-        Axes to draw on. If None, new axes are created.
-    hint_hidden : bool, default=True
-        If True, displays hints showing the total size of non-displayed intersections
-        for each set
-
-    Returns
-    -------
-    matplotlib.axes.Axes
-        The axes containing the pseudo-Venn diagram
-
-    Raises
-    ------
-    NotImplementedError
-        If n_sets is not exactly 6
-
-    Notes
-    -----
-    - Only works for exactly 6 sets
-    - Uses 6 overlapping circles arranged in a hexagonal pattern
-    - Does not show all 63 possible intersections
-    - When hint_hidden=True, shows "n/d*" annotations indicating hidden elements,
-      where n is the number of elements in non-displayed intersections for that set
+    Internal function that handles the actual drawing logic.
     """
     n_sets = get_n_sets(petal_labels, dataset_labels)
     if n_sets != 6:
@@ -237,8 +150,8 @@ def draw_pseudovenn6(
         hidden = [0] * n_sets
 
     # Draw labels for visible petals
+    fontsize = plt.rcParams['font.size']
     for logic, petal_label in petal_labels.items():
-        # Not all intersections are shown in pseudovenn
         if logic in PSEUDOVENN_PETAL_COORDS[6]:
             x, y = PSEUDOVENN_PETAL_COORDS[6][logic]
             draw_text(ax, x, y, petal_label, fontsize=fontsize)
@@ -269,6 +182,303 @@ def draw_pseudovenn6(
 
     # Add legend if requested
     if legend_loc is not None:
-        ax.legend(dataset_labels, loc=legend_loc, prop={"size": fontsize})
+        ax.legend(dataset_labels, loc=legend_loc)
 
     return ax
+
+
+# =============================================================================
+# Public API
+# =============================================================================
+
+
+def venn(
+    sets: Union[List[set], Dict[str, set]],
+    labels: Optional[List[str]] = None,
+    colors: Optional[Union[List[str], str]] = None,
+    weighted: bool = False,
+    alpha: float = DEFAULT_ALPHA,
+    figsize: Tuple[float, float] = DEFAULT_FIGSIZE,
+    ax: Optional[Axes] = None,
+    legend_loc: str = "upper right",
+    fmt: str = "{size}"
+) -> Tuple[plt.Figure, Axes]:
+    """
+    Create a Venn diagram for 2-6 sets.
+
+    This function creates true Venn diagrams that show all possible intersections.
+    For 2-5 sets, it uses ellipses; for 6 sets, it uses triangles. Each region
+    (petal) is labeled with the size of the intersection by default.
+
+    Parameters
+    ----------
+    sets : list of sets or dict
+        Either a list of 2-6 sets, or a dictionary mapping labels to sets.
+        Example: [set1, set2, set3] or {'A': set1, 'B': set2, 'C': set3}
+    labels : list of str, optional
+        Labels for each set. If sets is a dict, labels are taken from keys.
+        Default: ['Set A', 'Set B', 'Set C', ...]
+    colors : list of str, str, or None, optional
+        Colors for each set. Can be:
+        - List of color names/codes for each set
+        - String name of a publiplots palette or matplotlib colormap
+        - None (uses 'pastel_categorical' palette)
+    weighted : bool, default=False
+        If True, attempts to scale regions proportionally to set sizes.
+        Note: This is not fully supported in the current implementation and may
+        not produce accurate proportional scaling. Future versions will improve this.
+    alpha : float, default=0.3
+        Transparency of set regions (0=transparent, 1=opaque).
+    figsize : tuple, default=(10, 6)
+        Figure size as (width, height) in inches.
+    ax : Axes, optional
+        Matplotlib axes object. If None, creates new figure.
+    legend_loc : str, default='upper right'
+        Location for the legend. Standard matplotlib legend locations are supported.
+        Set to None to hide the legend.
+    fmt : str, default='{size}'
+        Format string for region labels. Can include:
+        - {size}: number of elements in the intersection
+        - {logic}: binary string representing the intersection
+        - {percentage}: percentage of total elements
+
+    Returns
+    -------
+    fig : Figure
+        Matplotlib figure object.
+    ax : Axes
+        Matplotlib axes object.
+
+    Raises
+    ------
+    ValueError
+        If the number of sets is not between 2 and 6
+    TypeError
+        If sets is not a list of sets or dict of sets
+
+    Examples
+    --------
+    Simple 2-way Venn diagram:
+
+    >>> set1 = {1, 2, 3, 4, 5}
+    >>> set2 = {4, 5, 6, 7, 8}
+    >>> fig, ax = pp.venn([set1, set2], labels=['Group A', 'Group B'])
+
+    3-way Venn with custom colors:
+
+    >>> sets_dict = {'A': set1, 'B': set2, 'C': set3}
+    >>> colors = ['red', 'blue', 'green']
+    >>> fig, ax = pp.venn(sets_dict, colors=colors)
+
+    4-way Venn with colormap:
+
+    >>> fig, ax = pp.venn([set1, set2, set3, set4], colors='Set1')
+
+    6-way Venn diagram with percentage labels:
+
+    >>> fig, ax = pp.venn(
+    ...     [set1, set2, set3, set4, set5, set6],
+    ...     fmt='{size} ({percentage:.1f}%)'
+    ... )
+
+    Notes
+    -----
+    - For 2-5 sets: Uses ellipses that show all possible intersections
+    - For 6 sets: Uses triangles to show all 63 possible intersections
+    - The 'weighted' parameter is provided for API compatibility but does not
+      currently produce accurate proportional scaling
+    - Font size controlled by matplotlib rcParams['font.size'] or publiplots styles
+    - Based on pyvenn by LankyCyril (https://github.com/LankyCyril/pyvenn)
+
+    See Also
+    --------
+    pseudovenn : Alternative 6-set visualization using circles (doesn't show all intersections)
+    """
+    # Parse input sets
+    if isinstance(sets, dict):
+        labels = list(sets.keys())
+        sets_list = [set(s) for s in sets.values()]
+    else:
+        sets_list = [set(s) for s in sets]
+        if labels is None:
+            labels = [f"Set {chr(65+i)}" for i in range(len(sets_list))]
+
+    # Validate number of sets
+    n_sets = len(sets_list)
+    if n_sets < 2 or n_sets > 6:
+        raise ValueError("Venn diagram supports 2 to 6 sets")
+
+    # Validate that all inputs are sets
+    for s in sets_list:
+        if not isinstance(s, set):
+            raise TypeError("All elements must be sets")
+
+    # Prepare colors using publiplots color utilities
+    colors_rgba = _prepare_colors(colors, n_sets, alpha)
+
+    # Generate petal labels (intersection sizes)
+    petal_labels = generate_petal_labels(sets_list, fmt=fmt)
+
+    # Create figure if not provided
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+    else:
+        fig = ax.get_figure()
+
+    # Draw the Venn diagram
+    ax = _draw_venn_diagram(
+        petal_labels=petal_labels,
+        dataset_labels=labels,
+        colors=colors_rgba,
+        figsize=figsize,
+        legend_loc=legend_loc,
+        ax=ax
+    )
+
+    plt.tight_layout()
+    return fig, ax
+
+
+def pseudovenn(
+    sets: Union[List[set], Dict[str, set]],
+    labels: Optional[List[str]] = None,
+    colors: Optional[Union[List[str], str]] = None,
+    alpha: float = DEFAULT_ALPHA,
+    figsize: Tuple[float, float] = DEFAULT_FIGSIZE,
+    ax: Optional[Axes] = None,
+    legend_loc: str = "upper right",
+    fmt: str = "{size}",
+    hint_hidden: bool = True
+) -> Tuple[plt.Figure, Axes]:
+    """
+    Create a pseudo-Venn diagram for 6 sets using overlapping circles.
+
+    Unlike the true Venn diagram which uses triangles for 6 sets, this function
+    creates an intersection of 6 circles arranged in a hexagonal pattern. This
+    is more visually intuitive but does not display all 63 possible intersections.
+    Hidden intersections can be indicated with hints.
+
+    Parameters
+    ----------
+    sets : list of sets or dict
+        Either a list of exactly 6 sets, or a dictionary mapping labels to 6 sets.
+    labels : list of str, optional
+        Labels for each set. If sets is a dict, labels are taken from keys.
+        Default: ['Set A', 'Set B', 'Set C', 'Set D', 'Set E', 'Set F']
+    colors : list of str, str, or None, optional
+        Colors for each set. Can be:
+        - List of color names/codes for each set
+        - String name of a publiplots palette or matplotlib colormap
+        - None (uses 'pastel_categorical' palette)
+    alpha : float, default=0.3
+        Transparency of set regions (0=transparent, 1=opaque).
+    figsize : tuple, default=(10, 6)
+        Figure size as (width, height) in inches.
+    ax : Axes, optional
+        Matplotlib axes object. If None, creates new figure.
+    legend_loc : str, default='upper right'
+        Location for the legend. Standard matplotlib legend locations are supported.
+        Set to None to hide the legend.
+    fmt : str, default='{size}'
+        Format string for region labels. Can only use '{size}' when hint_hidden=True.
+        When hint_hidden=False, can also use:
+        - {logic}: binary string representing the intersection
+        - {percentage}: percentage of total elements
+    hint_hidden : bool, default=True
+        If True, displays hints showing the total size of non-displayed intersections
+        for each set (shown as "n/d*" where n is the number of hidden elements).
+
+    Returns
+    -------
+    fig : Figure
+        Matplotlib figure object.
+    ax : Axes
+        Matplotlib axes object.
+
+    Raises
+    ------
+    ValueError
+        If the number of sets is not exactly 6
+    TypeError
+        If sets is not a list of sets or dict of sets
+    NotImplementedError
+        If hint_hidden=True and fmt is not '{size}'
+
+    Examples
+    --------
+    Basic pseudo-Venn for 6 sets:
+
+    >>> sets_list = [set1, set2, set3, set4, set5, set6]
+    >>> fig, ax = pp.pseudovenn(sets_list)
+
+    With custom labels and colors:
+
+    >>> sets_dict = {'A': set1, 'B': set2, 'C': set3, 'D': set4, 'E': set5, 'F': set6}
+    >>> fig, ax = pp.pseudovenn(sets_dict, colors='Set2')
+
+    Without hidden element hints:
+
+    >>> fig, ax = pp.pseudovenn(sets_list, hint_hidden=False, fmt='{size} ({percentage:.1f}%)')
+
+    Notes
+    -----
+    - Only works for exactly 6 sets
+    - Uses 6 overlapping circles in a hexagonal arrangement
+    - Does not show all 63 possible intersections (only ~32 are visible)
+    - When hint_hidden=True, annotations show how many elements from each set
+      are in non-displayed intersections
+    - Font size controlled by matplotlib rcParams['font.size'] or publiplots styles
+    - Based on pyvenn by LankyCyril (https://github.com/LankyCyril/pyvenn)
+
+    See Also
+    --------
+    venn : True Venn diagram that shows all intersections (uses triangles for 6 sets)
+    """
+    # Parse input sets
+    if isinstance(sets, dict):
+        labels = list(sets.keys())
+        sets_list = [set(s) for s in sets.values()]
+    else:
+        sets_list = [set(s) for s in sets]
+        if labels is None:
+            labels = [f"Set {chr(65+i)}" for i in range(len(sets_list))]
+
+    # Validate number of sets
+    n_sets = len(sets_list)
+    if n_sets != 6:
+        raise ValueError("Pseudo-Venn diagram requires exactly 6 sets. Use venn() for 2-5 sets.")
+
+    # Validate that all inputs are sets
+    for s in sets_list:
+        if not isinstance(s, set):
+            raise TypeError("All elements must be sets")
+
+    # Validate fmt with hint_hidden
+    if hint_hidden and fmt != "{size}":
+        raise NotImplementedError(f"To use fmt='{fmt}', set hint_hidden=False")
+
+    # Prepare colors using publiplots color utilities
+    colors_rgba = _prepare_colors(colors, 6, alpha)
+
+    # Generate petal labels
+    petal_labels = generate_petal_labels(sets_list, fmt=fmt)
+
+    # Create figure if not provided
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+    else:
+        fig = ax.get_figure()
+
+    # Draw the pseudo-Venn diagram
+    ax = _draw_pseudovenn6(
+        petal_labels=petal_labels,
+        dataset_labels=labels,
+        colors=colors_rgba,
+        figsize=figsize,
+        legend_loc=legend_loc,
+        ax=ax,
+        hint_hidden=hint_hidden
+    )
+
+    plt.tight_layout()
+    return fig, ax
