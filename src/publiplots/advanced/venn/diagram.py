@@ -111,7 +111,12 @@ def _venn(
             x, y = PETAL_LABEL_COORDS[n_sets][logic]
             draw_text(ax, x, y, petal_label, fontsize=plt.rcParams['font.size'])
 
-
+    # Draw set labels on diagram
+    if set_labels:
+        fontsize = plt.rcParams['font.size']
+        for i, label in enumerate(dataset_labels):
+            x, y = SET_LABEL_COORDS[n_sets][i]
+            draw_text(ax, x, y, label, fontsize=fontsize * 1.2, color='black')
 
     return ax
 
