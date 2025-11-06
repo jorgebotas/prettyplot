@@ -25,7 +25,7 @@ from publiplots.base.bar import barplot
 from publiplots.base.scatter import scatterplot
 
 # Advanced plotting functions
-from publiplots.advanced.venn import venn, pseudovenn
+from publiplots.advanced.venn import venn
 
 # Utilities
 from publiplots.utils.io import savefig, save_multiple, close_all
@@ -73,7 +73,6 @@ __all__ = [
     "scatterplot",
     # Advanced plots
     "venn",
-    "pseudovenn",
     # I/O utilities
     "savefig",
     "save_multiple",

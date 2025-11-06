@@ -5,12 +5,12 @@ This module provides functions for creating Venn diagrams for 2-6 sets.
 Based on the pyvenn library by LankyCyril (https://github.com/LankyCyril/pyvenn).
 
 The module exposes:
-- Main API functions: venn() and pseudovenn()
+- Main API function: venn()
 - Internal implementation components for advanced use
 """
 
 # Import main API functions from diagram
-from .diagram import venn, pseudovenn
+from .diagram import venn
 
 # Import internal components for advanced use
 from .constants import (
@@ -18,7 +18,6 @@ from .constants import (
     SHAPE_DIMS,
     SHAPE_ANGLES,
     PETAL_LABEL_COORDS,
-    PSEUDOVENN_PETAL_COORDS
 )
 from .core import (
     draw_ellipse,
@@ -37,7 +36,6 @@ from .logic import (
 __all__ = [
     # Main API functions
     'venn',
-    'pseudovenn',
     # Internal components (for advanced use)
     'draw_ellipse',
     'draw_triangle',
@@ -51,5 +49,4 @@ __all__ = [
     'SHAPE_DIMS',
     'SHAPE_ANGLES',
     'PETAL_LABEL_COORDS',
-    'PSEUDOVENN_PETAL_COORDS',
 ]

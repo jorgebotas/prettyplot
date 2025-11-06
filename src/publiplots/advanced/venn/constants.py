@@ -79,34 +79,9 @@ PETAL_LABEL_COORDS = {
         "11100": (.25, .58), "11101": (.28, .39), "11110": (.36, .66),
         "11111": (.51, .47)
     },
-    6: {
-        "000001": (.212, .562), "000010": (.430, .249), "000011": (.356, .444),
-        "000100": (.609, .255), "000101": (.323, .546), "000110": (.513, .316),
-        "000111": (.523, .348), "001000": (.747, .458), "001001": (.325, .492),
-        "001010": (.670, .481), "001011": (.359, .478), "001100": (.653, .444),
-        "001101": (.344, .526), "001110": (.653, .466), "001111": (.363, .503),
-        "010000": (.750, .616), "010001": (.682, .654), "010010": (.402, .310),
-        "010011": (.392, .421), "010100": (.653, .691), "010101": (.651, .644),
-        "010110": (.490, .340), "010111": (.468, .399), "011000": (.692, .545),
-        "011001": (.666, .592), "011010": (.665, .496), "011011": (.374, .470),
-        "011100": (.653, .537), "011101": (.652, .579), "011110": (.653, .488),
-        "011111": (.389, .486), "100000": (.553, .806), "100001": (.313, .604),
-        "100010": (.388, .694), "100011": (.375, .633), "100100": (.605, .359),
-        "100101": (.334, .555), "100110": (.582, .397), "100111": (.542, .372),
-        "101000": (.468, .708), "101001": (.355, .572), "101010": (.420, .679),
-        "101011": (.375, .597), "101100": (.641, .436), "101101": (.348, .538),
-        "101110": (.635, .453), "101111": (.370, .548), "110000": (.594, .689),
-        "110001": (.579, .670), "110010": (.398, .670), "110011": (.395, .653),
-        "110100": (.633, .682), "110101": (.616, .656), "110110": (.587, .427),
-        "110111": (.526, .415), "111000": (.495, .677), "111001": (.505, .648),
-        "111010": (.428, .663), "111011": (.430, .631), "111100": (.639, .524),
-        "111101": (.591, .604), "111110": (.622, .477), "111111": (.501, .523)
-    }
-}
 
-# Coordinates for pseudovenn (6-circle intersection, not all combinations shown)
-# This is an alternative layout for 6 sets using overlapping circles
-PSEUDOVENN_PETAL_COORDS = {
+    # Coordinates for pseudovenn (6-circle intersection, not all combinations shown)
+    # This is an alternative layout for 6 sets using overlapping circles
     6: {
         "100000": (.275, .875), "010000": (.725, .875), "001000": (.925, .500),
         "000100": (.725, .125), "000010": (.275, .125), "000001": (.075, .500),
@@ -122,44 +97,36 @@ PSEUDOVENN_PETAL_COORDS = {
     }
 }
 
+
 # Coordinates for set labels (displayed outside each set's shape)
 # Positioned to be clearly outside the circles/ellipses for readability
 SET_LABEL_COORDS = {
     # 2 sets: Below circles at same x-coordinate
     2: [
-        (.375, .13),   # Set 0: Below left circle
-        (.625, .13)    # Set 1: Below right circle
+        (.375, .20),   # Set 0: Below left circle
+        (.625, .20)    # Set 1: Below right circle
     ],
     # 3 sets: Outside circle radius
     3: [
         (.333, .90),   # Set 0: Above top-left circle
         (.666, .90),   # Set 1: Above top-right circle
-        (.500, .05)    # Set 2: Below bottom circle
+        (.500, .02)    # Set 2: Below bottom circle
     ],
     # 4 sets: Top two above, bottom two below ellipses
     4: [
-        (.350, .10),   # Set 0: Below left ellipse
-        (.450, .80),   # Set 1: Above top-left ellipse
-        (.544, .80),   # Set 2: Above top-right ellipse
+        (.356, .10),   # Set 0: Below left ellipse
+        (.356, .80),   # Set 1: Above top-left ellipse
+        (.644, .80),   # Set 2: Above top-right ellipse
         (.644, .10)    # Set 3: Below right ellipse
     ],
     # 5 sets: At outer edges of ellipse arrangement
     5: [
-        (.30, .32),    # Set 0: Lower left outer edge
-        (.32, .75),    # Set 1: Upper left outer edge
-        (.68, .75),    # Set 2: Upper right outer edge
-        (.70, .32),    # Set 3: Lower right outer edge
-        (.50, .14)     # Set 4: Bottom center outer edge
+        (.20, .00),    # Set 0: Lower left outer edge
+        (.20, .75),    # Set 1: Upper left outer edge
+        (.80, .75),    # Set 2: Upper right outer edge
+        (.80, .00),    # Set 3: Lower right outer edge
+        (.50, .98)     # Set 4: Bottom center outer edge
     ],
-    # 6 sets: Hexagonal pattern outside circle arrangement
-    6: [
-        (.50, .98),    # Set 0: Top
-        (.95, .77),    # Set 1: Upper right
-        (.95, .23),    # Set 2: Lower right
-        (.50, .02),    # Set 3: Bottom
-        (.05, .23),    # Set 4: Lower left
-        (.05, .77)     # Set 5: Upper left
-    ]
 }
 
 # Text alignment for set labels (horizontal, vertical)
@@ -171,21 +138,21 @@ SET_LABEL_COORDS = {
 SET_LABEL_ALIGNMENTS = {
     # 2 sets: Both labels below circles
     2: [
-        ("center", "top"),    # Set 0: Below left circle
-        ("center", "top")     # Set 1: Below right circle
+        ("right", "top"),    # Set 0: Below left circle
+        ("left", "top")     # Set 1: Below right circle
     ],
     # 3 sets: Two above, one below
     3: [
-        ("center", "bottom"),  # Set 0: Above top-left circle
-        ("center", "bottom"),  # Set 1: Above top-right circle
+        ("right", "bottom"),  # Set 0: Above top-left circle
+        ("left", "bottom"),  # Set 1: Above top-right circle
         ("center", "top")      # Set 2: Below bottom circle
     ],
     # 4 sets: Bottom two below, top two above ellipses
     4: [
-        ("center", "top"),     # Set 0: Below left ellipse
-        ("center", "bottom"),  # Set 1: Above top-left ellipse
-        ("center", "bottom"),  # Set 2: Above top-right ellipse
-        ("center", "top")      # Set 3: Below right ellipse
+        ("right", "top"),     # Set 0: Below left ellipse
+        ("right", "bottom"),  # Set 1: Above top-left ellipse
+        ("left", "bottom"),  # Set 2: Above top-right ellipse
+        ("left", "top")      # Set 3: Below right ellipse
     ],
     # 5 sets: Mixed positioning at outer edges
     5: [
@@ -193,15 +160,6 @@ SET_LABEL_ALIGNMENTS = {
         ("right", "bottom"),   # Set 1: Above and left of upper-left ellipse
         ("left", "bottom"),    # Set 2: Above and right of upper-right ellipse
         ("left", "center"),    # Set 3: Right of lower-right ellipse
-        ("center", "top")      # Set 4: Below bottom ellipse
+        ("center", "bottom")   # Set 4: Above top ellipse
     ],
-    # 6 sets: Hexagonal pattern
-    6: [
-        ("center", "bottom"),  # Set 0: Top
-        ("left", "center"),    # Set 1: Upper right
-        ("left", "center"),    # Set 2: Lower right
-        ("center", "top"),     # Set 3: Bottom
-        ("right", "center"),   # Set 4: Lower left
-        ("right", "center")    # Set 5: Upper left
-    ]
 }
