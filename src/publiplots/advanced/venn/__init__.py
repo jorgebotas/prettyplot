@@ -1,7 +1,7 @@
 """
 Venn diagram module for publiplots.
 
-This module provides functions for creating Venn diagrams for 2-6 sets.
+This module provides functions for creating Venn diagrams for 2-5 sets.
 Based on the pyvenn library by LankyCyril (https://github.com/LankyCyril/pyvenn).
 
 The module exposes:
@@ -19,12 +19,10 @@ from .constants import (
     SHAPE_ANGLES,
     PETAL_LABEL_COORDS,
 )
-from .core import (
+from .draw import (
     draw_ellipse,
-    draw_triangle,
     draw_text,
     init_axes,
-    less_transparent_color
 )
 from .logic import (
     generate_logics,
@@ -38,10 +36,8 @@ __all__ = [
     'venn',
     # Internal components (for advanced use)
     'draw_ellipse',
-    'draw_triangle',
     'draw_text',
     'init_axes',
-    'less_transparent_color',
     'generate_logics',
     'generate_petal_labels',
     'get_n_sets',

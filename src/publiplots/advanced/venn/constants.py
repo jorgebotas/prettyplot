@@ -2,16 +2,15 @@
 Constants for Venn diagram layouts.
 
 This module contains the coordinate data and parameters for rendering Venn diagrams
-with 2 to 6 sets. The data defines the positions, dimensions, and angles for the
-shapes (ellipses for 2-5 sets, triangles for 6 sets) as well as the positions
-for petal labels showing intersection sizes.
+with 2 to 5 sets. The data defines the positions, dimensions, and angles for the
+ellipses as well as the positions for the petal labels showing intersection sizes
+and the set labels displayed outside each set's shape.
 
 Adapted from pyvenn by LankyCyril (https://github.com/LankyCyril/pyvenn)
 """
 
-# Coordinates for the centers of shapes (ellipses or triangle vertices)
+# Coordinates for the centers of shapes (ellipses)
 # For 2-5 sets: (x, y) tuples for ellipse centers
-# For 6 sets: (x1, y1, x2, y2, x3, y3) tuples for triangle vertices
 SHAPE_COORDS = {
     2: [(.375, .500), (.625, .500)],
     3: [(.333, .633), (.666, .633), (.500, .310)],
@@ -28,7 +27,6 @@ SHAPE_COORDS = {
 }
 
 # Dimensions for shapes (width, height) for ellipses
-# For 6 sets (triangles): None values as dimensions are defined by vertices
 SHAPE_DIMS = {
     2: [(.50, .50), (.50, .50)],
     3: [(.50, .50), (.50, .50), (.50, .50)],
@@ -38,7 +36,6 @@ SHAPE_DIMS = {
 }
 
 # Rotation angles for ellipses (in degrees)
-# For 6 sets (triangles): None values as rotation is not applicable
 SHAPE_ANGLES = {
     2: [0, 0],
     3: [0, 0, 0],
@@ -80,21 +77,6 @@ PETAL_LABEL_COORDS = {
         "11111": (.51, .47)
     },
 
-    # Coordinates for pseudovenn (6-circle intersection, not all combinations shown)
-    # This is an alternative layout for 6 sets using overlapping circles
-    6: {
-        "100000": (.275, .875), "010000": (.725, .875), "001000": (.925, .500),
-        "000100": (.725, .125), "000010": (.275, .125), "000001": (.075, .500),
-        "110000": (.500, .850), "011000": (.800, .675), "001100": (.800, .325),
-        "000110": (.500, .150), "000011": (.200, .325), "100001": (.200, .675),
-        "110001": (.375, .700), "111000": (.625, .700), "011100": (.750, .500),
-        "001110": (.625, .300), "000111": (.375, .300), "100011": (.250, .500),
-        "111001": (.500, .650), "111100": (.635, .575), "011110": (.635, .415),
-        "001111": (.500, .350), "100111": (.365, .415), "110011": (.365, .575),
-        "111011": (.440, .600), "111101": (.560, .600), "111110": (.620, .500),
-        "011111": (.560, .400), "101111": (.440, .400), "110111": (.380, .500),
-        "111111": (.500, .500)
-    }
 }
 
 
@@ -121,11 +103,11 @@ SET_LABEL_COORDS = {
     ],
     # 5 sets: At outer edges of ellipse arrangement
     5: [
-        (.20, .00),    # Set 0: Lower left outer edge
-        (.20, .75),    # Set 1: Upper left outer edge
-        (.80, .75),    # Set 2: Upper right outer edge
-        (.80, .00),    # Set 3: Lower right outer edge
-        (.50, .98)     # Set 4: Bottom center outer edge
+        (.20, .75),    # Set 0: Upper left outer edge
+        (.50, .98),    # Set 2: Upper center outer edge
+        (.80, .75),    # Set 3: Upper right outer edge
+        (.80, .00),    # Set 4: Lower right outer edge
+        (.20, .00)     # Set 4: Lower left outer edge
     ],
 }
 
@@ -138,28 +120,28 @@ SET_LABEL_COORDS = {
 SET_LABEL_ALIGNMENTS = {
     # 2 sets: Both labels below circles
     2: [
-        ("right", "top"),    # Set 0: Below left circle
-        ("left", "top")     # Set 1: Below right circle
+        ("right", "top"),     # Set 0: Below left circle
+        ("left", "top")       # Set 1: Below right circle
     ],
     # 3 sets: Two above, one below
     3: [
         ("right", "bottom"),  # Set 0: Above top-left circle
-        ("left", "bottom"),  # Set 1: Above top-right circle
-        ("center", "top")      # Set 2: Below bottom circle
+        ("left", "bottom"),   # Set 1: Above top-right circle
+        ("center", "top")     # Set 2: Below bottom circle
     ],
     # 4 sets: Bottom two below, top two above ellipses
     4: [
         ("right", "top"),     # Set 0: Below left ellipse
         ("right", "bottom"),  # Set 1: Above top-left ellipse
-        ("left", "bottom"),  # Set 2: Above top-right ellipse
-        ("left", "top")      # Set 3: Below right ellipse
+        ("left", "bottom"),   # Set 2: Above top-right ellipse
+        ("left", "top")       # Set 3: Below right ellipse
     ],
     # 5 sets: Mixed positioning at outer edges
     5: [
-        ("right", "center"),   # Set 0: Left of lower-left ellipse
-        ("right", "bottom"),   # Set 1: Above and left of upper-left ellipse
-        ("left", "bottom"),    # Set 2: Above and right of upper-right ellipse
-        ("left", "center"),    # Set 3: Right of lower-right ellipse
-        ("center", "bottom")   # Set 4: Above top ellipse
+        ("right", "bottom"),  # Set 0: Above and left of upper-left ellipse
+        ("center", "bottom"), # Set 1: Above top ellipse
+        ("left", "bottom"),   # Set 2: Above and right of upper-right ellipse
+        ("left", "center"),   # Set 3: Right of lower-right ellipse
+        ("right", "center")   # Set 4: Left of lower-left ellipse
     ],
 }

@@ -11,43 +11,18 @@ from matplotlib.pyplot import subplots
 from matplotlib.patches import Ellipse, Polygon
 from matplotlib.colors import to_rgba
 from matplotlib.axes import Axes
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
-
-def less_transparent_color(color, alpha_factor: float = 2) -> Tuple[float, float, float, float]:
-    """
-    Increase the opacity (alpha value) of a color.
-
-    This function takes a color and increases its alpha (opacity) value to make it
-    less transparent. This is useful for edge colors that should be more visible
-    than fill colors.
-
-    Parameters
-    ----------
-    color : color-like
-        Any matplotlib-compatible color specification (string name, hex code, RGB tuple, etc.)
-    alpha_factor : float, default=2
-        Factor by which to reduce transparency. Higher values create more opaque colors.
-        The new alpha is calculated as: (1 + current_alpha) / alpha_factor
-
-    Returns
-    -------
-    tuple
-        RGBA tuple (red, green, blue, alpha) with increased opacity
-
-    Examples
-    --------
-    >>> less_transparent_color('red', alpha_factor=2)
-    (1.0, 0.0, 0.0, 0.5)
-
-    >>> less_transparent_color((1.0, 0.0, 0.0, 0.3), alpha_factor=2)
-    (1.0, 0.0, 0.0, 0.65)
-    """
-    new_alpha = (1 + to_rgba(color)[3]) / alpha_factor
-    return to_rgba(color, alpha=new_alpha)
-
-
-def draw_ellipse(ax: Axes, x: float, y: float, w: float, h: float, a: float, color) -> None:
+def draw_ellipse(
+        ax: Axes,
+        x: float,
+        y: float,
+        w: float,
+        h: float,
+        a: float,
+        color: Union[str, Tuple[float, ...]],
+        alpha: float,
+    ) -> None:
     """
     Draw an ellipse on the given matplotlib axes.
 
@@ -71,7 +46,8 @@ def draw_ellipse(ax: Axes, x: float, y: float, w: float, h: float, a: float, col
         Rotation angle of the ellipse in degrees (counterclockwise from horizontal)
     color : color-like
         Fill color for the ellipse (any matplotlib-compatible color specification)
-
+    alpha : float, default=1.0
+        Alpha transparency value for the ellipse fill color
     Returns
     -------
     None
@@ -88,61 +64,22 @@ def draw_ellipse(ax: Axes, x: float, y: float, w: float, h: float, a: float, col
             width=w,
             height=h,
             angle=a,
-            facecolor=color,
-            edgecolor=less_transparent_color(color)
+            facecolor=to_rgba(color, alpha=alpha),
+            edgecolor=color
         )
     )
 
 
-def draw_triangle(ax: Axes, x1: float, y1: float, x2: float, y2: float,
-                  x3: float, y3: float, _dim, _angle, color) -> None:
-    """
-    Draw a triangle on the given matplotlib axes.
-
-    This function creates a triangular polygon patch defined by three vertices.
-    The triangle is filled with the given color and outlined with a less transparent
-    version of the same color. This is used for 6-set Venn diagrams where triangles
-    are more suitable than ellipses.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        The axes on which to draw the triangle
-    x1, y1 : float
-        Coordinates of the first vertex (normalized coordinates 0-1)
-    x2, y2 : float
-        Coordinates of the second vertex (normalized coordinates 0-1)
-    x3, y3 : float
-        Coordinates of the third vertex (normalized coordinates 0-1)
-    _dim : None
-        Unused parameter for API compatibility with draw_ellipse
-    _angle : None
-        Unused parameter for API compatibility with draw_ellipse
-    color : color-like
-        Fill color for the triangle (any matplotlib-compatible color specification)
-
-    Returns
-    -------
-    None
-        Modifies the axes in-place by adding the triangle patch
-
-    Examples
-    --------
-    >>> fig, ax = plt.subplots()
-    >>> draw_triangle(ax, 0.5, 0.8, 0.3, 0.2, 0.7, 0.2, None, None, 'red')
-    """
-    ax.add_patch(
-        Polygon(
-            xy=[(x1, y1), (x2, y2), (x3, y3)],
-            closed=True,
-            facecolor=color,
-            edgecolor=less_transparent_color(color)
-        )
-    )
-
-
-def draw_text(ax: Axes, x: float, y: float, text: str, fontsize: int,
-              color: str = "black", ha: str = "center", va: str = "center") -> None:
+def draw_text(
+        ax: Axes,
+        x: float,
+        y: float,
+        text: str,
+        fontsize: int,
+        color: Optional[Union[str, Tuple[float, ...]]] = None,
+        ha: str = "center",
+        va: str = "center",
+    ) -> None:
     """
     Draw text at a specified position on the axes with configurable alignment.
 
@@ -162,7 +99,7 @@ def draw_text(ax: Axes, x: float, y: float, text: str, fontsize: int,
         The text string to display
     fontsize : int
         Font size in points
-    color : str, default='black'
+    color : str or tuple of floats (RGBA), optional
         Text color (any matplotlib-compatible color specification)
     ha : str, default='center'
         Horizontal alignment: 'left', 'center', or 'right'
