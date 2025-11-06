@@ -15,7 +15,8 @@ from matplotlib.axes import Axes
 
 from publiplots.config import DEFAULT_ALPHA, DEFAULT_FIGSIZE
 from publiplots.themes.colors import get_palette
-from ._venn import generate_colors, generate_petal_labels, draw_venn_diagram, draw_pseudovenn6
+from .diagram import generate_colors, draw_venn_diagram, draw_pseudovenn6
+from .logic import generate_petal_labels
 
 
 def venn(
