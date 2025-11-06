@@ -121,3 +121,13 @@ PSEUDOVENN_PETAL_COORDS = {
         "111111": (.500, .500)
     }
 }
+
+# Coordinates for set labels (displayed on or near each set's shape)
+# These are positioned at the outer edge of each ellipse/triangle for clarity
+SET_LABEL_COORDS = {
+    2: [(.20, .50), (.80, .50)],
+    3: [(.20, .75), (.80, .75), (.50, .15)],
+    4: [(.25, .35), (.38, .75), (.62, .75), (.75, .35)],
+    5: [(.35, .30), (.38, .70), (.62, .70), (.68, .30), (.50, .18)],
+    6: [(.50, .98), (.95, .77), (.95, .23), (.50, .02), (.05, .23), (.05, .77)]
+}

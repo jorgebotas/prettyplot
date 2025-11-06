@@ -25,7 +25,8 @@ from .constants import (
     SHAPE_DIMS,
     SHAPE_ANGLES,
     PETAL_LABEL_COORDS,
-    PSEUDOVENN_PETAL_COORDS
+    PSEUDOVENN_PETAL_COORDS,
+    SET_LABEL_COORDS
 )
 from .core import init_axes, draw_ellipse, draw_triangle, draw_text
 from .logic import get_n_sets, generate_petal_labels
@@ -71,6 +72,7 @@ def _venn(
     dataset_labels: List[str],
     colors: List[Tuple[float, ...]],
     figsize: Tuple[float, float],
+    set_labels: bool,
     legend: bool,
     ax: Optional[Axes]
 ) -> Axes:
@@ -177,7 +179,14 @@ def _pseudovenn(
         )
         draw_text(ax, 0.5, -0.1, hint_text, fontsize=fontsize)
 
-    # Add legend if requested
+    # Draw set labels on diagram
+    if set_labels:
+        fontsize = plt.rcParams['font.size']
+        for i, label in enumerate(dataset_labels):
+            x, y = SET_LABEL_COORDS[n_sets][i]
+            draw_text(ax, x, y, label, fontsize=fontsize * 1.2, color='black')
+
+        # Add legend if requested
     if legend:
         ax.legend(dataset_labels, loc="upper right", bbox_to_anchor=(1, 1))
 
@@ -197,7 +206,8 @@ def venn(
     alpha: float = DEFAULT_ALPHA,
     figsize: Tuple[float, float] = DEFAULT_FIGSIZE,
     ax: Optional[Axes] = None,
-    legend: bool = True,
+    set_labels: bool = True,
+    legend: bool = False,
     fmt: str = "{size}"
 ) -> Tuple[plt.Figure, Axes]:
     """
@@ -329,6 +339,7 @@ def venn(
         colors=colors_rgba,
         figsize=figsize,
         ax=ax,
+        set_labels=set_labels,
         legend=legend
     )
 
@@ -342,7 +353,8 @@ def pseudovenn(
     alpha: float = DEFAULT_ALPHA,
     figsize: Tuple[float, float] = DEFAULT_FIGSIZE,
     ax: Optional[Axes] = None,
-    legend: bool = True,
+    set_labels: bool = True,
+    legend: bool = False,
     fmt: str = "{size}",
     hint_hidden: bool = True
 ) -> Tuple[plt.Figure, Axes]:
