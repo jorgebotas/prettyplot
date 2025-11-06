@@ -142,28 +142,32 @@ def draw_triangle(ax: Axes, x1: float, y1: float, x2: float, y2: float,
 
 
 def draw_text(ax: Axes, x: float, y: float, text: str, fontsize: int,
-              color: str = "black") -> None:
+              color: str = "black", ha: str = "center", va: str = "center") -> None:
     """
-    Draw centered text at a specified position on the axes.
+    Draw text at a specified position on the axes with configurable alignment.
 
-    This function places text at the given coordinates with center alignment
-    both horizontally and vertically. It's used for labeling regions in the
-    Venn diagram with intersection sizes or other information.
+    This function places text at the given coordinates. By default, it uses center
+    alignment both horizontally and vertically, but alignment can be customized for
+    optimal label positioning relative to shapes.
 
     Parameters
     ----------
     ax : matplotlib.axes.Axes
         The axes on which to draw the text
     x : float
-        X-coordinate for text center (normalized coordinates 0-1)
+        X-coordinate for text position (normalized coordinates 0-1)
     y : float
-        Y-coordinate for text center (normalized coordinates 0-1)
+        Y-coordinate for text position (normalized coordinates 0-1)
     text : str
         The text string to display
     fontsize : int
         Font size in points
     color : str, default='black'
         Text color (any matplotlib-compatible color specification)
+    ha : str, default='center'
+        Horizontal alignment: 'left', 'center', or 'right'
+    va : str, default='center'
+        Vertical alignment: 'top', 'center', or 'bottom'
 
     Returns
     -------
@@ -174,13 +178,14 @@ def draw_text(ax: Axes, x: float, y: float, text: str, fontsize: int,
     --------
     >>> fig, ax = plt.subplots()
     >>> draw_text(ax, 0.5, 0.5, '42', fontsize=12, color='black')
+    >>> draw_text(ax, 0.5, 0.9, 'Label', fontsize=14, va='bottom')
     """
     ax.text(
         x, y, text,
         fontsize=fontsize,
         color=color,
-        horizontalalignment="center",
-        verticalalignment="center"
+        horizontalalignment=ha,
+        verticalalignment=va
     )
 
 

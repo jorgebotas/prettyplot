@@ -161,3 +161,47 @@ SET_LABEL_COORDS = {
         (.05, .77)     # Set 5: Upper left
     ]
 }
+
+# Text alignment for set labels (horizontal, vertical)
+# Alignment is chosen based on label position relative to shapes:
+# - Labels above shapes: va="bottom" (text extends down toward shape)
+# - Labels below shapes: va="top" (text extends up toward shape)
+# - Labels left of shapes: ha="right" (text extends right toward shape)
+# - Labels right of shapes: ha="left" (text extends left toward shape)
+SET_LABEL_ALIGNMENTS = {
+    # 2 sets: Both labels below circles
+    2: [
+        ("center", "top"),    # Set 0: Below left circle
+        ("center", "top")     # Set 1: Below right circle
+    ],
+    # 3 sets: Two above, one below
+    3: [
+        ("center", "bottom"),  # Set 0: Above top-left circle
+        ("center", "bottom"),  # Set 1: Above top-right circle
+        ("center", "top")      # Set 2: Below bottom circle
+    ],
+    # 4 sets: Bottom two below, top two above ellipses
+    4: [
+        ("center", "top"),     # Set 0: Below left ellipse
+        ("center", "bottom"),  # Set 1: Above top-left ellipse
+        ("center", "bottom"),  # Set 2: Above top-right ellipse
+        ("center", "top")      # Set 3: Below right ellipse
+    ],
+    # 5 sets: Mixed positioning at outer edges
+    5: [
+        ("right", "center"),   # Set 0: Left of lower-left ellipse
+        ("right", "bottom"),   # Set 1: Above and left of upper-left ellipse
+        ("left", "bottom"),    # Set 2: Above and right of upper-right ellipse
+        ("left", "center"),    # Set 3: Right of lower-right ellipse
+        ("center", "top")      # Set 4: Below bottom ellipse
+    ],
+    # 6 sets: Hexagonal pattern
+    6: [
+        ("center", "bottom"),  # Set 0: Top
+        ("left", "center"),    # Set 1: Upper right
+        ("left", "center"),    # Set 2: Lower right
+        ("center", "top"),     # Set 3: Bottom
+        ("right", "center"),   # Set 4: Lower left
+        ("right", "center")    # Set 5: Upper left
+    ]
+}

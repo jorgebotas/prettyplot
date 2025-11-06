@@ -26,7 +26,8 @@ from .constants import (
     SHAPE_ANGLES,
     PETAL_LABEL_COORDS,
     PSEUDOVENN_PETAL_COORDS,
-    SET_LABEL_COORDS
+    SET_LABEL_COORDS,
+    SET_LABEL_ALIGNMENTS
 )
 from .core import init_axes, draw_ellipse, draw_triangle, draw_text
 from .logic import get_n_sets, generate_petal_labels
@@ -116,7 +117,8 @@ def _venn(
         fontsize = plt.rcParams['font.size']
         for i, label in enumerate(dataset_labels):
             x, y = SET_LABEL_COORDS[n_sets][i]
-            draw_text(ax, x, y, label, fontsize=fontsize * 1.2, color='black')
+            ha, va = SET_LABEL_ALIGNMENTS[n_sets][i]
+            draw_text(ax, x, y, label, fontsize=fontsize * 1.2, color='black', ha=ha, va=va)
 
     return ax
 
@@ -191,7 +193,8 @@ def _pseudovenn(
         fontsize = plt.rcParams['font.size']
         for i, label in enumerate(dataset_labels):
             x, y = SET_LABEL_COORDS[n_sets][i]
-            draw_text(ax, x, y, label, fontsize=fontsize * 1.2, color='black')
+            ha, va = SET_LABEL_ALIGNMENTS[n_sets][i]
+            draw_text(ax, x, y, label, fontsize=fontsize * 1.2, color='black', ha=ha, va=va)
 
         # Add legend if requested
     if legend:
