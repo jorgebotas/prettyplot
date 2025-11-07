@@ -14,6 +14,18 @@ PubliPlots is a Python visualization library that provides beautiful, publicatio
 
 ## Installation
 
+### From PyPI
+
+```bash
+pip install publiplots
+```
+
+Or if you are using [uv](https://github.com/astral-sh/uv) for Python environment management:
+
+```bash
+uv pip install publiplots
+```
+
 ### From source (development)
 
 ```bash
@@ -55,11 +67,6 @@ Now you can select the "Python (publiplots)" kernel in Jupyter Lab or Jupyter No
 import publiplots as pp
 ```
 
-### From PyPI (coming soon)
-
-```bash
-pip install publiplots
-```
 
 ## Quick Start
 
