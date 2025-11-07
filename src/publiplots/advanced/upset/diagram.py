@@ -285,7 +285,4 @@ def upsetplot(
         set_label=set_label,
     )
 
-    # Adjust layout to prevent overlap
-    plt.tight_layout()
-
     return fig, (ax_intersections, ax_matrix, ax_sets)

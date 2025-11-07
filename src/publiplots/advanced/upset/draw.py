@@ -288,8 +288,8 @@ def setup_upset_axes(
         wspace=0.05,  # Small gap between set bars and matrix
     )
 
-    # Top row: intersection bars (spans both columns)
-    ax_intersections = fig.add_subplot(gs[0, :])
+    # Top row: intersection bars (right column only, to align with matrix)
+    ax_intersections = fig.add_subplot(gs[0, 1])
 
     # Middle row: matrix (right column)
     ax_matrix = fig.add_subplot(gs[1, 1])
