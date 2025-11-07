@@ -198,17 +198,26 @@ def draw_matrix(
                     linewidths=0,
                 )
 
-        # Draw connecting line for active sets
+        # Draw connecting lines between active sets (avoiding dots)
         if len(active_sets) > 1:
-            y_coords = active_sets
-            x_coords = [i] * len(active_sets)
-            # Draw each line separately to avoid overlap
-            # We need to subtract the dot size from the y coordinate to avoid overlap
-            print(dot_size, len(active_sets))
-            for x, y in zip(x_coords, y_coords):
+            # Sort to get bottom-to-top order
+            sorted_sets = sorted(active_sets)
+
+            # Convert dot size from points² to radius in data coordinates
+            # dot_size is in points², so radius in points = sqrt(dot_size)
+            # We need a gap between line and dot edge
+            # Using approximate conversion: 1 data unit ≈ 72 points per inch
+            # For simplicity, use a fixed offset that works well visually
+            radius_offset = 0.15  # Offset in data coordinates
+
+            # Draw line segments between consecutive dots
+            for idx in range(len(sorted_sets) - 1):
+                y_start = sorted_sets[idx] + radius_offset
+                y_end = sorted_sets[idx + 1] - radius_offset
+
                 ax.plot(
-                    [x, x],
-                    [y - dot_size / 2, y + dot_size / 2],
+                    [i, i],
+                    [y_start, y_end],
                     color=active_color,
                     linewidth=linewidth,
                     solid_capstyle="round",
