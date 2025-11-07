@@ -11,6 +11,7 @@ Licensed under BSD-3-Clause
 """
 
 from typing import Dict, List, Optional, Tuple
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import to_rgba
@@ -128,7 +129,8 @@ def draw_set_size_bars(
     ax.set_xlim(-0.02 * max(sizes), 1.05 * max(sizes))
     ax.set_ylim(-0.5, len(positions) - 0.5)
     ax.set_yticks(positions)
-    ax.set_yticklabels([])
+    ax.set_yticklabels(set_names, fontsize=matplotlib.rcParams["ytick.labelsize"])
+    ax.tick_params(axis='y', which='both', left=False, right=False)
     ax.spines["left"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["top"].set_visible(False)
