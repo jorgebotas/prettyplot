@@ -214,20 +214,26 @@ def upsetplot(
     n_sets = processed["n_sets"]
     n_intersections = processed["n_intersections"]
 
-    print(n_intersections, n_sets)
-
-    # Determine figure size if not provided
+    # Create figure with initial size (will be adjusted by setup_upset_axes)
     if figsize is None:
-        # width = max(DEFAULT_FIGSIZE[0], n_intersections * 0.4)
-        # height = max(DEFAULT_FIGSIZE[1], n_sets * 0.5 + 3)
-        width =  n_intersections * 0.4
-        height = n_sets * 0.5 + 3
-        figsize = (width, height)
+        # Initial size - will be recalculated based on text width
+        width = max(8, n_intersections * 0.4)
+        height = max(6, n_sets * 0.8 + 3)
+        initial_figsize = (width, height)
+    else:
+        initial_figsize = figsize
 
-    fig = plt.figure(figsize=figsize)
+    fig = plt.figure(figsize=initial_figsize)
 
-    # Setup axes
-    ax_intersections, ax_matrix, ax_sets = setup_upset_axes(fig, figsize=figsize)
+    # Setup axes with proper sizing that accounts for text width
+    # This will adjust figure size if needed to ensure equal bar widths
+    ax_intersections, ax_matrix, ax_sets = setup_upset_axes(
+        fig=fig,
+        set_names=set_names,
+        n_intersections=n_intersections,
+        figsize=figsize,  # User-specified size (or None for auto)
+        element_size=None,  # Could be exposed as parameter
+    )
 
     # Draw intersection size bars
     intersection_sizes = intersections["size"].tolist()
