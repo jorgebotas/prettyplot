@@ -168,6 +168,8 @@ def draw_matrix(
     inactive_color : str, optional
         Color for inactive dots. If None, use to_rgba(color, alpha=alpha).
     """
+    import numpy as np
+
     n_sets = len(set_names)
     n_intersections = len(membership_matrix)
 
@@ -180,6 +182,35 @@ def draw_matrix(
     # Set inactive color
     if inactive_color is None:
         inactive_color = to_rgba(DEFAULT_COLOR, alpha=alpha)
+
+    # Set axis limits first (needed for transformation calculations)
+    ax.set_xlim(-0.5, n_intersections - 0.5)
+    ax.set_ylim(-0.5, n_sets - 0.5)
+
+    # Calculate radius offset in data coordinates based on dot_size
+    # dot_size is in points², so radius in points = sqrt(dot_size)
+    radius_points = np.sqrt(dot_size)
+
+    # Convert from points to data coordinates using the axes transformation
+    # Get the figure DPI and the axes bbox
+    fig_dpi = ax.figure.dpi
+    bbox = ax.get_position()  # Axes position in figure coordinates (0-1)
+    fig_height_inches = ax.figure.get_figheight()
+
+    # Height of axes in inches
+    ax_height_inches = bbox.height * fig_height_inches
+
+    # Height of axes in points
+    ax_height_points = ax_height_inches * 72  # 72 points per inch
+
+    # Data units per point (y-axis spans n_sets data units)
+    data_units_per_point = n_sets / ax_height_points
+
+    # Radius in data units
+    radius_data = radius_points * data_units_per_point
+
+    # Add small buffer (15% extra) to ensure line doesn't touch dot
+    radius_offset = radius_data * 1.15
 
     # Draw dots for all positions
     for i, membership in enumerate(membership_matrix):
@@ -203,14 +234,8 @@ def draw_matrix(
             # Sort to get bottom-to-top order
             sorted_sets = sorted(active_sets)
 
-            # Convert dot size from points² to radius in data coordinates
-            # dot_size is in points², so radius in points = sqrt(dot_size)
-            # We need a gap between line and dot edge
-            # Using approximate conversion: 1 data unit ≈ 72 points per inch
-            # For simplicity, use a fixed offset that works well visually
-            radius_offset = 0.15  # Offset in data coordinates
-
             # Draw line segments between consecutive dots
+            # (radius_offset calculated above based on dot_size)
             for idx in range(len(sorted_sets) - 1):
                 y_start = sorted_sets[idx] + radius_offset
                 y_end = sorted_sets[idx + 1] - radius_offset
