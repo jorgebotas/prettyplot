@@ -128,26 +128,13 @@ def draw_set_size_bars(
     # Style axes
     ax.set_xlim(-0.02 * max(sizes), 1.05 * max(sizes))
     ax.set_ylim(-0.5, len(positions) - 0.5)
-    ax.set_yticks(positions)
-    ax.set_yticklabels(set_names, fontsize=matplotlib.rcParams["ytick.labelsize"])
-    ax.tick_params(axis='y', which='both', left=False, right=False)
+    ax.set_yticks([])  # No tick marks or labels on set bars
     ax.spines["left"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["top"].set_visible(False)
     ax.grid(axis="x", alpha=0.3, linestyle="--", linewidth=GRID_LINEWIDTH)
     ax.set_axisbelow(True)
     ax.invert_xaxis()
-
-    # Add value labels at end of bars
-    max_size = max(sizes)
-    for name, pos, size in zip(set_names, positions, sizes):
-        ax.text(
-            size,
-            pos,
-            f"{name} ({size}) ",
-            ha="right",
-            va="center",
-        )
 
 
 
@@ -254,11 +241,23 @@ def draw_matrix(
     # Add horizontal grid lines between sets
     for i in range(n_sets - 1):
         ax.axhline(
-            i + 0.5, 
-            color="#e0e0e0", 
-            linewidth=GRID_LINEWIDTH, 
-            linestyle="-", 
+            i + 0.5,
+            color="#e0e0e0",
+            linewidth=GRID_LINEWIDTH,
+            linestyle="-",
             zorder=0
+        )
+
+    # Add set name labels on the left side of the matrix
+    for i, name in enumerate(set_names):
+        ax.text(
+            -0.6,  # Position to the left of the leftmost column
+            i,
+            str(name),
+            ha="right",
+            va="center",
+            fontsize=matplotlib.rcParams["ytick.labelsize"],
+            fontweight="normal",
         )
 
 
