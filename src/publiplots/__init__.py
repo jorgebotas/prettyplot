@@ -26,6 +26,7 @@ from publiplots.base.scatter import scatterplot
 
 # Advanced plotting functions
 from publiplots.advanced.venn import venn
+from publiplots.advanced.upset import upsetplot
 
 # Utilities
 from publiplots.utils.io import savefig, save_multiple, close_all
@@ -73,6 +74,7 @@ __all__ = [
     "scatterplot",
     # Advanced plots
     "venn",
+    "upsetplot",
     # I/O utilities
     "savefig",
     "save_multiple",
