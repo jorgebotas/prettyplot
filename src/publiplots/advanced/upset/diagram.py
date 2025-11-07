@@ -42,7 +42,6 @@ def upsetplot(
     alpha: float = DEFAULT_ALPHA,
     dot_size: float = 150,
     figsize: Optional[Tuple[float, float]] = None,
-    figsize_factors: Tuple[float, float] = (0.4, 0.5),
     title: str = "",
     intersection_label: str = "Intersection Size",
     set_label: str = "Set Size"
@@ -215,10 +214,14 @@ def upsetplot(
     n_sets = processed["n_sets"]
     n_intersections = processed["n_intersections"]
 
+    print(n_intersections, n_sets)
+
     # Determine figure size if not provided
     if figsize is None:
-        width = max(8, n_intersections * 0.4)
-        height = max(6, n_sets * 0.5 + 3)
+        # width = max(DEFAULT_FIGSIZE[0], n_intersections * 0.4)
+        # height = max(DEFAULT_FIGSIZE[1], n_sets * 0.5 + 3)
+        width =  n_intersections * 0.4
+        height = n_sets * 0.5 + 3
         figsize = (width, height)
 
     fig = plt.figure(figsize=figsize)

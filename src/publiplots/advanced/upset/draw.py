@@ -17,11 +17,14 @@ from matplotlib.colors import to_rgba
 
 from publiplots.config import DEFAULT_COLOR, DEFAULT_LINEWIDTH, DEFAULT_ALPHA
 
+GRID_LINEWIDTH = 1
+
 
 def draw_intersection_bars(
     ax: Axes,
     sizes: List[int],
     positions: List[int],
+    width: float = 0.6,
     color: str = DEFAULT_COLOR,
     linewidth: float = DEFAULT_LINEWIDTH,
     alpha: float = DEFAULT_ALPHA,
@@ -37,6 +40,8 @@ def draw_intersection_bars(
         Intersection sizes
     positions : list of int
         X positions for each bar
+    width : float
+        Width of the bars
     color : str
         Bar color
     linewidth : float
@@ -47,8 +52,8 @@ def draw_intersection_bars(
     ax.bar(
         positions,
         sizes,
-        width=0.6,
-        color=to_rgba(color, alpha=0.1),
+        width=width,
+        color=to_rgba(color, alpha=alpha),
         edgecolor=color,
         linewidth=linewidth,
         zorder=2,
@@ -57,10 +62,11 @@ def draw_intersection_bars(
     # Style axes
     ax.set_xlim(-0.5, len(positions) - 0.5)
     ax.set_xticks([])
+    ax.set_ylim(-0.02 * max(sizes), 1.05 * max(sizes))
     ax.spines["bottom"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["top"].set_visible(False)
-    ax.grid(axis="y", alpha=0.3, linestyle="--", linewidth=0.8)
+    ax.grid(axis="y", alpha=0.3, linestyle="--", linewidth=GRID_LINEWIDTH)
     ax.set_axisbelow(True)
 
     # Add value labels on top of bars
@@ -79,6 +85,7 @@ def draw_set_size_bars(
     set_names: List[str],
     set_sizes: Dict[str, int],
     positions: List[int],
+    width: float = 0.6,
     color: str = DEFAULT_COLOR,
     linewidth: float = DEFAULT_LINEWIDTH,
     alpha: float = DEFAULT_ALPHA,
@@ -96,6 +103,8 @@ def draw_set_size_bars(
         Mapping from set name to size
     positions : list
         Y positions for each bar
+    width : float
+        Width of the bars
     color : str
         Bar color
     linewidth : float
@@ -108,7 +117,7 @@ def draw_set_size_bars(
     ax.barh(
         positions,
         sizes,
-        height=0.6,
+        height=width,
         color=to_rgba(color, alpha=alpha),
         edgecolor=color,
         linewidth=linewidth,
@@ -116,26 +125,28 @@ def draw_set_size_bars(
     )
 
     # Style axes
+    ax.set_xlim(-0.02 * max(sizes), 1.05 * max(sizes))
     ax.set_ylim(-0.5, len(positions) - 0.5)
     ax.set_yticks(positions)
-    ax.set_yticklabels(set_names)
+    ax.set_yticklabels([])
     ax.spines["left"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["top"].set_visible(False)
-    ax.grid(axis="x", alpha=0.3, linestyle="--", linewidth=0.8)
+    ax.grid(axis="x", alpha=0.3, linestyle="--", linewidth=GRID_LINEWIDTH)
     ax.set_axisbelow(True)
     ax.invert_xaxis()
 
     # Add value labels at end of bars
     max_size = max(sizes)
-    for pos, size in zip(positions, sizes):
+    for name, pos, size in zip(set_names, positions, sizes):
         ax.text(
             size,
             pos,
-            f"  {size}",
+            f"{name} ({size}) ",
             ha="right",
             va="center",
         )
+
 
 
 def draw_matrix(
@@ -187,67 +198,33 @@ def draw_matrix(
     ax.set_xlim(-0.5, n_intersections - 0.5)
     ax.set_ylim(-0.5, n_sets - 0.5)
 
-    # Calculate radius offset in data coordinates based on dot_size
-    # dot_size is in points², so radius in points = sqrt(dot_size)
-    radius_points = np.sqrt(dot_size)
-
-    # Convert from points to data coordinates using the axes transformation
-    # Get the figure DPI and the axes bbox
-    fig_dpi = ax.figure.dpi
-    bbox = ax.get_position()  # Axes position in figure coordinates (0-1)
-    fig_height_inches = ax.figure.get_figheight()
-
-    # Height of axes in inches
-    ax_height_inches = bbox.height * fig_height_inches
-
-    # Height of axes in points
-    ax_height_points = ax_height_inches * 72  # 72 points per inch
-
-    # Data units per point (y-axis spans n_sets data units)
-    data_units_per_point = n_sets / ax_height_points
-
-    # Radius in data units
-    radius_data = radius_points * data_units_per_point
-
-    # Add small buffer (15% extra) to ensure line doesn't touch dot
-    radius_offset = radius_data * 1.15
-
     # Draw dots for all positions
     for i, membership in enumerate(membership_matrix):
         active_sets = [j for j, is_member in enumerate(membership) if is_member]
 
         # Draw inactive dots (light gray)
         for j in range(n_sets):
-            if j not in active_sets:
-                ax.scatter(
-                    i,
-                    j,
-                    s=dot_size * 0.4,
-                    color=inactive_color,
-                    marker="o",
-                    zorder=2,
-                    linewidths=0,
-                )
+            # Draw inactive dot
+            ax.scatter(
+                i,
+                j,
+                s=dot_size,
+                color=inactive_color if j not in active_sets else "white",
+                marker="o",
+                zorder=2,
+                linewidths=0,
+            )
 
-        # Draw connecting lines between active sets (avoiding dots)
-        if len(active_sets) > 1:
-            # Sort to get bottom-to-top order
-            sorted_sets = sorted(active_sets)
-
-            # Draw line segments between consecutive dots
-            # (radius_offset calculated above based on dot_size)
-            for idx in range(len(sorted_sets) - 1):
-                y_start = sorted_sets[idx] + radius_offset
-                y_end = sorted_sets[idx + 1] - radius_offset
-
-                ax.plot(
-                    [i, i],
-                    [y_start, y_end],
-                    color=active_color,
-                    linewidth=linewidth,
-                    solid_capstyle="round",
-                    zorder=1,
-                )
+        x_coords = [i] * len(active_sets)
+        y_coords = active_sets
+        ax.plot(
+            x_coords,
+            y_coords,
+            color=active_color,
+            linewidth=linewidth,
+            solid_capstyle="round",
+            zorder=1,
+        )
 
         # Draw active dots (dark)
         for j in active_sets:
@@ -259,7 +236,7 @@ def draw_matrix(
                 marker="o",
                 edgecolors=active_color,
                 linewidths=linewidth,
-                zorder=3,
+                zorder=4,
             )
 
     # Style axes
@@ -277,7 +254,7 @@ def draw_matrix(
         ax.axhline(
             i + 0.5, 
             color="#e0e0e0", 
-            linewidth=0.8, 
+            linewidth=GRID_LINEWIDTH, 
             linestyle="-", 
             zorder=0
         )
