@@ -351,7 +351,7 @@ class LegendBuilder:
     def __init__(
         self,
         ax: Axes,
-        x_offset: float = 1.02,
+        bbox_to_anchor: Tuple[float, float] = (1.02, 1),
         spacing: float = 0.03,
     ):
         """
@@ -366,9 +366,9 @@ class LegendBuilder:
         """
         self.ax = ax
         self.fig = ax.get_figure()
-        self.x_offset = x_offset
+        self.x_offset = bbox_to_anchor[0]
+        self.current_y = bbox_to_anchor[1]
         self.spacing = spacing
-        self.current_y = 1.0
         self.elements = []
 
     def add_legend(
@@ -541,7 +541,7 @@ class LegendBuilder:
 
 def create_legend_builder(
         ax: Axes,
-        x_offset: float = 1.02,
+        bbox_to_anchor: Tuple[float, float] = (1.02, 1),
         spacing: float = 0.03,
     ) -> LegendBuilder:
     """
@@ -553,8 +553,8 @@ def create_legend_builder(
     ----------
     ax : Axes
         Main plot axes.
-    x_offset : float
-        Horizontal offset from right edge of axes.
+    bbox_to_anchor : Tuple[float, float]
+        Bounding box to anchor the legend to.
     spacing : float
         Vertical spacing between elements.
     
@@ -570,7 +570,7 @@ def create_legend_builder(
     >>> builder.add_colorbar(label="Temperature", title_position="top")
     >>> builder.add_legend(size_handles, title="Size")
     """
-    return LegendBuilder(ax, x_offset=x_offset, spacing=spacing)
+    return LegendBuilder(ax, bbox_to_anchor=bbox_to_anchor, spacing=spacing)
 
 __all__ = [
     "HandlerCircle",

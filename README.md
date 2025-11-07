@@ -14,6 +14,18 @@ PubliPlots is a Python visualization library that provides beautiful, publicatio
 
 ## Installation
 
+### From PyPI
+
+```bash
+pip install publiplots
+```
+
+Or if you are using [uv](https://github.com/astral-sh/uv) for Python environment management:
+
+```bash
+uv pip install publiplots
+```
+
 ### From source (development)
 
 ```bash
@@ -55,11 +67,6 @@ Now you can select the "Python (publiplots)" kernel in Jupyter Lab or Jupyter No
 import publiplots as pp
 ```
 
-### From PyPI (coming soon)
-
-```bash
-pip install publiplots
-```
 
 ## Quick Start
 
@@ -128,3 +135,11 @@ MIT License - see LICENSE file for details.
 ## Author
 
 Jorge Botas ([@jorgebotas](https://github.com/jorgebotas))
+
+## Acknowledgments
+
+PubliPlots builds upon excellent work from the Python visualization community:
+
+- **[pyvenn](https://github.com/LankyCyril/pyvenn)** by LankyCyril - The Venn diagram implementation (2-6 sets) is adapted from this library
+- **[matplotlib](https://matplotlib.org/)** - The foundational plotting library that powers PubliPlots
+- **[seaborn](https://seaborn.pydata.org/)** - Inspiration for API design and color palettes
