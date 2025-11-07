@@ -13,19 +13,18 @@ Licensed under BSD-3-Clause
 from typing import Dict, List, Optional, Tuple
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
-from matplotlib.patches import Circle
-import numpy as np
+from matplotlib.colors import to_rgba
 
-from ...config import DEFAULT_COLOR, DEFAULT_LINEWIDTH, DEFAULT_ALPHA
+from publiplots.config import DEFAULT_COLOR, DEFAULT_LINEWIDTH, DEFAULT_ALPHA
 
 
-def _draw_intersection_bars(
+def draw_intersection_bars(
     ax: Axes,
     sizes: List[int],
     positions: List[int],
     color: str = DEFAULT_COLOR,
     linewidth: float = DEFAULT_LINEWIDTH,
-    alpha: float = 1.0,
+    alpha: float = DEFAULT_ALPHA,
 ) -> None:
     """
     Draw bars showing intersection sizes.
@@ -49,10 +48,9 @@ def _draw_intersection_bars(
         positions,
         sizes,
         width=0.6,
-        color=color,
-        edgecolor="black",
+        color=to_rgba(color, alpha=0.1),
+        edgecolor=color,
         linewidth=linewidth,
-        alpha=alpha,
         zorder=2,
     )
 
@@ -73,19 +71,17 @@ def _draw_intersection_bars(
             str(size),
             ha="center",
             va="bottom",
-            fontsize=9,
-            fontweight="normal",
         )
 
 
-def _draw_set_size_bars(
+def draw_set_size_bars(
     ax: Axes,
     set_names: List[str],
     set_sizes: Dict[str, int],
     positions: List[int],
     color: str = DEFAULT_COLOR,
     linewidth: float = DEFAULT_LINEWIDTH,
-    alpha: float = 1.0,
+    alpha: float = DEFAULT_ALPHA,
 ) -> None:
     """
     Draw horizontal bars showing set sizes.
@@ -113,17 +109,16 @@ def _draw_set_size_bars(
         positions,
         sizes,
         height=0.6,
-        color=color,
-        edgecolor="black",
+        color=to_rgba(color, alpha=alpha),
+        edgecolor=color,
         linewidth=linewidth,
-        alpha=alpha,
         zorder=2,
     )
 
     # Style axes
     ax.set_ylim(-0.5, len(positions) - 0.5)
     ax.set_yticks(positions)
-    ax.set_yticklabels(set_names, fontsize=11, fontweight="normal")
+    ax.set_yticklabels(set_names)
     ax.spines["left"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["top"].set_visible(False)
@@ -140,20 +135,19 @@ def _draw_set_size_bars(
             f"  {size}",
             ha="right",
             va="center",
-            fontsize=9,
-            fontweight="normal",
         )
 
 
-def _draw_matrix(
-    ax: Axes,
-    membership_matrix: List[Tuple[int, ...]],
-    set_names: List[str],
-    dot_size: float = 150,
-    line_width: float = 2.5,
-    active_color: str = "#2d2d2d",
-    inactive_color: str = "#d0d0d0",
-) -> None:
+def draw_matrix(
+        ax: Axes,
+        membership_matrix: List[Tuple[int, ...]],
+        set_names: List[str],
+        dot_size: float = 150,
+        linewidth: float = DEFAULT_LINEWIDTH,
+        active_color: str = DEFAULT_COLOR,
+        inactive_color: Optional[str] = None,
+        alpha: float = DEFAULT_ALPHA,
+    ) -> None:
     """
     Draw the membership matrix showing which sets each intersection contains.
 
@@ -167,12 +161,12 @@ def _draw_matrix(
         Names of sets (corresponds to rows, bottom to top)
     dot_size : float
         Size of dots in the matrix
-    line_width : float
+    linewidth : float
         Width of connecting lines
-    active_color : str
-        Color for active set membership
-    inactive_color : str
-        Color for inactive dots
+    active_color : str, optional
+        Color for active set membership. If None, use DEFAULT_COLOR.
+    inactive_color : str, optional
+        Color for inactive dots. If None, use to_rgba(color, alpha=alpha).
     """
     n_sets = len(set_names)
     n_intersections = len(membership_matrix)
@@ -182,6 +176,10 @@ def _draw_matrix(
 
     # Intersection positions (x-axis: one column per intersection)
     intersection_positions = list(range(n_intersections))
+
+    # Set inactive color
+    if inactive_color is None:
+        inactive_color = to_rgba(DEFAULT_COLOR, alpha=alpha)
 
     # Draw dots for all positions
     for i, membership in enumerate(membership_matrix):
@@ -194,7 +192,7 @@ def _draw_matrix(
                     i,
                     j,
                     s=dot_size * 0.4,
-                    c=inactive_color,
+                    color=inactive_color,
                     marker="o",
                     zorder=2,
                     linewidths=0,
@@ -204,14 +202,18 @@ def _draw_matrix(
         if len(active_sets) > 1:
             y_coords = active_sets
             x_coords = [i] * len(active_sets)
-            ax.plot(
-                x_coords,
-                y_coords,
-                color=active_color,
-                linewidth=line_width,
-                solid_capstyle="round",
-                zorder=1,
-            )
+            # Draw each line separately to avoid overlap
+            # We need to subtract the dot size from the y coordinate to avoid overlap
+            print(dot_size, len(active_sets))
+            for x, y in zip(x_coords, y_coords):
+                ax.plot(
+                    [x, x],
+                    [y - dot_size / 2, y + dot_size / 2],
+                    color=active_color,
+                    linewidth=linewidth,
+                    solid_capstyle="round",
+                    zorder=1,
+                )
 
         # Draw active dots (dark)
         for j in active_sets:
@@ -219,10 +221,10 @@ def _draw_matrix(
                 i,
                 j,
                 s=dot_size,
-                c=active_color,
+                color=to_rgba(active_color, alpha=alpha),
                 marker="o",
-                edgecolors="black",
-                linewidths=0.8,
+                edgecolors=active_color,
+                linewidths=linewidth,
                 zorder=3,
             )
 
@@ -239,7 +241,11 @@ def _draw_matrix(
     # Add horizontal grid lines between sets
     for i in range(n_sets - 1):
         ax.axhline(
-            i + 0.5, color="#e0e0e0", linewidth=0.8, linestyle="-", zorder=0
+            i + 0.5, 
+            color="#e0e0e0", 
+            linewidth=0.8, 
+            linestyle="-", 
+            zorder=0
         )
 
 
@@ -327,12 +333,12 @@ def add_upset_labels(
         Label for set size axis
     """
     if title:
-        fig.suptitle(title, fontsize=14, fontweight="bold", y=0.98)
+        fig.suptitle(title, y=0.98)
 
     if intersection_label:
         ax_intersections.set_ylabel(
-            intersection_label, fontsize=11, fontweight="normal"
+            intersection_label
         )
 
     if set_label:
-        ax_sets.set_xlabel(set_label, fontsize=11, fontweight="normal")
+        ax_sets.set_xlabel(set_label)

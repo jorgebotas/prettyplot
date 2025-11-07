@@ -20,9 +20,9 @@ from ...config import DEFAULT_COLOR, DEFAULT_LINEWIDTH, DEFAULT_ALPHA, DEFAULT_F
 from .logic import process_upset_data
 from .draw import (
     setup_upset_axes,
-    _draw_intersection_bars,
-    _draw_set_size_bars,
-    _draw_matrix,
+    draw_intersection_bars,
+    draw_set_size_bars,
+    draw_matrix,
     add_upset_labels,
 )
 
@@ -37,15 +37,15 @@ def upsetplot(
     max_degree: Optional[int] = None,
     show_counts: int = 20,
     color: str = DEFAULT_COLOR,
-    linewidth: float = DEFAULT_LINEWIDTH,
-    alpha: float = 0.7,
+    bar_linewidth: float = DEFAULT_LINEWIDTH,
+    matrix_linewidth: float = DEFAULT_LINEWIDTH * 1.2,
+    alpha: float = DEFAULT_ALPHA,
     dot_size: float = 150,
     figsize: Optional[Tuple[float, float]] = None,
+    figsize_factors: Tuple[float, float] = (0.4, 0.5),
     title: str = "",
     intersection_label: str = "Intersection Size",
-    set_label: str = "Set Size",
-    fig: Optional[Figure] = None,
-    **kwargs,
+    set_label: str = "Set Size"
 ) -> Tuple[Figure, Tuple[Axes, Axes, Axes]]:
     """
     Create an UpSet plot for visualizing set intersections.
@@ -103,7 +103,7 @@ def upsetplot(
     linewidth : float, default=DEFAULT_LINEWIDTH
         Width of edges around bars and dots in the matrix.
 
-    alpha : float, default=0.7
+    alpha : float, default=DEFAULT_ALPHA
         Transparency level for bars (0=transparent, 1=opaque).
 
     dot_size : float, default=150
@@ -121,13 +121,6 @@ def upsetplot(
 
     set_label : str, default="Set Size"
         Label for the x-axis of set size bars.
-
-    fig : Figure, optional
-        Existing matplotlib Figure to use. If None, creates a new figure.
-
-    **kwargs
-        Additional keyword arguments (currently unused, reserved for future
-        extensions).
 
     Returns
     -------
@@ -187,7 +180,6 @@ def upsetplot(
     >>> fig, axes = upsetplot(
     ...     data,
     ...     color='#ff6b6b',
-    ...     alpha=0.8,
     ...     dot_size=200,
     ...     figsize=(12, 6)
     ... )
@@ -229,11 +221,7 @@ def upsetplot(
         height = max(6, n_sets * 0.5 + 3)
         figsize = (width, height)
 
-    # Create figure
-    if fig is None:
-        fig = plt.figure(figsize=figsize)
-    else:
-        fig.set_size_inches(figsize)
+    fig = plt.figure(figsize=figsize)
 
     # Setup axes
     ax_intersections, ax_matrix, ax_sets = setup_upset_axes(fig, figsize=figsize)
@@ -242,37 +230,37 @@ def upsetplot(
     intersection_sizes = intersections["size"].tolist()
     intersection_positions = list(range(n_intersections))
 
-    _draw_intersection_bars(
+    draw_intersection_bars(
         ax=ax_intersections,
         sizes=intersection_sizes,
         positions=intersection_positions,
         color=color,
-        linewidth=linewidth,
+        linewidth=bar_linewidth,
         alpha=alpha,
     )
 
     # Draw set size bars (reverse order for bottom-to-top display)
     set_positions = list(range(n_sets))
 
-    _draw_set_size_bars(
+    draw_set_size_bars(
         ax=ax_sets,
         set_names=set_names,
         set_sizes=set_sizes,
         positions=set_positions,
         color=color,
-        linewidth=linewidth,
+        linewidth=bar_linewidth,
         alpha=alpha,
     )
 
     # Draw membership matrix
-    _draw_matrix(
+    draw_matrix(
         ax=ax_matrix,
         membership_matrix=membership_matrix,
         set_names=set_names,
         dot_size=dot_size,
-        line_width=linewidth * 1.2,
-        active_color="#2d2d2d",
-        inactive_color="#d0d0d0",
+        linewidth=matrix_linewidth,
+        active_color=color,
+        alpha=alpha,
     )
 
     # Add labels and title
