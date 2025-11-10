@@ -380,6 +380,23 @@ def setup_upset_axes(
     set_bar_cols = n_sets  # Set bars occupy n_sets columns
     matrix_cols = n_intersections  # Matrix occupies n_intersections columns
 
+    # Create width_ratios to ensure all bar/matrix columns have equal width
+    # All set bar and matrix columns get ratio 1.0
+    # Text columns get ratio proportional to their share of space
+    width_ratios = []
+
+    # Set bar columns: each gets ratio 1.0
+    width_ratios.extend([1.0] * set_bar_cols)
+
+    # Text columns: collectively need textw/colw worth of space
+    # Each text column gets equal share
+    if text_cols > 0:
+        text_ratio_per_col = (textw / colw) / text_cols
+        width_ratios.extend([text_ratio_per_col] * text_cols)
+
+    # Matrix columns: each gets ratio 1.0 (same as set bars)
+    width_ratios.extend([1.0] * matrix_cols)
+
     # Create GridSpec with calculated proportions
     # Total columns: set_bar_cols + text_cols + matrix_cols
     # Layout: [set bars][labels][matrix/intersection bars]
@@ -388,8 +405,13 @@ def setup_upset_axes(
         set_bar_cols + text_cols + matrix_cols,
         figure=fig,
         height_ratios=[2, n_sets],  # Intersection bars + matrix
+        width_ratios=width_ratios,  # Ensure equal bar widths
         hspace=0.05,
         wspace=0,  # No space between columns
+        left=0,  # Use full figure width
+        right=1,
+        bottom=0,
+        top=1,
     )
 
     # Top row: intersection bars (over the rightmost matrix_cols columns)
