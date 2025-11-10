@@ -272,9 +272,9 @@ def setup_upset_axes(
     Set up the three-panel layout for UpSet plot with proper sizing.
 
     This function calculates figure dimensions to ensure:
-    1. Set label text has enough space
-    2. Each bar/dot column has equal width
-    3. Intersection bars and set bars have the same width
+    1. Set label text has dedicated space between bars and matrix
+    2. Matrix elements are square (width = height)
+    3. Bar widths in both plots equal matrix element dimensions
 
     Parameters
     ----------
@@ -322,22 +322,28 @@ def setup_upset_axes(
     # Get figure width in display coordinates
     figw = fig.get_window_extent(renderer=fig.canvas.get_renderer()).width
 
-    if figsize is None and element_size is None:
-        # Calculate column width from available space
-        # Reserve space for text labels
-        colw = (figw - textw) / n_intersections
+    # Calculate element size (colw) and adjust figure size
+    # Key constraint: bars should have same width as matrix elements
+    # For square matrix elements: element_width = element_height
+    # So: matrix_width / n_intersections = matrix_height / n_sets
+    # Therefore: bars need width = colw for both intersection and set bars
 
-        # Calculate figure size to fit everything
+    if figsize is None and element_size is None:
+        # Calculate from available space
+        # figw = set_bar_space + textw + matrix_space
+        # For equal element widths: figw = colw * n_sets + textw + colw * n_intersections
         render_ratio = figw / fig.get_figwidth() if fig.get_figwidth() > 0 else 72
 
+        colw = (figw - textw) / (n_sets + n_intersections)
+
         # Ensure minimum element size
-        if colw < 20:  # Minimum 20 points per column
+        if colw < 20:  # Minimum 20 points per element
             colw = 20
-            figw = colw * n_intersections + textw
+            figw = colw * (n_sets + n_intersections) + textw
             fig.set_figwidth(figw / render_ratio)
 
-        # Height: proportional to number of sets
-        fig_height = max(6, n_sets * 0.8 + 3)  # 3 extra for intersection bars
+        # Height: colw * n_sets for matrix + extra for intersection bars
+        fig_height = (colw * n_sets + colw * 2) / render_ratio
         fig.set_figheight(fig_height)
 
     elif figsize is not None:
@@ -345,39 +351,41 @@ def setup_upset_axes(
         fig.set_size_inches(figsize)
         figw = fig.get_window_extent(renderer=fig.canvas.get_renderer()).width
         render_ratio = figw / fig.get_figwidth()
-        colw = (figw - textw) / n_intersections
+        colw = (figw - textw) / (n_sets + n_intersections)
 
     else:
         # User specified element size
         render_ratio = figw / fig.get_figwidth() if fig.get_figwidth() > 0 else 72
         colw = element_size / 72 * render_ratio
-        figw = colw * n_intersections + textw
+        figw = colw * (n_sets + n_intersections) + textw
         fig.set_figwidth(figw / render_ratio)
-        fig.set_figheight((colw * n_sets) / render_ratio)
+        fig.set_figheight((colw * (n_sets + 2)) / render_ratio)
 
-    # Calculate number of grid columns for text space
-    text_cols = max(1, int(np.ceil(textw / colw)))
+    # Calculate grid columns for each section
+    set_bar_cols = n_sets  # Set bars occupy n_sets columns
+    text_cols = max(1, int(np.ceil(textw / colw)))  # Text labels
+    matrix_cols = n_intersections  # Matrix occupies n_intersections columns
 
     # Create GridSpec with calculated proportions
-    # Total columns: text_cols + n_intersections
-    # Rows: intersection bars + matrix
+    # Total columns: set_bar_cols + text_cols + matrix_cols
+    # Layout: [set bars][labels][matrix/intersection bars]
     gs = gridspec.GridSpec(
-        2,  # 2 rows: intersection bars (top) and matrix (bottom)
-        text_cols + n_intersections,
+        2,  # 2 rows: intersection bars (top) and matrix section (bottom)
+        set_bar_cols + text_cols + matrix_cols,
         figure=fig,
-        height_ratios=[2, n_sets],  # Intersection bars + matrix (one row per set)
+        height_ratios=[2, n_sets],  # Intersection bars + matrix
         hspace=0.05,
-        wspace=0,  # No space between columns - they're uniform
+        wspace=0,  # No space between columns
     )
 
-    # Top row: intersection bars (only over the intersection columns)
-    ax_intersections = fig.add_subplot(gs[0, text_cols:])
+    # Top row: intersection bars (over the rightmost matrix_cols columns)
+    ax_intersections = fig.add_subplot(gs[0, set_bar_cols + text_cols:])
 
-    # Bottom row left: set size bars (over text columns)
-    ax_sets = fig.add_subplot(gs[1, :text_cols])
+    # Bottom row left: set size bars (over the leftmost set_bar_cols columns)
+    ax_sets = fig.add_subplot(gs[1, :set_bar_cols])
 
-    # Bottom row right: matrix (over intersection columns)
-    ax_matrix = fig.add_subplot(gs[1, text_cols:])
+    # Bottom row right: matrix (over the rightmost matrix_cols columns)
+    ax_matrix = fig.add_subplot(gs[1, set_bar_cols + text_cols:])
 
     return ax_intersections, ax_matrix, ax_sets
 
