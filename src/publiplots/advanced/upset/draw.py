@@ -15,6 +15,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import to_rgba
+from matplotlib.ticker import MaxNLocator
 
 from publiplots.config import DEFAULT_COLOR, DEFAULT_LINEWIDTH, DEFAULT_ALPHA
 
@@ -25,7 +26,7 @@ def draw_intersection_bars(
     ax: Axes,
     sizes: List[int],
     positions: List[int],
-    width: float = 0.6,
+    width: float = 0.4,
     color: str = DEFAULT_COLOR,
     linewidth: float = DEFAULT_LINEWIDTH,
     alpha: float = DEFAULT_ALPHA,
@@ -69,6 +70,7 @@ def draw_intersection_bars(
     ax.spines["top"].set_visible(False)
     ax.grid(axis="y", alpha=0.3, linestyle="--", linewidth=GRID_LINEWIDTH)
     ax.set_axisbelow(True)
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
 
     # Add value labels on top of bars
     for i, (pos, size) in enumerate(zip(positions, sizes)):
@@ -86,7 +88,7 @@ def draw_set_size_bars(
     set_names: List[str],
     set_sizes: Dict[str, int],
     positions: List[int],
-    width: float = 0.6,
+    width: float = 0.4,
     color: str = DEFAULT_COLOR,
     linewidth: float = DEFAULT_LINEWIDTH,
     alpha: float = DEFAULT_ALPHA,
@@ -135,6 +137,7 @@ def draw_set_size_bars(
     ax.grid(axis="x", alpha=0.3, linestyle="--", linewidth=GRID_LINEWIDTH)
     ax.set_axisbelow(True)
     ax.invert_xaxis()
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
 
 

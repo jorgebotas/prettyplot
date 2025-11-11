@@ -42,6 +42,7 @@ def upsetplot(
     alpha: float = DEFAULT_ALPHA,
     dot_size: float = 150,
     figsize: Optional[Tuple[float, float]] = None,
+    element_size: Optional[float] = None,
     title: str = "",
     intersection_label: str = "Intersection Size",
     set_label: str = "Set Size"
@@ -232,7 +233,7 @@ def upsetplot(
         set_names=set_names,
         n_intersections=n_intersections,
         figsize=figsize,  # User-specified size (or None for auto)
-        element_size=None,  # Could be exposed as parameter
+        element_size=element_size
     )
 
     # Draw intersection size bars

@@ -14,7 +14,6 @@ from publiplots.config import DEFAULT_DPI, DEFAULT_FORMAT
 
 
 def savefig(
-    fig: Figure,
     filepath: str,
     dpi: Optional[int] = None,
     format: Optional[str] = None,
@@ -34,8 +33,6 @@ def savefig(
 
     Parameters
     ----------
-    fig : Figure
-        Matplotlib figure object to save.
     filepath : str
         Output file path. The file extension determines the format if
         format parameter is not specified.
@@ -63,16 +60,16 @@ def savefig(
     Save a figure with default settings:
     >>> import publiplots as pp
     >>> fig, ax = pp.scatterplot(data, x='x', y='y')
-    >>> pp.savefig(fig, 'output.png')
+    >>> pp.savefig('output.png')
 
     Save with higher DPI:
-    >>> pp.savefig(fig, 'output.png', dpi=600)
+    >>> pp.savefig('output.png', dpi=600)
 
     Save as PDF (vector format):
-    >>> pp.savefig(fig, 'output.pdf')
+    >>> pp.savefig('output.pdf')
 
     Save with transparency:
-    >>> pp.savefig(fig, 'output.png', transparent=True)
+    >>> pp.savefig('output.png', transparent=True)
 
     Notes
     -----
@@ -97,7 +94,7 @@ def savefig(
     filepath_obj.parent.mkdir(parents=True, exist_ok=True)
 
     # Save the figure
-    fig.savefig(
+    plt.savefig(
         filepath,
         dpi=dpi,
         format=format,
@@ -113,7 +110,6 @@ def savefig(
 
 
 def save_multiple(
-    fig: Figure,
     basename: str,
     formats: list = None,
     **kwargs: Any
@@ -127,8 +123,6 @@ def save_multiple(
 
     Parameters
     ----------
-    fig : Figure
-        Matplotlib figure object to save.
     basename : str
         Base filename without extension (e.g., 'figure1').
     formats : list, optional
@@ -140,20 +134,20 @@ def save_multiple(
     Examples
     --------
     Save in default formats (PNG and PDF):
-    >>> pp.save_multiple(fig, 'results/figure1')
+    >>> pp.save_multiple('results/figure1')
 
     Save in custom formats:
-    >>> pp.save_multiple(fig, 'figure1', formats=['png', 'svg', 'eps'])
+    >>> pp.save_multiple('figure1', formats=['png', 'svg', 'eps'])
 
     Save with custom DPI:
-    >>> pp.save_multiple(fig, 'figure1', formats=['png'], dpi=600)
+    >>> pp.save_multiple('figure1', formats=['png'], dpi=600)
     """
     if formats is None:
         formats = ['png', 'pdf']
 
     for fmt in formats:
         filepath = f"{basename}.{fmt}"
-        savefig(fig, filepath, format=fmt, **kwargs)
+        savefig(filepath, format=fmt, **kwargs)
 
 
 def close_all() -> None:
