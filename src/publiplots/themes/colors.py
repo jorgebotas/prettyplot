@@ -375,8 +375,8 @@ def resolve_palette(
 
     # Handle None: use default palette for multiple colors, default color for single
     if palette is None:
-        default_palette = get_default("palette", "pastel_categorical")
-        default_color = get_default("color", "#5d83c3")
+        default_palette = resolve_param("palette", None)
+        default_color = resolve_param("color", None)
 
         if n_colors is not None and n_colors > 1:
             # Use default palette for multiple colors
