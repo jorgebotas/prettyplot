@@ -20,13 +20,14 @@ from matplotlib.ticker import MaxNLocator
 from publiplots.config import DEFAULT_COLOR, DEFAULT_LINEWIDTH, DEFAULT_ALPHA
 
 GRID_LINEWIDTH = 1
+BARWIDTH = 0.5
 
 
 def draw_intersection_bars(
     ax: Axes,
     sizes: List[int],
     positions: List[int],
-    width: float = 0.6,
+    width: float = BARWIDTH,
     color: str = DEFAULT_COLOR,
     linewidth: float = DEFAULT_LINEWIDTH,
     alpha: float = DEFAULT_ALPHA,
@@ -88,7 +89,7 @@ def draw_set_size_bars(
     set_names: List[str],
     set_sizes: Dict[str, int],
     positions: List[int],
-    width: float = 0.6,
+    width: float = BARWIDTH,
     color: str = DEFAULT_COLOR,
     linewidth: float = DEFAULT_LINEWIDTH,
     alpha: float = DEFAULT_ALPHA,
@@ -457,7 +458,7 @@ def setup_upset_axes(
     set_px_per_unit = set_height_px / set_data_range
 
     # Choose target visual width (use the smaller px_per_unit as reference)
-    target_visual_width = 0.6 * min(int_px_per_unit, set_px_per_unit)
+    target_visual_width = BARWIDTH * min(int_px_per_unit, set_px_per_unit)
 
     # Calculate bar widths in data coordinates to achieve target visual width
     intersection_bar_width = target_visual_width / int_px_per_unit
