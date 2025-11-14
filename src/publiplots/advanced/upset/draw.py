@@ -26,7 +26,7 @@ def draw_intersection_bars(
     ax: Axes,
     sizes: List[int],
     positions: List[int],
-    width: float = 0.4,
+    width: float = 0.6,
     color: str = DEFAULT_COLOR,
     linewidth: float = DEFAULT_LINEWIDTH,
     alpha: float = DEFAULT_ALPHA,
@@ -88,7 +88,7 @@ def draw_set_size_bars(
     set_names: List[str],
     set_sizes: Dict[str, int],
     positions: List[int],
-    width: float = 0.4,
+    width: float = 0.6,
     color: str = DEFAULT_COLOR,
     linewidth: float = DEFAULT_LINEWIDTH,
     alpha: float = DEFAULT_ALPHA,
@@ -300,6 +300,10 @@ def setup_upset_axes(
         Axes for membership matrix (middle)
     ax_sets : Axes
         Axes for set size bars (left)
+    intersection_bar_width : float
+        Optimal bar width for intersection bars in data coordinates
+    set_bar_width : float
+        Optimal bar width for set bars in data coordinates
     """
     import matplotlib
     from matplotlib import gridspec
@@ -426,7 +430,40 @@ def setup_upset_axes(
     # Bottom row right: matrix (over the rightmost matrix_cols columns)
     ax_matrix = fig.add_subplot(gs[1, set_bar_cols + text_cols:])
 
-    return ax_intersections, ax_matrix, ax_sets
+    # Calculate appropriate bar widths for equal visual appearance
+    # When figsize is specified, elements may not be square, so we need
+    # different bar widths for intersection and set bars to appear equal
+
+    # Get actual figure and axes dimensions
+    figw_display = fig.get_figwidth() * fig.dpi
+    figh_display = fig.get_figheight() * fig.dpi
+
+    # Get axes dimensions (normalized coordinates → display pixels)
+    int_bbox = ax_intersections.get_position()
+    set_bbox = ax_sets.get_position()
+
+    int_width_px = int_bbox.width * figw_display
+    int_height_px = int_bbox.height * figh_display
+    set_width_px = set_bbox.width * figw_display
+    set_height_px = set_bbox.height * figh_display
+
+    # Calculate pixels per data unit for each axis
+    # Intersection bars: n_intersections span from -0.5 to n_intersections-0.5
+    int_data_range = n_intersections  # Total range: from -0.5 to n-0.5 is n units
+    int_px_per_unit = int_width_px / int_data_range
+
+    # Set bars: n_sets span from -0.5 to n_sets-0.5
+    set_data_range = n_sets
+    set_px_per_unit = set_height_px / set_data_range
+
+    # Choose target visual width (use the smaller px_per_unit as reference)
+    target_visual_width = 0.6 * min(int_px_per_unit, set_px_per_unit)
+
+    # Calculate bar widths in data coordinates to achieve target visual width
+    intersection_bar_width = target_visual_width / int_px_per_unit
+    set_bar_width = target_visual_width / set_px_per_unit
+
+    return ax_intersections, ax_matrix, ax_sets, intersection_bar_width, set_bar_width
 
 
 def add_upset_labels(

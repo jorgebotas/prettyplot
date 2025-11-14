@@ -228,7 +228,7 @@ def upsetplot(
 
     # Setup axes with proper sizing that accounts for text width
     # This will adjust figure size if needed to ensure equal bar widths
-    ax_intersections, ax_matrix, ax_sets = setup_upset_axes(
+    ax_intersections, ax_matrix, ax_sets, intersection_bar_width, set_bar_width = setup_upset_axes(
         fig=fig,
         set_names=set_names,
         n_intersections=n_intersections,
@@ -244,6 +244,7 @@ def upsetplot(
         ax=ax_intersections,
         sizes=intersection_sizes,
         positions=intersection_positions,
+        width=intersection_bar_width,
         color=color,
         linewidth=bar_linewidth,
         alpha=alpha,
@@ -257,6 +258,7 @@ def upsetplot(
         set_names=set_names,
         set_sizes=set_sizes,
         positions=set_positions,
+        width=set_bar_width,
         color=color,
         linewidth=bar_linewidth,
         alpha=alpha,
