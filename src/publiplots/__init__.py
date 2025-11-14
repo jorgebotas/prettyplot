@@ -26,6 +26,7 @@ from publiplots.base.scatter import scatterplot
 
 # Advanced plotting functions
 from publiplots.advanced.venn import venn
+from publiplots.advanced.upset import upsetplot
 
 # Utilities
 from publiplots.utils.io import savefig, save_multiple, close_all
@@ -48,6 +49,7 @@ from publiplots.utils.legend import (
 from publiplots.themes.colors import get_palette, list_palettes, show_palette, resolve_palette, DEFAULT_COLOR
 from publiplots.themes.styles import (
     set_publication_style,
+    set_illustrator_style,
     set_minimal_style,
     set_poster_style,
     reset_style,
@@ -73,6 +75,7 @@ __all__ = [
     "scatterplot",
     # Advanced plots
     "venn",
+    "upsetplot",
     # I/O utilities
     "savefig",
     "save_multiple",
@@ -98,6 +101,7 @@ __all__ = [
     "DEFAULT_COLOR",
     # Style functions
     "set_publication_style",
+    "set_illustrator_style",
     "set_minimal_style",
     "set_poster_style",
     "reset_style",

@@ -10,7 +10,7 @@ from typing import Tuple
 # Default figure settings
 DEFAULT_DPI: int = 300
 DEFAULT_FORMAT: str = 'pdf'
-DEFAULT_FIGSIZE: Tuple[float, float] = (6, 4)
+DEFAULT_FIGSIZE: Tuple[float, float] = (3, 2)
 
 # Default styling
 DEFAULT_FONT: str = 'Arial'
@@ -19,7 +19,7 @@ DEFAULT_STYLE: str = 'white'
 DEFAULT_COLOR: str = '#5d83c3' # slate blue
 
 # Default plot parameters
-DEFAULT_LINEWIDTH: float = 2.0
+DEFAULT_LINEWIDTH: float = 1.0
 DEFAULT_ALPHA: float = 0.1
 DEFAULT_CAPSIZE: float = 0.0
 
