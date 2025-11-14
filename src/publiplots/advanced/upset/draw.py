@@ -184,7 +184,7 @@ def draw_matrix(
 
     # Set inactive color
     if inactive_color is None:
-        inactive_color = to_rgba(DEFAULT_COLOR, alpha=alpha)
+        inactive_color = to_rgba(active_color, alpha=alpha)
 
     # Set axis limits first (needed for transformation calculations)
     ax.set_xlim(-0.5, n_intersections - 0.5)
