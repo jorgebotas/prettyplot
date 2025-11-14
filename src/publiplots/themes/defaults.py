@@ -5,6 +5,8 @@ This module defines the default matplotlib rcParams that will be initialized
 when publiplots is imported. All publiplots functions read from these rcParams,
 ensuring consistency with matplotlib/seaborn styling patterns.
 
+Base defaults are defined in base_defaults.py and composed into styles.
+
 Main exports:
 - rcParams: Unified parameter interface (pp.rcParams['color'])
 - resolve_param(): Helper to resolve parameter values (value or default)
@@ -14,67 +16,40 @@ Main exports:
 from typing import Dict, Any, Optional
 import matplotlib.pyplot as plt
 
+from .base_defaults import MATPLOTLIB_DEFAULTS, CUSTOM_DEFAULTS
+
 
 # =============================================================================
 # PubliPlots Default rcParams
 # =============================================================================
 
-# Standard matplotlib rcParams that publiplots sets
-PUBLIPLOTS_RCPARAMS: Dict[str, Any] = {
-    # Figure settings - small defaults suitable for publications
-    "figure.figsize": (3, 2),
-    "figure.dpi": 100,  # Display DPI
-    "savefig.dpi": 300,  # Output DPI
-    "savefig.format": "pdf",
-    "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.1,
+# Standard matplotlib rcParams (imported from base_defaults)
+PUBLIPLOTS_RCPARAMS: Dict[str, Any] = MATPLOTLIB_DEFAULTS
+"""
+Default matplotlib rcParams for publiplots.
 
-    # Font settings - publication-ready defaults
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+These are the base defaults shared across all styles. Individual styles
+(notebook, publication) may override specific parameters.
 
-    # Line settings
-    "lines.linewidth": 1.0,
-    "lines.markersize": 8,
-
-    # PDF settings for vector graphics (editable text in Adobe Illustrator)
-    "pdf.fonttype": 42,
-    "ps.fonttype": 42,
-
-    # Patch settings (for bars, etc.)
-    "patch.linewidth": 1.0,
-}
+See base_defaults.py for the complete list of default values.
+"""
 
 # Custom publiplots settings (not part of matplotlib rcParams)
 # These are stored as module-level variables since matplotlib doesn't support custom namespaces
-_PUBLIPLOTS_CUSTOM_DEFAULTS: Dict[str, Any] = {
-    "color": "#5d83c3",  # Default slate blue color
-    "alpha": 0.1,  # Default transparency for error bars/bands
-    "capsize": 0.0,  # Default error bar cap size
-    "palette": "pastel_categorical",  # Default color palette name
-    "hatch_mode": 1,  # Default hatch pattern density mode
-}
+# Start with a copy so styles can modify without affecting the base
+_PUBLIPLOTS_CUSTOM_DEFAULTS: Dict[str, Any] = CUSTOM_DEFAULTS.copy()
 """
-Default rcParams for publiplots.
+Custom publiplots parameters.
 
-These settings are automatically applied when publiplots is imported,
-providing sensible publication-ready defaults that can be overridden
-by style functions or manual rcParams updates.
+These parameters are not part of matplotlib's rcParams but are used by
+publiplots functions. They can be accessed and modified via pp.rcParams.
 
-Standard matplotlib rcParams:
-- figure.figsize: (3, 2) - Compact figures suitable for publications
-- figure.dpi: 100 - Display resolution
-- savefig.dpi: 300 - High-quality output for publications
-- savefig.format: 'pdf' - Vector format for scalability
-- lines.linewidth: 1.0 - Moderate line thickness
-- pdf.fonttype: 42 - TrueType fonts (editable in Illustrator)
-
-Custom publiplots rcParams (use 'publiplots.*' namespace):
-- publiplots.color: Default color for single-color plots
-- publiplots.alpha: Default transparency for error regions
-- publiplots.capsize: Default error bar cap size
-- publiplots.palette: Default categorical color palette name
-- publiplots.hatch_mode: Hatch pattern density mode (1=normal, 2=dense)
+Current custom parameters:
+- color: Default color for single-color plots
+- alpha: Default transparency for bars/error regions
+- capsize: Default error bar cap size
+- palette: Default categorical color palette name
+- hatch_mode: Hatch pattern density mode (1-4)
 """
 
 
