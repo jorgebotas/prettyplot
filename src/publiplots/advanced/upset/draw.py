@@ -494,8 +494,7 @@ def add_upset_labels(
         Label for set size axis
     """
     if title:
-        fig.suptitle(title, y=0.98)
-
+        ax_intersections.set_title(title)
     if intersection_label:
         ax_intersections.set_ylabel(
             intersection_label
