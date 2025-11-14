@@ -283,7 +283,7 @@ def setup_upset_axes(
     fig: plt.Figure,
     set_names: List[str],
     n_intersections: int,
-    element_size: float,
+    elementsize: float,
 ) -> Tuple[Axes, Axes, Axes]:
     """
     Set up the three-panel layout for UpSet plot with proper sizing.
@@ -301,7 +301,7 @@ def setup_upset_axes(
         Names of sets (for measuring text width)
     n_intersections : int
         Number of intersections to display
-    element_size : float
+    elementsize : float
         Width of each element (bar/dot) in figure points. Controls the
         overall scale of the plot. Figure size is calculated to maintain
         proper proportions based on this value.
@@ -342,7 +342,7 @@ def setup_upset_axes(
     # Get figure width in display coordinates
     figw = fig.get_window_extent(renderer=fig.canvas.get_renderer()).width
 
-    # Calculate figure size based on element_size
+    # Calculate figure size based on elementsize
     # Key constraint: bars should have same width as matrix elements
     # For square matrix elements: element_width = element_height
     # So: matrix_width / n_intersections = matrix_height / n_sets
@@ -351,9 +351,9 @@ def setup_upset_axes(
     # Number of non-text elements (set bars + intersection bars)
     non_text_nelems = n_sets + n_intersections
 
-    # Calculate element width in display coordinates from element_size (in points)
+    # Calculate element width in display coordinates from elementsize (in points)
     render_ratio = figw / fig.get_figwidth() if fig.get_figwidth() > 0 else 72
-    colw = element_size / 72 * render_ratio
+    colw = elementsize / 72 * render_ratio
 
     # Calculate figure width to fit: text + non-text elements
     # Add +1 to text columns for margin (like UpSetPlot does)

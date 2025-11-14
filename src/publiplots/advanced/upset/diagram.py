@@ -42,7 +42,7 @@ def upsetplot(
     matrix_linewidth: Optional[float] = None,
     alpha: Optional[float] = None,
     dotsize: Optional[float] = None,
-    element_size: Optional[float] = None,
+    elementsize: Optional[float] = None,
     title: str = "",
     intersection_label: str = "",
     set_label: str = ""
@@ -110,15 +110,17 @@ def upsetplot(
         Transparency level for bars (0=transparent, 1=opaque).
 
     dotsize : float, optional
-        Size of dots in the membership matrix (scatter marker size).
-        If not specified, calculated from element_size as ``element_size * 3``.
-        Typical values: 100-200.
+        Size of dots in the membership matrix (area in points²).
+        If not specified, calculated from elementsize using circle geometry:
+        ``dotsize = π * (elementsize * 0.7 / 2)²``.
+        Typical values: 400-900.
 
-    element_size : float, optional
+    elementsize : float, optional
         Width of each matrix cell/bar in figure points (1/72 inch).
         Controls the overall scale of the plot. If not specified,
-        calculated from dotsize as ``dotsize / 3``, or defaults to 48.
-        Typical values: 32 (compact), 48 (default), 64 (spacious).
+        calculated from dotsize using circle geometry:
+        ``diameter = 2 * sqrt(dotsize / π); elementsize = diameter / 0.7``
+        or defaults to 48. Typical values: 32 (compact), 48 (default), 64 (spacious).
         The figure size is automatically calculated to maintain proper
         proportions based on this value.
 
@@ -189,18 +191,18 @@ def upsetplot(
     >>> fig, axes = upsetplot(
     ...     data,
     ...     color='#ff6b6b',
-    ...     element_size=64  # Larger, more spacious plot
+    ...     elementsize=64  # Larger, more spacious plot
     ... )
 
-    Control plot size via element_size:
+    Control plot size via elementsize:
 
     >>> fig, axes = upsetplot(
     ...     data,
-    ...     element_size=32  # Compact plot
+    ...     elementsize=32  # Compact plot
     ... )
     >>> fig, axes = upsetplot(
     ...     data,
-    ...     element_size=64  # Spacious plot
+    ...     elementsize=64  # Spacious plot
     ... )
 
     See Also
@@ -221,20 +223,27 @@ def upsetplot(
     matrix_linewidth = resolve_param("lines.linewidth") * 1.2 if matrix_linewidth is None else matrix_linewidth
     alpha = resolve_param("alpha", alpha)
 
-    # Handle element_size and dotsize relationship
-    # element_size controls physical dimensions (bars/cells width in points)
-    # dotsize controls scatter marker size (visual dot size)
-    # Relationship: dotsize ≈ element_size * 3
-    if element_size is None and dotsize is None:
+    # Handle elementsize and dotsize relationship using proper circle geometry
+    # elementsize: physical dimensions (bars/cells width in points)
+    # dotsize: scatter marker area in points² (area = π * r²)
+    # Relationship: dot diameter ≈ elementsize * 0.7 (dot takes 70% of cell width)
+    import numpy as np
+
+    DOT_TO_CELL_RATIO = 0.7  # Dot diameter as fraction of cell width
+
+    if elementsize is None and dotsize is None:
         # Both unspecified: use sensible defaults
-        element_size = 48  # Medium size (32=compact, 48=default, 64=spacious)
-        dotsize = element_size * 3  # 144
-    elif element_size is None:
-        # Only dotsize specified: calculate element_size
-        element_size = dotsize / 3
+        elementsize = 48  # Medium size (32=compact, 48=default, 64=spacious)
+        dot_diameter = elementsize * DOT_TO_CELL_RATIO
+        dotsize = np.pi * (dot_diameter / 2) ** 2  # Area = π * r²
+    elif elementsize is None:
+        # Only dotsize specified: calculate elementsize from dot area
+        dot_diameter = 2 * np.sqrt(dotsize / np.pi)  # diameter = 2 * sqrt(area/π)
+        elementsize = dot_diameter / DOT_TO_CELL_RATIO
     elif dotsize is None:
-        # Only element_size specified: calculate dotsize
-        dotsize = element_size * 3
+        # Only elementsize specified: calculate dotsize from element width
+        dot_diameter = elementsize * DOT_TO_CELL_RATIO
+        dotsize = np.pi * (dot_diameter / 2) ** 2
     # else: both specified, use as-is
 
     # Process data
@@ -257,18 +266,18 @@ def upsetplot(
     n_intersections = processed["n_intersections"]
 
     # Create figure with initial size (will be adjusted by setup_upset_axes)
-    # Initial size is just a starting point - setup_upset_axes will resize based on element_size
+    # Initial size is just a starting point - setup_upset_axes will resize based on elementsize
     width = max(8, n_intersections * 0.4)
     height = max(6, n_sets * 0.8 + 3)
     fig = plt.figure(figsize=(width, height))
 
     # Setup axes with proper sizing that maintains proportions
-    # Figure size is automatically calculated based on element_size
+    # Figure size is automatically calculated based on elementsize
     ax_intersections, ax_matrix, ax_sets, intersection_bar_width, set_bar_width = setup_upset_axes(
         fig=fig,
         set_names=set_names,
         n_intersections=n_intersections,
-        element_size=element_size
+        elementsize=elementsize
     )
 
     # Draw intersection size bars
