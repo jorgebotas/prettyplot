@@ -3,6 +3,12 @@ Matplotlib style presets for publiplots.
 
 This module provides functions to apply consistent styling to matplotlib
 plots, optimized for publication-ready visualizations.
+
+Main styles:
+- set_notebook_style(): For interactive work in Jupyter notebooks
+- set_publication_style(): For final publication figures (compact, high DPI)
+- set_minimal_style(): Minimal variant of notebook style
+- set_poster_style(): Large fonts and elements for presentations
 """
 
 from typing import  Dict, Any
@@ -464,14 +470,3 @@ def apply_custom_style(style_dict: Dict[str, Any]) -> None:
         rcParams[key] = value
 
 
-# =============================================================================
-# Backward Compatibility Aliases
-# =============================================================================
-
-# Keep old function names as aliases for backward compatibility
-set_illustrator_style = set_publication_style
-"""Alias for set_publication_style() - kept for backward compatibility."""
-
-# Keep old style dictionaries as aliases
-ILLUSTRATOR_STYLE = PUBLICATION_STYLE
-"""Alias for PUBLICATION_STYLE - kept for backward compatibility."""

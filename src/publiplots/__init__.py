@@ -50,7 +50,6 @@ from publiplots.themes.colors import get_palette, list_palettes, show_palette, r
 from publiplots.themes.styles import (
     set_notebook_style,
     set_publication_style,
-    set_illustrator_style,  # Backward compatibility alias
     set_minimal_style,
     set_poster_style,
     reset_style,
@@ -104,7 +103,6 @@ __all__ = [
     # Style functions
     "set_notebook_style",
     "set_publication_style",
-    "set_illustrator_style",  # Backward compatibility alias
     "set_minimal_style",
     "set_poster_style",
     "reset_style",
