@@ -50,8 +50,6 @@ from publiplots.themes.colors import get_palette, list_palettes, show_palette, r
 from publiplots.themes.styles import (
     set_notebook_style,
     set_publication_style,
-    set_minimal_style,
-    set_poster_style,
     reset_style,
 )
 # Initialize publiplots rcParams defaults
@@ -103,8 +101,6 @@ __all__ = [
     # Style functions
     "set_notebook_style",
     "set_publication_style",
-    "set_minimal_style",
-    "set_poster_style",
     "reset_style",
     # Marker functions
     "get_marker_cycle",

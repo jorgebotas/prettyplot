@@ -4,11 +4,9 @@ Matplotlib style presets for publiplots.
 This module provides functions to apply consistent styling to matplotlib
 plots, optimized for publication-ready visualizations.
 
-Main styles:
+Two main styles:
 - set_notebook_style(): For interactive work in Jupyter notebooks
 - set_publication_style(): For final publication figures (compact, high DPI)
-- set_minimal_style(): Minimal variant of notebook style
-- set_poster_style(): Large fonts and elements for presentations
 """
 
 from typing import  Dict, Any
@@ -163,48 +161,6 @@ Features:
 - Ideal for Jupyter notebooks and interactive analysis
 """
 
-MINIMAL_STYLE: Dict[str, Any] = {
-    **NOTEBOOK_STYLE,
-    # More minimal - even fewer visual elements
-    "axes.linewidth": 1.0,
-    "axes.spines.left": True,
-    "axes.spines.bottom": True,
-    "xtick.major.width": 1.0,
-    "ytick.major.width": 1.0,
-    "lines.linewidth": 1.5,
-}
-"""
-Minimal style with reduced visual clutter.
-
-Lighter lines and simpler appearance, ideal for presentations or
-when multiple figures need to be displayed together.
-"""
-
-POSTER_STYLE: Dict[str, Any] = {
-    **NOTEBOOK_STYLE,
-    # Larger sizes for poster presentations
-    "font.size": 16,
-    "axes.labelsize": 18,
-    "axes.titlesize": 20,
-    "xtick.labelsize": 14,
-    "ytick.labelsize": 14,
-    "legend.fontsize": 14,
-    "legend.title_fontsize": 16,
-    "figure.titlesize": 22,
-    "figure.figsize": (8, 6),
-    "lines.linewidth": 3.0,
-    "lines.markersize": 10,
-    "axes.linewidth": 2.0,
-    "xtick.major.width": 2.0,
-    "ytick.major.width": 2.0,
-    "patch.linewidth": 3.0,
-}
-"""
-Poster presentation style with larger fonts and thicker lines.
-
-Optimized for viewing from a distance, such as conference posters
-or large-screen presentations.
-"""
 
 
 # =============================================================================
@@ -335,81 +291,6 @@ def set_publication_style(
     except ValueError:
         pass  # If palette doesn't exist, keep seaborn default
 
-def set_minimal_style(
-    font: str = "Arial",
-    font_scale: float = 1.0
-) -> None:
-    """
-    Apply minimal style with reduced visual elements.
-
-    Parameters
-    ----------
-    font : str, default='Arial'
-        Font family to use.
-    font_scale : float, default=1.0
-        Scaling factor for all font sizes.
-
-    Examples
-    --------
-    >>> import publiplots as pp
-    >>> pp.set_minimal_style()
-    """
-    sns.set_theme(context="paper", style="white", font=font, font_scale=font_scale)
-
-    for key, value in MINIMAL_STYLE.items():
-        rcParams[key] = value
-
-    if font != "Arial":
-        rcParams["font.sans-serif"] = [font, "Arial", "Helvetica", "DejaVu Sans"]
-
-    if font_scale != 1.0:
-        for key in rcParams.keys():
-            if 'size' in key and isinstance(rcParams[key], (int, float)):
-                rcParams[key] = rcParams[key] * font_scale
-
-
-def set_poster_style(
-    font: str = "Arial",
-    font_scale: float = 2.0,
-    palette: str = "pastel_categorical"
-) -> None:
-    """
-    Apply poster presentation style with larger elements.
-
-    Parameters
-    ----------
-    font : str, default='Arial'
-        Font family to use.
-    font_scale : float, default=1.0
-        Additional scaling factor on top of poster defaults.
-    palette : str, default='pastel_categorical'
-        Default color palette name.
-
-    Examples
-    --------
-    >>> import publiplots as pp
-    >>> pp.set_poster_style()
-    """
-    sns.set_theme(context="poster", style="white", font=font, font_scale=font_scale)
-
-    for key, value in POSTER_STYLE.items():
-        rcParams[key] = value
-
-    if font != "Arial":
-        rcParams["font.sans-serif"] = [font, "Arial", "Helvetica", "DejaVu Sans"]
-
-    if font_scale != 1.0:
-        for key in rcParams.keys():
-            if 'size' in key and isinstance(rcParams[key], (int, float)):
-                rcParams[key] = rcParams[key] * font_scale
-
-    from publiplots.themes.colors import get_palette
-    try:
-        colors = get_palette(palette)
-        if isinstance(colors, list):
-            sns.set_palette(colors)
-    except ValueError:
-        pass
 
 
 def reset_style() -> None:

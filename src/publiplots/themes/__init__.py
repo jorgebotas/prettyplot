@@ -24,8 +24,6 @@ from publiplots.themes.colors import (
 from publiplots.themes.styles import (
     set_notebook_style,
     set_publication_style,
-    set_minimal_style,
-    set_poster_style,
     reset_style,
     get_current_style,
     apply_custom_style,
@@ -63,8 +61,6 @@ __all__ = [
     # Style functions
     "set_notebook_style",
     "set_publication_style",
-    "set_minimal_style",
-    "set_poster_style",
     "reset_style",
     "get_current_style",
     "apply_custom_style",
