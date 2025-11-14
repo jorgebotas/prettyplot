@@ -24,6 +24,7 @@ from publiplots.themes.colors import (
 
 from publiplots.themes.styles import (
     set_publication_style,
+    set_illustrator_style,
     set_minimal_style,
     set_poster_style,
     reset_style,
@@ -64,6 +65,7 @@ __all__ = [
     "PASTEL_POSITIVE_NEGATIVE",
     # Style functions
     "set_publication_style",
+    "set_illustrator_style",
     "set_minimal_style",
     "set_poster_style",
     "reset_style",

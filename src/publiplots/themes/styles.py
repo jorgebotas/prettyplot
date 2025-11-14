@@ -5,7 +5,7 @@ This module provides functions to apply consistent styling to matplotlib
 plots, optimized for publication-ready visualizations.
 """
 
-from typing import Optional, Dict, Any
+from typing import  Dict, Any
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib import rcParams

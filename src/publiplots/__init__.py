@@ -49,6 +49,7 @@ from publiplots.utils.legend import (
 from publiplots.themes.colors import get_palette, list_palettes, show_palette, resolve_palette, DEFAULT_COLOR
 from publiplots.themes.styles import (
     set_publication_style,
+    set_illustrator_style,
     set_minimal_style,
     set_poster_style,
     reset_style,
@@ -100,6 +101,7 @@ __all__ = [
     "DEFAULT_COLOR",
     # Style functions
     "set_publication_style",
+    "set_illustrator_style",
     "set_minimal_style",
     "set_poster_style",
     "reset_style",
