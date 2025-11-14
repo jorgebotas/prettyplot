@@ -13,8 +13,7 @@ The module supports three density modes for patterns:
 
 from typing import Optional, Dict, List, Set, Union
 
-from publiplots.themes.defaults import resolve_param, rcParams
-import matplotlib.pyplot as plt
+from publiplots.themes.defaults import rcParams
 
 
 # =============================================================================

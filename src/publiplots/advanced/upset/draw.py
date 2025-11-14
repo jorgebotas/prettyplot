@@ -13,7 +13,6 @@ Licensed under BSD-3-Clause
 from typing import Dict, List, Optional, Tuple
 
 from publiplots.themes.defaults import resolve_param
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import to_rgba
@@ -76,7 +75,7 @@ def draw_intersection_bars(
     ax.spines["top"].set_visible(False)
     ax.grid(axis="y", alpha=0.3, linestyle="--", linewidth=GRID_LINEWIDTH)
     ax.set_axisbelow(True)
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True, nbins='auto'))
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True, nbins="auto"))
 
     # Add value labels on top of bars
     for i, (pos, size) in enumerate(zip(positions, sizes)):
@@ -148,7 +147,7 @@ def draw_set_size_bars(
     ax.grid(axis="x", alpha=0.3, linestyle="--", linewidth=GRID_LINEWIDTH)
     ax.set_axisbelow(True)
     ax.invert_xaxis()
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins='auto'))
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins="auto"))
 
 
 
@@ -156,7 +155,7 @@ def draw_matrix(
         ax: Axes,
         membership_matrix: List[Tuple[int, ...]],
         set_names: List[str],
-        dot_size: float = 150,
+        dotsize: float = 150,
         linewidth: Optional[float] = None,
         active_color: Optional[str] = None,
         inactive_color: Optional[str] = None,
@@ -173,7 +172,7 @@ def draw_matrix(
         Binary membership patterns (each tuple is one column)
     set_names : list
         Names of sets (corresponds to rows, bottom to top)
-    dot_size : float
+    dotsize : float
         Size of dots in the matrix
     linewidth : float
         Width of connecting lines
@@ -216,7 +215,7 @@ def draw_matrix(
             ax.scatter(
                 i,
                 j,
-                s=dot_size,
+                s=dotsize,
                 color=inactive_color if j not in active_sets else "white",
                 marker="o",
                 zorder=2,
@@ -239,7 +238,7 @@ def draw_matrix(
             ax.scatter(
                 i,
                 j,
-                s=dot_size,
+                s=dotsize,
                 color=to_rgba(active_color, alpha=alpha),
                 marker="o",
                 edgecolors=active_color,
@@ -275,7 +274,7 @@ def draw_matrix(
             str(name),
             ha="right",
             va="center",
-            fontsize=matplotlib.rcParams["ytick.labelsize"],
+            fontsize=resolve_param("ytick.labelsize"),
             fontweight="normal",
         )
 
@@ -321,14 +320,13 @@ def setup_upset_axes(
     set_bar_width : float
         Optimal bar width for set bars in data coordinates
     """
-    import matplotlib
     from matplotlib import gridspec
     import numpy as np
 
     n_sets = len(set_names)
 
     # Measure text width needed for set labels
-    text_kw = {"size": matplotlib.rcParams["ytick.labelsize"]}
+    text_kw = {"size": resolve_param("ytick.labelsize")}
     # Add "x" for margin
     t = fig.text(
         0,
@@ -487,8 +485,8 @@ def add_upset_labels(
     ax_intersections: Axes,
     ax_sets: Axes,
     title: str = "",
-    intersection_label: str = "Intersection Size",
-    set_label: str = "Set Size",
+    intersection_label: str = "",
+    set_label: str = "",
 ) -> None:
     """
     Add labels and title to UpSet plot.

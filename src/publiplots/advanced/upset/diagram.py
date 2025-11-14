@@ -41,12 +41,12 @@ def upsetplot(
     bar_linewidth: Optional[float] = None,
     matrix_linewidth: Optional[float] = None,
     alpha: Optional[float] = None,
-    dot_size: float = 150,
+    dotsize: Optional[float] = None,
     figsize: Optional[Tuple[float, float]] = None,
     element_size: Optional[float] = None,
     title: str = "",
-    intersection_label: str = "Intersection Size",
-    set_label: str = "Set Size"
+    intersection_label: str = "",
+    set_label: str = ""
 ) -> Tuple[Figure, Tuple[Axes, Axes, Axes]]:
     """
     Create an UpSet plot for visualizing set intersections.
@@ -107,7 +107,7 @@ def upsetplot(
     alpha : float, default=DEFAULT_ALPHA
         Transparency level for bars (0=transparent, 1=opaque).
 
-    dot_size : float, default=150
+    dotsize : float, default=150
         Size of dots in the membership matrix.
 
     figsize : tuple of (float, float), optional
@@ -117,10 +117,10 @@ def upsetplot(
     title : str, default=""
         Main plot title.
 
-    intersection_label : str, default="Intersection Size"
+    intersection_label : str, default=""
         Label for the y-axis of intersection size bars.
 
-    set_label : str, default="Set Size"
+    set_label : str, default=""
         Label for the x-axis of set size bars.
 
     Returns
@@ -181,7 +181,7 @@ def upsetplot(
     >>> fig, axes = upsetplot(
     ...     data,
     ...     color='#ff6b6b',
-    ...     dot_size=200,
+    ...     dotsize=200,
     ...     figsize=(12, 6)
     ... )
 
@@ -200,11 +200,10 @@ def upsetplot(
     # Read defaults from rcParams if not provided
     color = resolve_param("color", color)
     bar_linewidth = resolve_param("lines.linewidth", bar_linewidth)
-    if matrix_linewidth is None:
-        default_lw = resolve_param("lines.linewidth", None)
-        matrix_linewidth = default_lw * 1.2
+    matrix_linewidth = resolve_param("lines.linewidth") * 1.2 if matrix_linewidth is None else matrix_linewidth
     alpha = resolve_param("alpha", alpha)
-    figsize = resolve_param("figure.figsize", figsize)
+    dotsize = resolve_param("lines.markersize") * 10 if dotsize is None else dotsize
+    element_size = dotsize * 1.5 if element_size is None else element_size
 
     # Process data
     processed = process_upset_data(
@@ -279,7 +278,7 @@ def upsetplot(
         ax=ax_matrix,
         membership_matrix=membership_matrix,
         set_names=set_names,
-        dot_size=dot_size,
+        dotsize=dotsize,
         linewidth=matrix_linewidth,
         active_color=color,
         alpha=alpha,
