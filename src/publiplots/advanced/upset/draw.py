@@ -76,7 +76,7 @@ def draw_intersection_bars(
     ax.spines["top"].set_visible(False)
     ax.grid(axis="y", alpha=0.3, linestyle="--", linewidth=GRID_LINEWIDTH)
     ax.set_axisbelow(True)
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True, nbins='auto'))
 
     # Add value labels on top of bars
     for i, (pos, size) in enumerate(zip(positions, sizes)):
@@ -148,7 +148,7 @@ def draw_set_size_bars(
     ax.grid(axis="x", alpha=0.3, linestyle="--", linewidth=GRID_LINEWIDTH)
     ax.set_axisbelow(True)
     ax.invert_xaxis()
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins='auto'))
 
 
 
