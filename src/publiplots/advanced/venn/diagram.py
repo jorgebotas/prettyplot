@@ -13,7 +13,7 @@ Based on pyvenn by LankyCyril: https://github.com/LankyCyril/pyvenn
 from matplotlib.axes import Axes
 from typing import Dict, List, Optional, Tuple, Union
 
-from publiplots.themes.defaults import resolve_param
+from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 
 from publiplots.themes.colors import get_palette

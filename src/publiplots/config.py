@@ -14,7 +14,7 @@ Global configuration settings for publiplots.
        - pp.set_notebook_style() - For interactive work (larger figures, readable fonts)
        - pp.set_publication_style() - For final figures (compact, high DPI, Illustrator-ready)
     2. Modify rcParams directly: plt.rcParams["figure.figsize"] = (8, 6)
-    3. Use from publiplots.themes.defaults import get_default, reset_to_publiplots_defaults()
+    3. Use from publiplots.themes.rcparams import get_default, reset_to_publiplots_defaults()
 """
 
 import warnings

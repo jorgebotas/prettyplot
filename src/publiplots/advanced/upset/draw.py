@@ -12,7 +12,7 @@ Licensed under BSD-3-Clause
 
 from typing import Dict, List, Optional, Tuple
 
-from publiplots.themes.defaults import resolve_param
+from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import to_rgba

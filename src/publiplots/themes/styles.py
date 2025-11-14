@@ -14,7 +14,11 @@ Styles are composed from base defaults plus style-specific overrides.
 from typing import Dict, Any
 import matplotlib.pyplot as plt
 
-from .base_defaults import MATPLOTLIB_DEFAULTS, CUSTOM_DEFAULTS
+from .rcparams import (
+    MATPLOTLIB_RCPARAMS,
+    PUBLIPLOTS_RCPARAMS,
+    _PUBLIPLOTS_CUSTOM_DEFAULTS,
+)
 
 
 # =============================================================================
@@ -23,8 +27,8 @@ from .base_defaults import MATPLOTLIB_DEFAULTS, CUSTOM_DEFAULTS
 
 # Notebook style: base defaults + larger sizes for interactive work
 NOTEBOOK_STYLE = {
-    **MATPLOTLIB_DEFAULTS,
-    **CUSTOM_DEFAULTS,
+    **MATPLOTLIB_RCPARAMS,
+    **PUBLIPLOTS_RCPARAMS,
     # Overrides for notebook/interactive work
     "figure.figsize": [6.0, 4.0],  # Larger for screens
     "font.size": 11,  # More readable
@@ -50,10 +54,10 @@ Features:
 
 # Publication style: base defaults + compact publication settings
 PUBLICATION_STYLE = {
-    **MATPLOTLIB_DEFAULTS,
-    **CUSTOM_DEFAULTS,
+    **MATPLOTLIB_RCPARAMS,
+    **PUBLIPLOTS_RCPARAMS,
     # Overrides for publication
-    # (most values already optimal in MATPLOTLIB_DEFAULTS)
+    # (most values already optimal in MATPLOTLIB_RCPARAMS)
     "lines.linewidth": 1.2,  # Slightly thinner for compact plots
     "alpha": 0.15,  # More visible on small figures
 }
@@ -75,26 +79,26 @@ Features:
 
 def _apply_style(style_dict: Dict[str, Any]) -> None:
     """
-    Apply a complete style (both matplotlib and custom params).
+    Apply a complete style (both matplotlib and publiplots params).
 
     Parameters
     ----------
     style_dict : dict
         Complete style dictionary containing both matplotlib rcParams
-        and custom publiplots parameters.
+        and publiplots-specific parameters.
     """
-    from .defaults import _PUBLIPLOTS_CUSTOM_DEFAULTS
-
-    # Separate matplotlib params from custom params
+    # Separate matplotlib params from publiplots params
     matplotlib_params = {
-        k: v for k, v in style_dict.items() if k not in CUSTOM_DEFAULTS
+        k: v for k, v in style_dict.items() if k not in PUBLIPLOTS_RCPARAMS
     }
-    custom_params = {k: v for k, v in style_dict.items() if k in CUSTOM_DEFAULTS}
+    publiplots_params = {
+        k: v for k, v in style_dict.items() if k in PUBLIPLOTS_RCPARAMS
+    }
 
     # Apply to respective stores
     plt.rcParams.update(matplotlib_params)
     _PUBLIPLOTS_CUSTOM_DEFAULTS.clear()
-    _PUBLIPLOTS_CUSTOM_DEFAULTS.update(custom_params)
+    _PUBLIPLOTS_CUSTOM_DEFAULTS.update(publiplots_params)
 
 
 # =============================================================================
@@ -108,7 +112,7 @@ def set_notebook_style() -> None:
     This style is optimized for interactive work in Jupyter notebooks with
     readable font sizes and larger figure dimensions.
 
-    The style includes both matplotlib rcParams and custom publiplots parameters
+    The style includes both matplotlib rcParams and publiplots parameters
     (color, alpha, capsize, palette, hatch_mode).
 
     Examples
@@ -130,7 +134,7 @@ def set_notebook_style() -> None:
     - Figure size: 6×4 inches
     - DPI: 300 (good quality for screens)
     - Line width: 2.0 (thicker for visibility)
-    - All custom params: color, alpha, capsize, palette, hatch_mode
+    - All publiplots params: color, alpha, capsize, palette, hatch_mode
     """
     _apply_style(NOTEBOOK_STYLE)
 
@@ -143,7 +147,7 @@ def set_publication_style() -> None:
     high DPI (600), and compact dimensions. Perfect for creating figures that
     will be edited in Adobe Illustrator or directly included in papers.
 
-    The style includes both matplotlib rcParams and custom publiplots parameters
+    The style includes both matplotlib rcParams and publiplots parameters
     (color, alpha, capsize, palette, hatch_mode).
 
     Examples
@@ -167,7 +171,7 @@ def set_publication_style() -> None:
     - DPI: 600 (print quality)
     - Line width: 1.2 (appropriate for small plots)
     - Alpha: 0.15 (more visible on compact figures)
-    - All custom params: color, capsize, palette, hatch_mode
+    - All publiplots params: color, capsize, palette, hatch_mode
     """
     _apply_style(PUBLICATION_STYLE)
 
@@ -194,7 +198,7 @@ def get_current_style() -> Dict[str, Any]:
     Get current matplotlib rcParams as a dictionary.
 
     Useful for debugging or saving current style settings.
-    Only returns matplotlib rcParams, not custom publiplots parameters.
+    Only returns matplotlib rcParams, not publiplots parameters.
 
     Returns
     -------
@@ -216,7 +220,7 @@ def apply_custom_style(style_dict: Dict[str, Any]) -> None:
     """
     Apply a custom style dictionary to matplotlib.
 
-    Only applies matplotlib rcParams. To set custom publiplots parameters,
+    Only applies matplotlib rcParams. To set publiplots parameters,
     use pp.rcParams directly.
 
     Parameters
@@ -231,7 +235,7 @@ def apply_custom_style(style_dict: Dict[str, Any]) -> None:
     >>> custom = {'font.size': 14, 'lines.linewidth': 3}
     >>> pp.apply_custom_style(custom)
 
-    For custom publiplots parameters, use rcParams directly:
+    For publiplots parameters, use rcParams directly:
     >>> pp.rcParams['alpha'] = 0.2
     >>> pp.rcParams['hatch_mode'] = 3
     """

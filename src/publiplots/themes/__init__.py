@@ -21,7 +21,7 @@ from publiplots.themes.colors import (
     PASTEL_POSITIVE_NEGATIVE,
 )
 
-from publiplots.themes.defaults import (
+from publiplots.themes.rcparams import (
     rcParams,
     resolve_param,
     get_default,

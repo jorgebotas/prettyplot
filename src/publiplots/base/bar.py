@@ -7,7 +7,7 @@ flexible styling and grouping options.
 
 from typing import Optional, List, Dict, Tuple, Union
 
-from publiplots.themes.defaults import resolve_param
+from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 import seaborn as sns

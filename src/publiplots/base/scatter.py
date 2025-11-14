@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 from typing import Optional, Tuple, Union, Dict, List
 
-from publiplots.themes.defaults import resolve_param
+from publiplots.themes.rcparams import resolve_param
 
 from publiplots.themes.colors import resolve_palette_mapping
 from publiplots.utils import is_categorical, is_numeric, create_legend_handles, create_legend_builder

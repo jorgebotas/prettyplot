@@ -47,7 +47,7 @@ from publiplots.utils.legend import (
 
 # Theming
 from publiplots.themes.colors import get_palette, list_palettes, show_palette, resolve_palette
-from publiplots.themes.defaults import rcParams, resolve_param, init_rcparams
+from publiplots.themes.rcparams import rcParams, resolve_param, init_rcparams
 from publiplots.themes.styles import (
     set_notebook_style,
     set_publication_style,

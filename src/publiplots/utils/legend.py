@@ -9,7 +9,7 @@ visual style of scatterplots and barplots.
 
 from typing import List, Dict, Optional, Tuple, Any, Union
 
-from publiplots.themes.defaults import resolve_param
+from publiplots.themes.rcparams import resolve_param
 from matplotlib.axes import Axes
 from matplotlib.cm import ScalarMappable
 from matplotlib.colorbar import Colorbar
