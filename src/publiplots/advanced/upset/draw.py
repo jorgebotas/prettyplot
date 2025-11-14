@@ -12,7 +12,7 @@ Licensed under BSD-3-Clause
 
 from typing import Dict, List, Optional, Tuple
 
-from publiplots.themes.defaults import get_default
+from publiplots.themes.defaults import resolve_param
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
@@ -53,12 +53,9 @@ def draw_intersection_bars(
         Bar transparency
     """
     # Read defaults from rcParams if not provided
-    if color is None:
-        color = get_default("color", "#5d83c3")
-    if linewidth is None:
-        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
-    if alpha is None:
-        alpha = get_default("alpha", 0.1)
+    color = resolve_param("color", color)
+    linewidth = resolve_param("lines.linewidth", linewidth)
+    alpha = resolve_param("alpha", alpha)
 
     ax.bar(
         positions,
@@ -125,12 +122,9 @@ def draw_set_size_bars(
         Bar transparency
     """
     # Read defaults from rcParams if not provided
-    if color is None:
-        color = get_default("color", "#5d83c3")
-    if linewidth is None:
-        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
-    if alpha is None:
-        alpha = get_default("alpha", 0.1)
+    color = resolve_param("color", color)
+    linewidth = resolve_param("lines.linewidth", linewidth)
+    alpha = resolve_param("alpha", alpha)
 
     sizes = [set_sizes[name] for name in set_names]
 
@@ -191,12 +185,9 @@ def draw_matrix(
     import numpy as np
 
     # Read defaults from rcParams if not provided
-    if linewidth is None:
-        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
-    if active_color is None:
-        active_color = get_default("color", "#5d83c3")
-    if alpha is None:
-        alpha = get_default("alpha", 0.1)
+    linewidth = resolve_param("lines.linewidth", linewidth)
+    active_color = resolve_param("color", active_color)
+    alpha = resolve_param("alpha", alpha)
 
     n_sets = len(set_names)
     n_intersections = len(membership_matrix)

@@ -12,7 +12,7 @@ Licensed under BSD-3-Clause
 
 from typing import Dict, Optional, Set, Tuple, Union
 
-from publiplots.themes.defaults import get_default
+from publiplots.themes.defaults import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -198,17 +198,13 @@ def upsetplot(
     .. [2] UpSetPlot package: https://github.com/jnothman/UpSetPlot
     """
     # Read defaults from rcParams if not provided
-    if color is None:
-        color = get_default("color", "#5d83c3")
-    if bar_linewidth is None:
-        bar_linewidth = plt.rcParams.get("lines.linewidth", 1.0)
+    color = resolve_param("color", color)
+    bar_linewidth = resolve_param("lines.linewidth", bar_linewidth)
     if matrix_linewidth is None:
-        default_lw = plt.rcParams.get("lines.linewidth", 1.0)
+        default_lw = resolve_param("lines.linewidth", None)
         matrix_linewidth = default_lw * 1.2
-    if alpha is None:
-        alpha = get_default("alpha", 0.1)
-    if figsize is None:
-        figsize = plt.rcParams.get("figure.figsize", (3, 2))
+    alpha = resolve_param("alpha", alpha)
+    figsize = resolve_param("figure.figsize", figsize)
 
     # Process data
     processed = process_upset_data(

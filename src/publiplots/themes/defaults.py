@@ -4,9 +4,14 @@ Default rcParams settings for publiplots.
 This module defines the default matplotlib rcParams that will be initialized
 when publiplots is imported. All publiplots functions read from these rcParams,
 ensuring consistency with matplotlib/seaborn styling patterns.
+
+Main exports:
+- rcParams: Unified parameter interface (pp.rcParams['color'])
+- resolve_param(): Helper to resolve parameter values (value or default)
+- get_default(): Direct access to default values
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import matplotlib.pyplot as plt
 
 
@@ -103,7 +108,71 @@ def init_rcparams() -> None:
             plt.rcParams[key] = value
 
 
-def get_default(key: str, fallback: Any = None) -> Any:
+# =============================================================================
+# PubliPlots rcParams Wrapper
+# =============================================================================
+
+class PubliplotsRcParams:
+    """
+    Unified interface for publiplots parameters.
+
+    This class provides a dict-like interface for accessing both standard
+    matplotlib rcParams and custom publiplots parameters. It mimics the
+    behavior of matplotlib's rcParams but includes publiplots-specific
+    defaults.
+
+    Examples
+    --------
+    Access parameters:
+    >>> from publiplots.themes import rcParams
+    >>> figsize = rcParams['figure.figsize']
+    >>> color = rcParams['color']  # Custom publiplots param
+
+    Set parameters:
+    >>> rcParams['figure.figsize'] = (8, 6)
+    >>> rcParams['color'] = '#ff0000'
+
+    Use in functions with resolve_param:
+    >>> from publiplots.themes.defaults import resolve_param
+    >>> color = resolve_param('color', user_color)  # Uses user_color if not None
+    """
+
+    def __getitem__(self, key: str) -> Any:
+        """Get parameter value."""
+        return get_default(key)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Get parameter value with optional fallback."""
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        """Set parameter value."""
+        if key in _PUBLIPLOTS_CUSTOM_DEFAULTS:
+            _PUBLIPLOTS_CUSTOM_DEFAULTS[key] = value
+        else:
+            plt.rcParams[key] = value
+
+    def __contains__(self, key: str) -> bool:
+        """Check if parameter exists."""
+        return key in _PUBLIPLOTS_CUSTOM_DEFAULTS or key in plt.rcParams
+
+    def keys(self):
+        """Return all parameter keys."""
+        return list(_PUBLIPLOTS_CUSTOM_DEFAULTS.keys()) + list(plt.rcParams.keys())
+
+
+# Create global instance
+rcParams = PubliplotsRcParams()
+
+
+# =============================================================================
+# Parameter Resolution Functions
+# =============================================================================
+
+def get_default(key: str) -> Any:
     """
     Get a publiplots default value.
 
@@ -115,13 +184,16 @@ def get_default(key: str, fallback: Any = None) -> Any:
     key : str
         The parameter key. Can be a full rcParam key (e.g., 'figure.figsize')
         or a custom publiplots key (e.g., 'color', 'alpha', 'palette').
-    fallback : Any, optional
-        Fallback value if the key doesn't exist.
 
     Returns
     -------
     Any
-        The parameter value, or fallback if not found.
+        The parameter value.
+
+    Raises
+    ------
+    KeyError
+        If the parameter key doesn't exist.
 
     Examples
     --------
@@ -138,12 +210,51 @@ def get_default(key: str, fallback: Any = None) -> Any:
     """
     # Check if it's a custom publiplots parameter
     if key in _PUBLIPLOTS_CUSTOM_DEFAULTS:
-        return _PUBLIPLOTS_CUSTOM_DEFAULTS.get(key, fallback)
+        return _PUBLIPLOTS_CUSTOM_DEFAULTS[key]
 
-    # Otherwise, check matplotlib rcParams
-    if fallback is None:
-        fallback = PUBLIPLOTS_RCPARAMS.get(key)
-    return plt.rcParams.get(key, fallback)
+    # Otherwise, get from matplotlib rcParams
+    if key in plt.rcParams:
+        return plt.rcParams[key]
+
+    # If not found anywhere, raise KeyError
+    raise KeyError(f"Parameter '{key}' not found in publiplots or matplotlib rcParams")
+
+
+def resolve_param(key: str, value: Optional[Any] = None) -> Any:
+    """
+    Resolve a parameter value: use provided value if not None, otherwise get default.
+
+    This helper function eliminates the repetitive "if value is None: value = get_default(key)"
+    pattern throughout the codebase.
+
+    Parameters
+    ----------
+    key : str
+        The parameter key to resolve (e.g., 'color', 'figure.figsize', 'alpha').
+    value : Any, optional
+        User-provided value. If None, the default will be used.
+
+    Returns
+    -------
+    Any
+        The resolved parameter value (user value or default).
+
+    Examples
+    --------
+    Basic usage in a function:
+    >>> def my_plot(color=None, figsize=None):
+    ...     color = resolve_param('color', color)
+    ...     figsize = resolve_param('figure.figsize', figsize)
+    ...     # Now color and figsize are guaranteed to have values
+
+    With explicit user values:
+    >>> color = resolve_param('color', '#ff0000')  # Returns '#ff0000'
+
+    With None (uses default):
+    >>> color = resolve_param('color', None)  # Returns '#5d83c3'
+    >>> color = resolve_param('color')  # Same as above
+    """
+    return value if value is not None else get_default(key)
 
 
 def reset_to_publiplots_defaults() -> None:
@@ -163,31 +274,32 @@ def reset_to_publiplots_defaults() -> None:
     >>> print(plt.rcParams['figure.figsize'])
     (3, 2)
     """
+    # Reset standard matplotlib rcParams
     for key, value in PUBLIPLOTS_RCPARAMS.items():
         plt.rcParams[key] = value
 
+    # Note: Custom defaults are stored in _PUBLIPLOTS_CUSTOM_DEFAULTS
+    # and don't need resetting as they're accessed by reference
 
-def get_publiplots_rcparam(key: str, default: Any = None) -> Any:
+
+def get_publiplots_rcparam(key: str) -> Any:
     """
-    Get a publiplots rcParam value with fallback to default.
+    Get a publiplots rcParam value.
 
     This is a convenience function for accessing publiplots-specific
-    rcParams with type safety and default fallback.
+    rcParams with type safety.
+
+    Deprecated: Use get_default() or rcParams[key] instead.
 
     Parameters
     ----------
     key : str
-        The rcParam key to retrieve. For publiplots-specific params,
-        use 'publiplots.param_name'. For standard matplotlib params,
-        use the standard key (e.g., 'figure.figsize').
-    default : Any, optional
-        Fallback value if the key doesn't exist in rcParams.
-        If not provided, uses the default from PUBLIPLOTS_RCPARAMS.
+        The rcParam key to retrieve.
 
     Returns
     -------
     Any
-        The rcParam value, or default if not found.
+        The rcParam value.
 
     Examples
     --------
@@ -196,12 +308,5 @@ def get_publiplots_rcparam(key: str, default: Any = None) -> Any:
     >>> figsize = get_publiplots_rcparam('figure.figsize')
     >>> print(figsize)
     (3, 2)
-
-    Get custom parameter with fallback:
-    >>> alpha = get_publiplots_rcparam('publiplots.alpha', 0.2)
-    >>> print(alpha)
-    0.1
     """
-    if default is None:
-        default = PUBLIPLOTS_RCPARAMS.get(key)
-    return plt.rcParams.get(key, default)
+    return get_default(key)

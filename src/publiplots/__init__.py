@@ -47,13 +47,13 @@ from publiplots.utils.legend import (
 
 # Theming
 from publiplots.themes.colors import get_palette, list_palettes, show_palette, resolve_palette
+from publiplots.themes.defaults import rcParams, resolve_param, init_rcparams
 from publiplots.themes.styles import (
     set_notebook_style,
     set_publication_style,
     reset_style,
 )
 # Initialize publiplots rcParams defaults
-from publiplots.themes.defaults import init_rcparams
 init_rcparams()
 from publiplots.themes.markers import (
     get_marker_cycle,
@@ -98,6 +98,9 @@ __all__ = [
     "list_palettes",
     "show_palette",
     "resolve_palette",
+    # Parameter system
+    "rcParams",
+    "resolve_param",
     # Style functions
     "set_notebook_style",
     "set_publication_style",

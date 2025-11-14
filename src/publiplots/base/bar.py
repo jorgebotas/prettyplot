@@ -7,7 +7,7 @@ flexible styling and grouping options.
 
 from typing import Optional, List, Dict, Tuple, Union
 
-from publiplots.themes.defaults import get_default
+from publiplots.themes.defaults import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 import seaborn as sns
@@ -137,16 +137,11 @@ def barplot(
     barplot_enrichment : Specialized bar plot for enrichment analysis
     """
     # Read defaults from rcParams if not provided
-    if figsize is None:
-        figsize = plt.rcParams.get("figure.figsize", (3, 2))
-    if linewidth is None:
-        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
-    if alpha is None:
-        alpha = get_default("alpha", 0.1)
-    if capsize is None:
-        capsize = get_default("capsize", 0.0)
-    if color is None:
-        color = get_default("color", "#5d83c3")
+    figsize = resolve_param("figure.figsize", figsize)
+    linewidth = resolve_param("lines.linewidth", linewidth)
+    alpha = resolve_param("alpha", alpha)
+    capsize = resolve_param("capsize", capsize)
+    color = resolve_param("color", color)
 
     # Create figure if not provided
     if ax is None:

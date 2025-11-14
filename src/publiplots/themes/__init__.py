@@ -21,6 +21,12 @@ from publiplots.themes.colors import (
     PASTEL_POSITIVE_NEGATIVE,
 )
 
+from publiplots.themes.defaults import (
+    rcParams,
+    resolve_param,
+    get_default,
+)
+
 from publiplots.themes.styles import (
     set_notebook_style,
     set_publication_style,
@@ -43,6 +49,10 @@ from publiplots.themes.markers import (
 )
 
 __all__ = [
+    # Parameter system
+    "rcParams",
+    "resolve_param",
+    "get_default",
     # Color functions
     "get_palette",
     "list_palettes",

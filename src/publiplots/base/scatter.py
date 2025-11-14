@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 from typing import Optional, Tuple, Union, Dict, List
 
-from publiplots.themes.defaults import get_default
+from publiplots.themes.defaults import resolve_param
 
 from publiplots.themes.colors import resolve_palette_mapping
 from publiplots.utils import is_categorical, is_numeric, create_legend_handles, create_legend_builder
@@ -149,14 +149,10 @@ def scatterplot(
     ...                           size="pvalue", hue="log2fc")
     """
     # Read defaults from rcParams if not provided
-    if figsize is None:
-        figsize = plt.rcParams.get("figure.figsize", (3, 2))
-    if linewidth is None:
-        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
-    if alpha is None:
-        alpha = get_default("alpha", 0.1)
-    if color is None:
-        color = get_default("color", "#5d83c3")
+    figsize = resolve_param("figure.figsize", figsize)
+    linewidth = resolve_param("lines.linewidth", linewidth)
+    alpha = resolve_param("alpha", alpha)
+    color = resolve_param("color", color)
 
     # Validate required columns
     required_cols = [x, y]
@@ -461,10 +457,8 @@ def _legend(
     Create legend handles for scatter plot.
     """
     # Read defaults from rcParams if not provided
-    if alpha is None:
-        alpha = get_default("alpha", 0.1)
-    if linewidth is None:
-        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
+    alpha = resolve_param("alpha", alpha)
+    linewidth = resolve_param("lines.linewidth", linewidth)
 
     kwargs = kwargs or {}
     handle_kwargs = dict(alpha=alpha, linewidth=linewidth, color=color, style="circle")

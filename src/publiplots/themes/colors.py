@@ -8,7 +8,7 @@ are visually appealing and print well.
 
 from typing import Dict, List, Optional, Union
 
-from publiplots.themes.defaults import get_default
+from publiplots.themes.defaults import resolve_param
 import matplotlib.pyplot as plt
 import numpy as np
 

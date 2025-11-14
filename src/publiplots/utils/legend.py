@@ -9,7 +9,7 @@ visual style of scatterplots and barplots.
 
 from typing import List, Dict, Optional, Tuple, Any, Union
 
-from publiplots.themes.defaults import get_default
+from publiplots.themes.defaults import resolve_param
 from matplotlib.axes import Axes
 from matplotlib.cm import ScalarMappable
 from matplotlib.colorbar import Colorbar
@@ -121,8 +121,8 @@ class HandlerCircle(HandlerBase):
         # Defaults
         color = "gray"
         size = fontsize * 0.8
-        alpha = get_default("alpha", 0.1)
-        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
+        alpha = resolve_param("alpha", None)
+        linewidth = resolve_param("lines.linewidth", None)
         edgecolor = None
 
         # Extract from Patch (created by create_legend_handles)
@@ -214,8 +214,8 @@ class HandlerRectangle(HandlerPatch):
         """
         # Defaults
         color = "gray"
-        alpha = get_default("alpha", 0.1)
-        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
+        alpha = resolve_param("alpha", None)
+        linewidth = resolve_param("lines.linewidth", None)
         edgecolor = None
         hatch_pattern = None
 
@@ -310,13 +310,11 @@ def create_legend_handles(
         List of Patch objects with embedded properties.
     """
     # Read defaults from rcParams if not provided
-    if alpha is None:
-        alpha = get_default("alpha", 0.1)
-    if linewidth is None:
-        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
+    alpha = resolve_param("alpha", alpha)
+    linewidth = resolve_param("lines.linewidth", linewidth)
 
     if colors is None:
-        default_color = get_default("color", "#5d83c3")
+        default_color = resolve_param("color", None)
         colors = [color if color is not None else default_color] * len(labels)
 
     if hatches is None or len(hatches) == 0 or style == "circle":

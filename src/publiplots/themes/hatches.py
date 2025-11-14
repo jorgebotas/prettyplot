@@ -13,7 +13,7 @@ The module supports three density modes for patterns:
 
 from typing import Optional, Dict, List, Set, Union
 
-from publiplots.themes.defaults import get_default
+from publiplots.themes.defaults import resolve_param
 import matplotlib.pyplot as plt
 
 # Global variable to store current hatch mode

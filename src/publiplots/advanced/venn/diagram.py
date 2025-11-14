@@ -13,7 +13,7 @@ Based on pyvenn by LankyCyril: https://github.com/LankyCyril/pyvenn
 from matplotlib.axes import Axes
 from typing import Dict, List, Optional, Tuple, Union
 
-from publiplots.themes.defaults import get_default
+from publiplots.themes.defaults import resolve_param
 import matplotlib.pyplot as plt
 
 from publiplots.themes.colors import get_palette
@@ -205,10 +205,8 @@ def venn(
     ... )
     """
     # Read defaults from rcParams if not provided
-    if alpha is None:
-        alpha = get_default("alpha", 0.1)
-    if figsize is None:
-        figsize = plt.rcParams.get("figure.figsize", (3, 2))
+    alpha = resolve_param("alpha", alpha)
+    figsize = resolve_param("figure.figsize", figsize)
 
     # Parse input sets
     if isinstance(sets, dict):
