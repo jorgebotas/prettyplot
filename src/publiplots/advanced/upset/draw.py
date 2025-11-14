@@ -409,7 +409,7 @@ def setup_upset_axes(
         figure=fig,
         height_ratios=[2, n_sets],  # Intersection bars + matrix
         width_ratios=width_ratios,  # Ensure equal bar widths
-        hspace=0.05,
+        hspace=0,  # No space between rows - intersection bars should connect to matrix
         wspace=0,  # No space between columns
         left=0,  # Use full figure width
         right=1,
