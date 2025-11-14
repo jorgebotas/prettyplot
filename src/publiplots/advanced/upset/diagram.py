@@ -42,7 +42,6 @@ def upsetplot(
     matrix_linewidth: Optional[float] = None,
     alpha: Optional[float] = None,
     dotsize: Optional[float] = None,
-    figsize: Optional[Tuple[float, float]] = None,
     element_size: Optional[float] = None,
     title: str = "",
     intersection_label: str = "",
@@ -97,22 +96,31 @@ def upsetplot(
     show_counts : int, default=20
         Maximum number of intersections to display in the plot.
 
-    color : str, default=DEFAULT_COLOR
+    color : str, optional
         Color for bars (both intersection and set size bars).
         Supports any matplotlib color specification.
 
-    linewidth : float, default=DEFAULT_LINEWIDTH
-        Width of edges around bars and dots in the matrix.
+    bar_linewidth : float, optional
+        Width of edges around bars.
 
-    alpha : float, default=DEFAULT_ALPHA
+    matrix_linewidth : float, optional
+        Width of lines connecting dots in the matrix.
+
+    alpha : float, optional
         Transparency level for bars (0=transparent, 1=opaque).
 
-    dotsize : float, default=150
-        Size of dots in the membership matrix.
+    dotsize : float, optional
+        Size of dots in the membership matrix (scatter marker size).
+        If not specified, calculated from element_size as ``element_size * 3``.
+        Typical values: 100-200.
 
-    figsize : tuple of (float, float), optional
-        Figure size as (width, height) in inches. If None, uses a size
-        based on the number of sets and intersections.
+    element_size : float, optional
+        Width of each matrix cell/bar in figure points (1/72 inch).
+        Controls the overall scale of the plot. If not specified,
+        calculated from dotsize as ``dotsize / 3``, or defaults to 48.
+        Typical values: 32 (compact), 48 (default), 64 (spacious).
+        The figure size is automatically calculated to maintain proper
+        proportions based on this value.
 
     title : str, default=""
         Main plot title.
@@ -181,8 +189,18 @@ def upsetplot(
     >>> fig, axes = upsetplot(
     ...     data,
     ...     color='#ff6b6b',
-    ...     dotsize=200,
-    ...     figsize=(12, 6)
+    ...     element_size=64  # Larger, more spacious plot
+    ... )
+
+    Control plot size via element_size:
+
+    >>> fig, axes = upsetplot(
+    ...     data,
+    ...     element_size=32  # Compact plot
+    ... )
+    >>> fig, axes = upsetplot(
+    ...     data,
+    ...     element_size=64  # Spacious plot
     ... )
 
     See Also
@@ -202,8 +220,22 @@ def upsetplot(
     bar_linewidth = resolve_param("lines.linewidth", bar_linewidth)
     matrix_linewidth = resolve_param("lines.linewidth") * 1.2 if matrix_linewidth is None else matrix_linewidth
     alpha = resolve_param("alpha", alpha)
-    dotsize = resolve_param("lines.markersize") * 10 if dotsize is None else dotsize
-    element_size = dotsize * 1.5 if element_size is None else element_size
+
+    # Handle element_size and dotsize relationship
+    # element_size controls physical dimensions (bars/cells width in points)
+    # dotsize controls scatter marker size (visual dot size)
+    # Relationship: dotsize ≈ element_size * 3
+    if element_size is None and dotsize is None:
+        # Both unspecified: use sensible defaults
+        element_size = 48  # Medium size (32=compact, 48=default, 64=spacious)
+        dotsize = element_size * 3  # 144
+    elif element_size is None:
+        # Only dotsize specified: calculate element_size
+        element_size = dotsize / 3
+    elif dotsize is None:
+        # Only element_size specified: calculate dotsize
+        dotsize = element_size * 3
+    # else: both specified, use as-is
 
     # Process data
     processed = process_upset_data(
@@ -225,23 +257,17 @@ def upsetplot(
     n_intersections = processed["n_intersections"]
 
     # Create figure with initial size (will be adjusted by setup_upset_axes)
-    if figsize is None:
-        # Initial size - will be recalculated based on text width
-        width = max(8, n_intersections * 0.4)
-        height = max(6, n_sets * 0.8 + 3)
-        initial_figsize = (width, height)
-    else:
-        initial_figsize = figsize
+    # Initial size is just a starting point - setup_upset_axes will resize based on element_size
+    width = max(8, n_intersections * 0.4)
+    height = max(6, n_sets * 0.8 + 3)
+    fig = plt.figure(figsize=(width, height))
 
-    fig = plt.figure(figsize=initial_figsize)
-
-    # Setup axes with proper sizing that accounts for text width
-    # This will adjust figure size if needed to ensure equal bar widths
+    # Setup axes with proper sizing that maintains proportions
+    # Figure size is automatically calculated based on element_size
     ax_intersections, ax_matrix, ax_sets, intersection_bar_width, set_bar_width = setup_upset_axes(
         fig=fig,
         set_names=set_names,
         n_intersections=n_intersections,
-        figsize=figsize,  # User-specified size (or None for auto)
         element_size=element_size
     )
 

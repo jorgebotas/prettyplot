@@ -283,8 +283,7 @@ def setup_upset_axes(
     fig: plt.Figure,
     set_names: List[str],
     n_intersections: int,
-    figsize: Optional[Tuple[float, float]] = None,
-    element_size: Optional[float] = None,
+    element_size: float,
 ) -> Tuple[Axes, Axes, Axes]:
     """
     Set up the three-panel layout for UpSet plot with proper sizing.
@@ -297,15 +296,15 @@ def setup_upset_axes(
     Parameters
     ----------
     fig : Figure
-        Matplotlib figure
+        Matplotlib figure (size will be adjusted)
     set_names : list
         Names of sets (for measuring text width)
     n_intersections : int
         Number of intersections to display
-    figsize : tuple, optional
-        Figure size (width, height). If None, calculated automatically.
-    element_size : float, optional
-        Width of each element (bar/dot) in points. If None, calculated from figure width.
+    element_size : float
+        Width of each element (bar/dot) in figure points. Controls the
+        overall scale of the plot. Figure size is calculated to maintain
+        proper proportions based on this value.
 
     Returns
     -------
@@ -343,7 +342,7 @@ def setup_upset_axes(
     # Get figure width in display coordinates
     figw = fig.get_window_extent(renderer=fig.canvas.get_renderer()).width
 
-    # Calculate element size (colw) and adjust figure size
+    # Calculate figure size based on element_size
     # Key constraint: bars should have same width as matrix elements
     # For square matrix elements: element_width = element_height
     # So: matrix_width / n_intersections = matrix_height / n_sets
@@ -352,45 +351,18 @@ def setup_upset_axes(
     # Number of non-text elements (set bars + intersection bars)
     non_text_nelems = n_sets + n_intersections
 
-    if figsize is None and element_size is None:
-        # Calculate element width from available space
-        render_ratio = figw / fig.get_figwidth() if fig.get_figwidth() > 0 else 72
+    # Calculate element width in display coordinates from element_size (in points)
+    render_ratio = figw / fig.get_figwidth() if fig.get_figwidth() > 0 else 72
+    colw = element_size / 72 * render_ratio
 
-        # Element width = (figure width - text width) / non-text elements
-        colw = (figw - textw) / non_text_nelems
+    # Calculate figure width to fit: text + non-text elements
+    # Add +1 to text columns for margin (like UpSetPlot does)
+    figw = colw * (non_text_nelems + np.ceil(textw / colw) + 1)
+    fig.set_figwidth(figw / render_ratio)
+    fig.set_figheight((colw * (n_sets + 2)) / render_ratio)
 
-        # Ensure minimum element size
-        if colw < 20:  # Minimum 20 points per element
-            colw = 20
-            # Recalculate figure width to accommodate text + minimum element size
-            figw = colw * non_text_nelems + textw
-            fig.set_figwidth(figw / render_ratio)
-            # After resize, remeasure figure width
-            figw = fig.get_window_extent(renderer=fig.canvas.get_renderer()).width
-
-        # Height: colw * n_sets for matrix + extra for intersection bars
-        fig_height = (colw * n_sets + colw * 2) / render_ratio
-        fig.set_figheight(fig_height)
-
-    elif figsize is not None:
-        # User specified figure size
-        fig.set_size_inches(figsize)
-        # Remeasure after resize
-        figw = fig.get_window_extent(renderer=fig.canvas.get_renderer()).width
-        render_ratio = figw / fig.get_figwidth()
-        colw = (figw - textw) / non_text_nelems
-
-    else:
-        # User specified element size
-        render_ratio = figw / fig.get_figwidth() if fig.get_figwidth() > 0 else 72
-        colw = element_size / 72 * render_ratio
-        # Calculate figure width to fit: text + non-text elements
-        # Add +1 to text columns for margin (like UpSetPlot does)
-        figw = colw * (non_text_nelems + np.ceil(textw / colw) + 1)
-        fig.set_figwidth(figw / render_ratio)
-        fig.set_figheight((colw * (n_sets + 2)) / render_ratio)
-        # Remeasure after resize
-        figw = fig.get_window_extent(renderer=fig.canvas.get_renderer()).width
+    # Remeasure after resize
+    figw = fig.get_window_extent(renderer=fig.canvas.get_renderer()).width
 
     # Calculate grid columns for each section
     # Use UpSetPlot's approach: text_cols = total_cols - non_text_cols
