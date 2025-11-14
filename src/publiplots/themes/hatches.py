@@ -13,8 +13,11 @@ The module supports three density modes for patterns:
 
 from typing import Optional, Dict, List, Set, Union
 
+from publiplots.themes.defaults import get_default
+import matplotlib.pyplot as plt
+
 # Global variable to store current hatch mode
-_current_hatch_mode: int = None  # Will default to config.DEFAULT_HATCH_MODE
+_current_hatch_mode: int = None  # Will default to publiplots.hatch_mode from rcParams
 
 
 # =============================================================================
@@ -199,8 +202,7 @@ def set_hatch_mode(mode: Optional[int] = None) -> None:
 
     # Handle reset to default
     if mode is None:
-        from publiplots.config import DEFAULT_HATCH_MODE
-        _current_hatch_mode = DEFAULT_HATCH_MODE
+        _current_hatch_mode = get_default("hatch_mode", 1)
         return
 
     # Validate mode
@@ -250,9 +252,8 @@ def get_hatch_mode() -> int:
     global _current_hatch_mode
 
     if _current_hatch_mode is None:
-        # Import here to avoid circular dependency
-        from publiplots.config import DEFAULT_HATCH_MODE
-        _current_hatch_mode = DEFAULT_HATCH_MODE
+        # Read from rcParams if not explicitly set
+        _current_hatch_mode = get_default("hatch_mode", 1)
 
     return _current_hatch_mode
 

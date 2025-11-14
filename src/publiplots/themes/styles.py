@@ -16,8 +16,8 @@ from matplotlib import rcParams
 # =============================================================================
 
 
-ILLUSTRATOR_STYLE: Dict[str, Any] = {
-    # Font settings
+PUBLICATION_STYLE: Dict[str, Any] = {
+    # Font settings - small for publication-ready figures
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
     "font.size": 8,
@@ -33,7 +33,7 @@ ILLUSTRATOR_STYLE: Dict[str, Any] = {
     "pdf.fonttype": 42,
     "ps.fonttype": 42,
 
-    # Figure settings
+    # Figure settings - compact, high DPI for publications/Illustrator
     "figure.figsize": (3.5, 2.5),
     "figure.dpi": 100,
     "savefig.dpi": 600,
@@ -77,8 +77,15 @@ ILLUSTRATOR_STYLE: Dict[str, Any] = {
     "patch.linewidth": 1,
     "patch.edgecolor": "0.3",
 }
+"""
+Publication-ready style optimized for final publication figures.
 
-PUBLICATION_STYLE: Dict[str, Any] = {
+Small fonts, high DPI (600), compact figure size. Perfect for creating
+figures that will be edited in Adobe Illustrator or directly included
+in publications.
+"""
+
+NOTEBOOK_STYLE: Dict[str, Any] = {
     # Font settings
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
@@ -140,17 +147,18 @@ PUBLICATION_STYLE: Dict[str, Any] = {
     "patch.edgecolor": "0.2",
 }
 """
-Publication-ready style optimized for scientific papers and presentations.
+Notebook-ready style optimized for interactive work and exploration.
 
 Features:
-- Clean sans-serif fonts (Arial preferred)
-- High DPI for crisp output
-- Minimal spines (top and right removed)
-- Appropriate sizing for standard figure widths
+- Readable font sizes for screens
+- Larger figure sizes for notebooks
+- Medium DPI (300) for good quality
+- Thicker lines for better visibility
+- Ideal for Jupyter notebooks and interactive analysis
 """
 
 MINIMAL_STYLE: Dict[str, Any] = {
-    **PUBLICATION_STYLE,
+    **NOTEBOOK_STYLE,
     # More minimal - even fewer visual elements
     "axes.linewidth": 1.0,
     "axes.spines.left": True,
@@ -167,7 +175,7 @@ when multiple figures need to be displayed together.
 """
 
 POSTER_STYLE: Dict[str, Any] = {
-    **PUBLICATION_STYLE,
+    **NOTEBOOK_STYLE,
     # Larger sizes for poster presentations
     "font.size": 16,
     "axes.labelsize": 18,
@@ -197,23 +205,23 @@ or large-screen presentations.
 # Functions
 # =============================================================================
 
-def set_publication_style(
+def set_notebook_style(
     font: str = "Arial",
     font_scale: float = 1.6,
     context: str = "paper",
     palette: str = "pastel_categorical"
 ) -> None:
     """
-    Apply publication-ready style to all matplotlib plots.
+    Apply notebook-ready style to all matplotlib plots.
 
-    This is the main styling function that should be called at the beginning
-    of a script to ensure consistent, publication-ready plots.
+    This style is optimized for interactive work in Jupyter notebooks with
+    readable font sizes and larger figure dimensions.
 
     Parameters
     ----------
     font : str, default='Arial'
         Font family to use. Common options: 'Arial', 'Helvetica', 'Times'.
-    font_scale : float, default=1.0
+    font_scale : float, default=1.6
         Scaling factor for all font sizes. Use >1 for larger fonts.
     context : str, default='paper'
         Seaborn context: 'paper', 'notebook', 'talk', or 'poster'.
@@ -222,21 +230,21 @@ def set_publication_style(
 
     Examples
     --------
-    Apply default publication style:
+    Apply default notebook style:
     >>> import publiplots as pp
-    >>> pp.set_publication_style()
+    >>> pp.set_notebook_style()
 
-    Use larger fonts for a presentation:
-    >>> pp.set_publication_style(font_scale=1.3, context='talk')
+    Use larger fonts for presentation:
+    >>> pp.set_notebook_style(font_scale=1.3, context='talk')
 
     Use Times font for a specific journal:
-    >>> pp.set_publication_style(font='Times New Roman')
+    >>> pp.set_notebook_style(font='Times New Roman')
     """
     # Apply seaborn style first
     sns.set_theme(context=context, style="white", font=font, font_scale=font_scale)
 
-    # Apply publiplots style
-    for key, value in PUBLICATION_STYLE.items():
+    # Apply publiplots notebook style
+    for key, value in NOTEBOOK_STYLE.items():
         rcParams[key] = value
 
     # Override font if specified
@@ -259,17 +267,18 @@ def set_publication_style(
         pass  # If palette doesn't exist, keep seaborn default
 
 
-def set_illustrator_style(
+def set_publication_style(
     font: str = "Arial",
     font_scale: float = 1.0,
     context: str = "paper",
     palette: str = "pastel_categorical"
 ) -> None:
     """
-    Apply illustrator-ready style to all matplotlib plots.
+    Apply publication-ready style to all matplotlib plots.
 
-    This is the main styling function that should be called at the beginning
-    of a script to ensure consistent, illustrator-ready plots.
+    This style is optimized for final publication figures with small fonts,
+    high DPI (600), and compact dimensions. Perfect for creating figures that
+    will be edited in Adobe Illustrator or directly included in papers.
 
     Parameters
     ----------
@@ -284,21 +293,21 @@ def set_illustrator_style(
 
     Examples
     --------
-    Apply default illustrator style:
+    Apply default publication style:
     >>> import publiplots as pp
-    >>> pp.set_illustrator_style()
+    >>> pp.set_publication_style()
 
-    Use larger fonts for a presentation:
-    >>> pp.set_illustrator_style(font_scale=1.3, context='talk')
+    Use larger fonts:
+    >>> pp.set_publication_style(font_scale=1.3)
 
     Use Times font for a specific journal:
-    >>> pp.set_illustrator_style(font='Times New Roman')
+    >>> pp.set_publication_style(font='Times New Roman')
     """
     # Apply seaborn style first
     sns.set_theme(context=context, style="white", font=font, font_scale=font_scale)
 
-    # Apply publiplots style
-    for key, value in ILLUSTRATOR_STYLE.items():
+    # Apply publiplots publication style
+    for key, value in PUBLICATION_STYLE.items():
         rcParams[key] = value
 
     # Override font if specified
@@ -453,3 +462,16 @@ def apply_custom_style(style_dict: Dict[str, Any]) -> None:
     """
     for key, value in style_dict.items():
         rcParams[key] = value
+
+
+# =============================================================================
+# Backward Compatibility Aliases
+# =============================================================================
+
+# Keep old function names as aliases for backward compatibility
+set_illustrator_style = set_publication_style
+"""Alias for set_publication_style() - kept for backward compatibility."""
+
+# Keep old style dictionaries as aliases
+ILLUSTRATOR_STYLE = PUBLICATION_STYLE
+"""Alias for PUBLICATION_STYLE - kept for backward compatibility."""

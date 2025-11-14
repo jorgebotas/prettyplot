@@ -10,7 +10,6 @@ from publiplots.themes.colors import (
     list_palettes,
     show_palette,
     resolve_palette,
-    DEFAULT_COLOR,
     PASTEL_CATEGORICAL,
     PASTEL_CATEGORICAL_MINIMAL,
     PASTEL_SEQUENTIAL_GREEN,
@@ -23,8 +22,9 @@ from publiplots.themes.colors import (
 )
 
 from publiplots.themes.styles import (
+    set_notebook_style,
     set_publication_style,
-    set_illustrator_style,
+    set_illustrator_style,  # Backward compatibility alias
     set_minimal_style,
     set_poster_style,
     reset_style,
@@ -51,8 +51,6 @@ __all__ = [
     "list_palettes",
     "show_palette",
     "resolve_palette",
-    # Color constants
-    "DEFAULT_COLOR",
     # Color palettes
     "PASTEL_CATEGORICAL",
     "PASTEL_CATEGORICAL_MINIMAL",
@@ -64,8 +62,9 @@ __all__ = [
     "PASTEL_SIGNIFICANCE",
     "PASTEL_POSITIVE_NEGATIVE",
     # Style functions
+    "set_notebook_style",
     "set_publication_style",
-    "set_illustrator_style",
+    "set_illustrator_style",  # Backward compatibility alias
     "set_minimal_style",
     "set_poster_style",
     "reset_style",

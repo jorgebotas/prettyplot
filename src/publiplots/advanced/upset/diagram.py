@@ -11,12 +11,13 @@ Licensed under BSD-3-Clause
 """
 
 from typing import Dict, Optional, Set, Tuple, Union
+
+from publiplots.themes.defaults import get_default
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 import pandas as pd
 
-from ...config import DEFAULT_COLOR, DEFAULT_LINEWIDTH, DEFAULT_ALPHA, DEFAULT_FIGSIZE
 from .logic import process_upset_data
 from .draw import (
     setup_upset_axes,
@@ -36,10 +37,10 @@ def upsetplot(
     min_degree: int = 1,
     max_degree: Optional[int] = None,
     show_counts: int = 20,
-    color: str = DEFAULT_COLOR,
-    bar_linewidth: float = DEFAULT_LINEWIDTH,
-    matrix_linewidth: float = DEFAULT_LINEWIDTH * 1.2,
-    alpha: float = DEFAULT_ALPHA,
+    color: Optional[str] = None,
+    bar_linewidth: Optional[float] = None,
+    matrix_linewidth: Optional[float] = None,
+    alpha: Optional[float] = None,
     dot_size: float = 150,
     figsize: Optional[Tuple[float, float]] = None,
     element_size: Optional[float] = None,
@@ -196,6 +197,19 @@ def upsetplot(
        IEEE Transactions on Visualization and Computer Graphics.
     .. [2] UpSetPlot package: https://github.com/jnothman/UpSetPlot
     """
+    # Read defaults from rcParams if not provided
+    if color is None:
+        color = get_default("color", "#5d83c3")
+    if bar_linewidth is None:
+        bar_linewidth = plt.rcParams.get("lines.linewidth", 1.0)
+    if matrix_linewidth is None:
+        default_lw = plt.rcParams.get("lines.linewidth", 1.0)
+        matrix_linewidth = default_lw * 1.2
+    if alpha is None:
+        alpha = get_default("alpha", 0.1)
+    if figsize is None:
+        figsize = plt.rcParams.get("figure.figsize", (3, 2))
+
     # Process data
     processed = process_upset_data(
         data=data,

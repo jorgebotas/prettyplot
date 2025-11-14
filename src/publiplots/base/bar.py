@@ -6,13 +6,14 @@ flexible styling and grouping options.
 """
 
 from typing import Optional, List, Dict, Tuple, Union
+
+from publiplots.themes.defaults import get_default
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 import seaborn as sns
 import pandas as pd
 
-from publiplots.config import DEFAULT_LINEWIDTH, DEFAULT_ALPHA, DEFAULT_CAPSIZE, DEFAULT_FIGSIZE
-from publiplots.themes.colors import resolve_palette_mapping, DEFAULT_COLOR
+from publiplots.themes.colors import resolve_palette_mapping
 from publiplots.themes.hatches import resolve_hatch_mapping
 from publiplots.utils import is_categorical, create_legend_handles, create_legend_builder
 
@@ -24,15 +25,15 @@ def barplot(
     y: str,
     hue: Optional[str] = None,
     hatch: Optional[str] = None,
-    color: Optional[str] = DEFAULT_COLOR,
+    color: Optional[str] = None,
     ax: Optional[Axes] = None,
     title: str = "",
     xlabel: str = "",
     ylabel: str = "",
-    linewidth: float = DEFAULT_LINEWIDTH,
-    capsize: float = DEFAULT_CAPSIZE,
-    alpha: float = DEFAULT_ALPHA,
-    figsize: Tuple[float, float] = DEFAULT_FIGSIZE,
+    linewidth: Optional[float] = None,
+    capsize: Optional[float] = None,
+    alpha: Optional[float] = None,
+    figsize: Optional[Tuple[float, float]] = None,
     palette: Optional[Union[str, Dict, List]] = None,
     hatch_mapping: Optional[Dict[str, str]] = None,
     legend: bool = True,
@@ -135,6 +136,18 @@ def barplot(
     --------
     barplot_enrichment : Specialized bar plot for enrichment analysis
     """
+    # Read defaults from rcParams if not provided
+    if figsize is None:
+        figsize = plt.rcParams.get("figure.figsize", (3, 2))
+    if linewidth is None:
+        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
+    if alpha is None:
+        alpha = get_default("alpha", 0.1)
+    if capsize is None:
+        capsize = get_default("capsize", 0.0)
+    if color is None:
+        color = get_default("color", "#5d83c3")
+
     # Create figure if not provided
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)

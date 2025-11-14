@@ -7,7 +7,7 @@ customization options.
 
 Basic usage:
     >>> import publiplots as pp
-    >>> pp.set_publication_style()
+    >>> pp.set_notebook_style()  # For interactive work
     >>> fig, ax = pp.barplot(data=df, x='category', y='value')
     >>> pp.savefig(fig, 'output.png')
 """
@@ -46,14 +46,18 @@ from publiplots.utils.legend import (
 )
 
 # Theming
-from publiplots.themes.colors import get_palette, list_palettes, show_palette, resolve_palette, DEFAULT_COLOR
+from publiplots.themes.colors import get_palette, list_palettes, show_palette, resolve_palette
 from publiplots.themes.styles import (
+    set_notebook_style,
     set_publication_style,
-    set_illustrator_style,
+    set_illustrator_style,  # Backward compatibility alias
     set_minimal_style,
     set_poster_style,
     reset_style,
 )
+# Initialize publiplots rcParams defaults
+from publiplots.themes.defaults import init_rcparams
+init_rcparams()
 from publiplots.themes.markers import (
     get_marker_cycle,
     get_hatch_cycle,
@@ -97,11 +101,10 @@ __all__ = [
     "list_palettes",
     "show_palette",
     "resolve_palette",
-    # Color constants
-    "DEFAULT_COLOR",
     # Style functions
+    "set_notebook_style",
     "set_publication_style",
-    "set_illustrator_style",
+    "set_illustrator_style",  # Backward compatibility alias
     "set_minimal_style",
     "set_poster_style",
     "reset_style",

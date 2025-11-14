@@ -15,7 +15,8 @@ import numpy as np
 import pandas as pd
 from typing import Optional, Tuple, Union, Dict, List
 
-from publiplots.config import DEFAULT_FIGSIZE, DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_COLOR
+from publiplots.themes.defaults import get_default
+
 from publiplots.themes.colors import resolve_palette_mapping
 from publiplots.utils import is_categorical, is_numeric, create_legend_handles, create_legend_builder
 
@@ -31,10 +32,10 @@ def scatterplot(
     sizes: Optional[Tuple[float, float]] = None,
     size_norm: Optional[Union[Tuple[float, float], Normalize]] = None,
     hue_norm: Optional[Union[Tuple[float, float], Normalize]] = None,
-    alpha: float = DEFAULT_ALPHA,
-    linewidth: float = DEFAULT_LINEWIDTH,
+    alpha: Optional[float] = None,
+    linewidth: Optional[float] = None,
     edgecolor: Optional[str] = None,
-    figsize: Tuple[float, float] = DEFAULT_FIGSIZE,
+    figsize: Optional[Tuple[float, float]] = None,
     ax: Optional[Axes] = None,
     title: str = "",
     xlabel: str = "",
@@ -147,6 +148,16 @@ def scatterplot(
     >>> fig, ax = pp.scatterplot(data=df, x="category", y="condition",
     ...                           size="pvalue", hue="log2fc")
     """
+    # Read defaults from rcParams if not provided
+    if figsize is None:
+        figsize = plt.rcParams.get("figure.figsize", (3, 2))
+    if linewidth is None:
+        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
+    if alpha is None:
+        alpha = get_default("alpha", 0.1)
+    if color is None:
+        color = get_default("color", "#5d83c3")
+
     # Validate required columns
     required_cols = [x, y]
     if size is not None:
@@ -442,13 +453,19 @@ def _legend(
         hue_norm: Optional[Normalize],
         size_norm: Optional[Normalize],
         sizes: Tuple[float, float],
-        alpha: float = DEFAULT_ALPHA,
-        linewidth: float = DEFAULT_LINEWIDTH,
+        alpha: Optional[float] = None,
+        linewidth: Optional[float] = None,
         kwargs: Optional[Dict] = None,
     ) -> None:
     """
     Create legend handles for scatter plot.
     """
+    # Read defaults from rcParams if not provided
+    if alpha is None:
+        alpha = get_default("alpha", 0.1)
+    if linewidth is None:
+        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
+
     kwargs = kwargs or {}
     handle_kwargs = dict(alpha=alpha, linewidth=linewidth, color=color, style="circle")
     builder = create_legend_builder(ax=ax)

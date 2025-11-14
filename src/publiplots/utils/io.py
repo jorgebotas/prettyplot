@@ -10,8 +10,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-from publiplots.config import DEFAULT_DPI, DEFAULT_FORMAT
-
 
 def savefig(
     filepath: str,
@@ -81,13 +79,13 @@ def savefig(
     """
     # Use default DPI if not specified
     if dpi is None:
-        dpi = DEFAULT_DPI
+        dpi = plt.rcParams.get("savefig.dpi", 300)
 
     # Infer format from filepath if not specified
     if format is None:
         format = Path(filepath).suffix.lstrip('.')
         if not format:
-            format = DEFAULT_FORMAT
+            format = plt.rcParams.get("savefig.format", "pdf")
 
     # Create parent directories if they don't exist
     filepath_obj = Path(filepath)

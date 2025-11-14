@@ -11,13 +11,13 @@ Licensed under BSD-3-Clause
 """
 
 from typing import Dict, List, Optional, Tuple
+
+from publiplots.themes.defaults import get_default
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import to_rgba
 from matplotlib.ticker import MaxNLocator
-
-from publiplots.config import DEFAULT_COLOR, DEFAULT_LINEWIDTH, DEFAULT_ALPHA
 
 GRID_LINEWIDTH = 1
 BARWIDTH = 0.5
@@ -28,9 +28,9 @@ def draw_intersection_bars(
     sizes: List[int],
     positions: List[int],
     width: float = BARWIDTH,
-    color: str = DEFAULT_COLOR,
-    linewidth: float = DEFAULT_LINEWIDTH,
-    alpha: float = DEFAULT_ALPHA,
+    color: Optional[str] = None,
+    linewidth: Optional[float] = None,
+    alpha: Optional[float] = None,
 ) -> None:
     """
     Draw bars showing intersection sizes.
@@ -52,6 +52,14 @@ def draw_intersection_bars(
     alpha : float
         Bar transparency
     """
+    # Read defaults from rcParams if not provided
+    if color is None:
+        color = get_default("color", "#5d83c3")
+    if linewidth is None:
+        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
+    if alpha is None:
+        alpha = get_default("alpha", 0.1)
+
     ax.bar(
         positions,
         sizes,
@@ -90,9 +98,9 @@ def draw_set_size_bars(
     set_sizes: Dict[str, int],
     positions: List[int],
     width: float = BARWIDTH,
-    color: str = DEFAULT_COLOR,
-    linewidth: float = DEFAULT_LINEWIDTH,
-    alpha: float = DEFAULT_ALPHA,
+    color: Optional[str] = None,
+    linewidth: Optional[float] = None,
+    alpha: Optional[float] = None,
 ) -> None:
     """
     Draw horizontal bars showing set sizes.
@@ -116,6 +124,14 @@ def draw_set_size_bars(
     alpha : float
         Bar transparency
     """
+    # Read defaults from rcParams if not provided
+    if color is None:
+        color = get_default("color", "#5d83c3")
+    if linewidth is None:
+        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
+    if alpha is None:
+        alpha = get_default("alpha", 0.1)
+
     sizes = [set_sizes[name] for name in set_names]
 
     ax.barh(
@@ -147,10 +163,10 @@ def draw_matrix(
         membership_matrix: List[Tuple[int, ...]],
         set_names: List[str],
         dot_size: float = 150,
-        linewidth: float = DEFAULT_LINEWIDTH,
-        active_color: str = DEFAULT_COLOR,
+        linewidth: Optional[float] = None,
+        active_color: Optional[str] = None,
         inactive_color: Optional[str] = None,
-        alpha: float = DEFAULT_ALPHA,
+        alpha: Optional[float] = None,
     ) -> None:
     """
     Draw the membership matrix showing which sets each intersection contains.
@@ -173,6 +189,14 @@ def draw_matrix(
         Color for inactive dots. If None, use to_rgba(color, alpha=alpha).
     """
     import numpy as np
+
+    # Read defaults from rcParams if not provided
+    if linewidth is None:
+        linewidth = plt.rcParams.get("lines.linewidth", 1.0)
+    if active_color is None:
+        active_color = get_default("color", "#5d83c3")
+    if alpha is None:
+        alpha = get_default("alpha", 0.1)
 
     n_sets = len(set_names)
     n_intersections = len(membership_matrix)
