@@ -24,53 +24,62 @@ MATPLOTLIB_RCPARAMS: Dict[str, Any] = {
     # Figure settings - compact by default (publication-ready)
     "figure.figsize": [3.5, 2.5],
     "figure.dpi": 100,
-    "figure.facecolor": "white",
-    "figure.edgecolor": "white",
+    "figure.facecolor": "none",
+    "figure.edgecolor": "none",
 
     # Font settings - optimized for readability
     "font.size": 8,
     "font.family": "sans-serif",
-    "font.sans-serif": ["DejaVu Sans", "Arial", "Helvetica", "sans-serif"],
+    "font.sans-serif": ["Arial", "Helvetica", "sans-serif"],
 
     # Axes settings
     "axes.linewidth": 1.0,
-    "axes.edgecolor": "black",
+    "axes.edgecolor": "0.3",
+    "axes.labelcolor": "0.3",
     "axes.facecolor": "white",
     "axes.labelsize": 8,
     "axes.titlesize": 9,
-    "axes.titleweight": "bold",
-    "axes.spines.top": False,
-    "axes.spines.right": False,
+    "axes.titleweight": "normal",
+    "axes.spines.top": True,
+    "axes.spines.right": True,
+    "axes.spines.bottom": True,
+    "axes.spines.left": True,
 
     # Line settings
     "lines.linewidth": 1.5,
     "lines.markersize": 6,
 
+    # Patch settings (for bars, etc.)
+    "patch.linewidth": 1.0,
+    "patch.edgecolor": "0.2",
+
     # Tick settings
     "xtick.labelsize": 7,
     "ytick.labelsize": 7,
-    "xtick.major.width": 1.0,
-    "ytick.major.width": 1.0,
+    "xtick.major.width": 0.0,
+    "ytick.major.width": 0.0,
     "xtick.major.size": 3,
     "ytick.major.size": 3,
 
     # Grid settings
+    "axes.grid": False,
     "grid.linewidth": 0.8,
+    "grid.color": "0.8",
     "grid.alpha": 0.3,
+    "grid.linestyle": "--",
 
     # Legend settings
     "legend.fontsize": 7,
-    "legend.frameon": True,
-    "legend.framealpha": 0.8,
-    "legend.facecolor": "white",
-    "legend.edgecolor": "gray",
+    "legend.frameon": False,
+    "legend.facecolor": "none",
+    "legend.edgecolor": "none",
 
     # Save settings - high quality for publications
     "savefig.dpi": 600,
     "savefig.bbox": "tight",
     "savefig.pad_inches": 0.1,
-    "savefig.facecolor": "white",
-    "savefig.edgecolor": "white",
+    "savefig.facecolor": "none",
+    "savefig.edgecolor": "none",
 
     # PDF settings for vector graphics
     "pdf.fonttype": 42,
@@ -90,13 +99,13 @@ PUBLIPLOTS_RCPARAMS: Dict[str, Any] = {
     "alpha": 0.1,  # Default transparency for bars
 
     # Error bars
-    "capsize": 0.1,  # Error bar cap size
+    "capsize": 0.0,  # Error bar cap size
 
     # Color palettes
     "palette": "pastel_categorical",  # Default color palette
 
     # Hatch patterns
-    "hatch_mode": 1,  # Default hatch density mode (1=sparse)
+    "hatch_mode": 2,  # Default hatch density mode (2=medium)
 }
 """
 PubliPlots custom rcParams.
@@ -184,46 +193,6 @@ def resolve_param(key: str, value: Optional[Any] = None) -> Any:
     """
     return value if value is not None else _get_default(key)
 
-
-def get_default(key: str) -> Any:
-    """
-    Get a default parameter value.
-
-    This is a public wrapper around _get_default() for backward compatibility
-    and explicit default value access.
-
-    Parameters
-    ----------
-    key : str
-        Parameter name
-
-    Returns
-    -------
-    Any
-        Parameter default value
-
-    Raises
-    ------
-    KeyError
-        If parameter not found
-
-    Examples
-    --------
-    >>> from publiplots.themes import get_default
-    >>> color = get_default('color')
-    >>> print(color)
-    '#5d83c3'
-    >>> figsize = get_default('figure.figsize')
-    >>> print(figsize)
-    [3.5, 2.5]
-
-    Notes
-    -----
-    For most use cases, prefer using rcParams directly:
-    >>> from publiplots import rcParams
-    >>> color = rcParams['color']
-    """
-    return _get_default(key)
 
 
 # =============================================================================

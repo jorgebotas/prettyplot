@@ -24,7 +24,6 @@ from publiplots.themes.colors import (
 from publiplots.themes.rcparams import (
     rcParams,
     resolve_param,
-    get_default,
 )
 
 from publiplots.themes.styles import (
@@ -52,7 +51,6 @@ __all__ = [
     # Parameter system
     "rcParams",
     "resolve_param",
-    "get_default",
     # Color functions
     "get_palette",
     "list_palettes",

@@ -31,15 +31,16 @@ NOTEBOOK_STYLE = {
     **PUBLIPLOTS_RCPARAMS,
     # Overrides for notebook/interactive work
     "figure.figsize": [6.0, 4.0],  # Larger for screens
-    "font.size": 11,  # More readable
-    "axes.labelsize": 11,
-    "axes.titlesize": 12,
-    "xtick.labelsize": 10,
-    "ytick.labelsize": 10,
-    "legend.fontsize": 10,
-    "savefig.dpi": 300,  # Medium quality
-    "lines.linewidth": 2.0,  # Thicker for visibility
-    "axes.linewidth": 1.2,
+    "font.size": 12,  # More readable
+    "axes.labelsize": 14,
+    "axes.titlesize": 14,
+    "axes.linewidth": 1.0,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+    "legend.fontsize": 12,
+    "savefig.dpi": 300,
+    "lines.linewidth": 2.0,
+    "patch.linewidth": 2.0,
 }
 """
 Notebook-ready style optimized for interactive work and exploration.
@@ -58,8 +59,9 @@ PUBLICATION_STYLE = {
     **PUBLIPLOTS_RCPARAMS,
     # Overrides for publication
     # (most values already optimal in MATPLOTLIB_RCPARAMS)
-    "lines.linewidth": 1.2,  # Slightly thinner for compact plots
-    "alpha": 0.15,  # More visible on small figures
+    "lines.linewidth": 1.0,  # Slightly thinner for compact plots
+    "patch.linewidth": 1.0,
+    "axes.linewidth": 0.75,
 }
 """
 Publication-ready style optimized for final publication figures.
