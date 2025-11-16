@@ -229,11 +229,11 @@ def upsetplot(
     # Relationship: dot diameter ≈ elementsize * 0.5 (dot takes 50% of cell width)
     import numpy as np
 
-    DOT_TO_CELL_RATIO = 0.5  # Dot diameter as fraction of cell width
+    DOT_TO_CELL_RATIO = 0.4  # Dot diameter as fraction of cell width
 
     if elementsize is None and dotsize is None:
         # Both unspecified: use sensible defaults
-        elementsize = resolve_param("lines.markersize") * 5
+        elementsize = resolve_param("lines.markersize") * 4
         dot_diameter = elementsize * DOT_TO_CELL_RATIO
         dotsize = np.pi * (dot_diameter / 2) ** 2  # Area = π * r²
     elif elementsize is None:
@@ -267,8 +267,9 @@ def upsetplot(
 
     # Create figure with initial size (will be adjusted by setup_upset_axes)
     # Initial size is just a starting point - setup_upset_axes will resize based on elementsize
-    width = max(8, n_intersections * 0.4)
-    height = max(6, n_sets * 0.8 + 3)
+    default_width, default_height = resolve_param("figure.figsize")
+    width = max(default_width, n_intersections * 0.4)
+    height = max(default_height, n_sets * 0.8 + 3)
     fig = plt.figure(figsize=(width, height))
 
     # Setup axes with proper sizing that maintains proportions

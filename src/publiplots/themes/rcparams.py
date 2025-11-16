@@ -24,7 +24,6 @@ MATPLOTLIB_RCPARAMS: Dict[str, Any] = {
     # Figure settings - compact by default (publication-ready)
     "figure.figsize": [3.25, 2.5],
     "figure.dpi": 600,
-    "figure.facecolor": "none",
     "figure.edgecolor": "none",
     
 
@@ -81,7 +80,6 @@ MATPLOTLIB_RCPARAMS: Dict[str, Any] = {
     # Legend settings
     "legend.fontsize": 7,
     "legend.frameon": False,
-    "legend.facecolor": "none",
     "legend.edgecolor": "none",
 
     # Save settings - high quality for publications
