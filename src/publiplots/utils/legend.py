@@ -8,6 +8,8 @@ visual style of scatterplots and barplots.
 """
 
 from typing import List, Dict, Optional, Tuple, Any, Union
+
+from publiplots.themes.rcparams import resolve_param
 from matplotlib.axes import Axes
 from matplotlib.cm import ScalarMappable
 from matplotlib.colorbar import Colorbar
@@ -15,8 +17,6 @@ from matplotlib.legend import Legend
 from matplotlib.legend_handler import HandlerBase, HandlerPatch
 from matplotlib.patches import Circle, Rectangle, Patch
 import matplotlib.pyplot as plt
-
-from publiplots.config import DEFAULT_ALPHA, DEFAULT_LINEWIDTH, DEFAULT_COLOR
 
 
 # =============================================================================
@@ -121,8 +121,8 @@ class HandlerCircle(HandlerBase):
         # Defaults
         color = "gray"
         size = fontsize * 0.8
-        alpha = DEFAULT_ALPHA
-        linewidth = DEFAULT_LINEWIDTH
+        alpha = resolve_param("alpha", None)
+        linewidth = resolve_param("lines.linewidth", None)
         edgecolor = None
 
         # Extract from Patch (created by create_legend_handles)
@@ -214,8 +214,8 @@ class HandlerRectangle(HandlerPatch):
         """
         # Defaults
         color = "gray"
-        alpha = DEFAULT_ALPHA
-        linewidth = DEFAULT_LINEWIDTH
+        alpha = resolve_param("alpha", None)
+        linewidth = resolve_param("lines.linewidth", None)
         edgecolor = None
         hatch_pattern = None
 
@@ -277,8 +277,8 @@ def create_legend_handles(
     colors: Optional[List[str]] = None,
     hatches: Optional[List[str]] = None,
     sizes: Optional[List[float]] = None,
-    alpha: float = DEFAULT_ALPHA,
-    linewidth: float = DEFAULT_LINEWIDTH,
+    alpha: Optional[float] = None,
+    linewidth: Optional[float] = None,
     style: str = "rectangle",
     color: Optional[str] = None
 ) -> List[Patch]:
@@ -309,9 +309,13 @@ def create_legend_handles(
     List[Patch]
         List of Patch objects with embedded properties.
     """
+    # Read defaults from rcParams if not provided
+    alpha = resolve_param("alpha", alpha)
+    linewidth = resolve_param("lines.linewidth", linewidth)
 
     if colors is None:
-        colors = [color if color is not None else DEFAULT_COLOR] * len(labels)
+        default_color = resolve_param("color", None)
+        colors = [color if color is not None else default_color] * len(labels)
 
     if hatches is None or len(hatches) == 0 or style == "circle":
         hatches = [""] * len(labels)

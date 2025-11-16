@@ -7,10 +7,11 @@ are visually appealing and print well.
 """
 
 from typing import Dict, List, Optional, Union
+
+from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 import numpy as np
 
-from publiplots.config import DEFAULT_COLOR
 from publiplots.utils import is_categorical
 
 # =============================================================================
@@ -371,16 +372,18 @@ def resolve_palette(
     ['#ff0000', '#00ff00', '#0000ff']
     """
     import seaborn as sns
-    from publiplots.config import DEFAULT_PALETTE
 
     # Handle None: use default palette for multiple colors, default color for single
     if palette is None:
+        default_palette = resolve_param("palette", None)
+        default_color = resolve_param("color", None)
+
         if n_colors is not None and n_colors > 1:
             # Use default palette for multiple colors
-            return get_palette(DEFAULT_PALETTE, n_colors=n_colors)
+            return get_palette(default_palette, n_colors=n_colors)
         else:
             # Use default color for single color
-            return [DEFAULT_COLOR]
+            return [default_color]
 
     # Handle list/dict: return as-is
     if isinstance(palette, (list, dict)):

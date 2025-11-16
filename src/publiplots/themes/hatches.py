@@ -13,8 +13,7 @@ The module supports three density modes for patterns:
 
 from typing import Optional, Dict, List, Set, Union
 
-# Global variable to store current hatch mode
-_current_hatch_mode: int = None  # Will default to config.DEFAULT_HATCH_MODE
+from publiplots.themes.rcparams import rcParams
 
 
 # =============================================================================
@@ -195,13 +194,10 @@ def set_hatch_mode(mode: Optional[int] = None) -> None:
     the same session. To reset to the default, call set_hatch_mode()
     with no arguments or set_hatch_mode(None).
     """
-    global _current_hatch_mode
-
     # Handle reset to default
     if mode is None:
-        from publiplots.config import DEFAULT_HATCH_MODE
-        _current_hatch_mode = DEFAULT_HATCH_MODE
-        return
+        # Reset to default value from PUBLIPLOTS_RCPARAMS
+        mode = 1
 
     # Validate mode
     if mode not in _ALLOWED_HATCH_MODES:
@@ -210,7 +206,8 @@ def set_hatch_mode(mode: Optional[int] = None) -> None:
             "2 (medium), 3 (dense), or 4 (very dense), or None to reset to default."
         )
 
-    _current_hatch_mode = mode
+    # Set via rcParams
+    rcParams['hatch_mode'] = mode
 
 
 def get_hatch_mode() -> int:
@@ -247,14 +244,7 @@ def get_hatch_mode() -> int:
     set_hatch_mode : Set or reset the global hatch mode
     get_hatch_patterns : Get patterns for a specific mode
     """
-    global _current_hatch_mode
-
-    if _current_hatch_mode is None:
-        # Import here to avoid circular dependency
-        from publiplots.config import DEFAULT_HATCH_MODE
-        _current_hatch_mode = DEFAULT_HATCH_MODE
-
-    return _current_hatch_mode
+    return rcParams['hatch_mode']
 
 
 # =============================================================================

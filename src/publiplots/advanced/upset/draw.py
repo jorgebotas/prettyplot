@@ -11,13 +11,12 @@ Licensed under BSD-3-Clause
 """
 
 from typing import Dict, List, Optional, Tuple
-import matplotlib
+
+from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import to_rgba
 from matplotlib.ticker import MaxNLocator
-
-from publiplots.config import DEFAULT_COLOR, DEFAULT_LINEWIDTH, DEFAULT_ALPHA
 
 GRID_LINEWIDTH = 1
 BARWIDTH = 0.5
@@ -28,9 +27,9 @@ def draw_intersection_bars(
     sizes: List[int],
     positions: List[int],
     width: float = BARWIDTH,
-    color: str = DEFAULT_COLOR,
-    linewidth: float = DEFAULT_LINEWIDTH,
-    alpha: float = DEFAULT_ALPHA,
+    color: Optional[str] = None,
+    linewidth: Optional[float] = None,
+    alpha: Optional[float] = None,
 ) -> None:
     """
     Draw bars showing intersection sizes.
@@ -52,6 +51,11 @@ def draw_intersection_bars(
     alpha : float
         Bar transparency
     """
+    # Read defaults from rcParams if not provided
+    color = resolve_param("color", color)
+    linewidth = resolve_param("lines.linewidth", linewidth)
+    alpha = resolve_param("alpha", alpha)
+
     ax.bar(
         positions,
         sizes,
@@ -71,7 +75,7 @@ def draw_intersection_bars(
     ax.spines["top"].set_visible(False)
     ax.grid(axis="y", alpha=0.3, linestyle="--", linewidth=GRID_LINEWIDTH)
     ax.set_axisbelow(True)
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True, nbins="auto"))
 
     # Add value labels on top of bars
     for i, (pos, size) in enumerate(zip(positions, sizes)):
@@ -90,9 +94,9 @@ def draw_set_size_bars(
     set_sizes: Dict[str, int],
     positions: List[int],
     width: float = BARWIDTH,
-    color: str = DEFAULT_COLOR,
-    linewidth: float = DEFAULT_LINEWIDTH,
-    alpha: float = DEFAULT_ALPHA,
+    color: Optional[str] = None,
+    linewidth: Optional[float] = None,
+    alpha: Optional[float] = None,
 ) -> None:
     """
     Draw horizontal bars showing set sizes.
@@ -116,6 +120,11 @@ def draw_set_size_bars(
     alpha : float
         Bar transparency
     """
+    # Read defaults from rcParams if not provided
+    color = resolve_param("color", color)
+    linewidth = resolve_param("lines.linewidth", linewidth)
+    alpha = resolve_param("alpha", alpha)
+
     sizes = [set_sizes[name] for name in set_names]
 
     ax.barh(
@@ -138,7 +147,7 @@ def draw_set_size_bars(
     ax.grid(axis="x", alpha=0.3, linestyle="--", linewidth=GRID_LINEWIDTH)
     ax.set_axisbelow(True)
     ax.invert_xaxis()
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins="auto"))
 
 
 
@@ -146,11 +155,11 @@ def draw_matrix(
         ax: Axes,
         membership_matrix: List[Tuple[int, ...]],
         set_names: List[str],
-        dot_size: float = 150,
-        linewidth: float = DEFAULT_LINEWIDTH,
-        active_color: str = DEFAULT_COLOR,
+        dotsize: float = 150,
+        linewidth: Optional[float] = None,
+        active_color: Optional[str] = None,
         inactive_color: Optional[str] = None,
-        alpha: float = DEFAULT_ALPHA,
+        alpha: Optional[float] = None,
     ) -> None:
     """
     Draw the membership matrix showing which sets each intersection contains.
@@ -163,7 +172,7 @@ def draw_matrix(
         Binary membership patterns (each tuple is one column)
     set_names : list
         Names of sets (corresponds to rows, bottom to top)
-    dot_size : float
+    dotsize : float
         Size of dots in the matrix
     linewidth : float
         Width of connecting lines
@@ -173,6 +182,11 @@ def draw_matrix(
         Color for inactive dots. If None, use to_rgba(color, alpha=alpha).
     """
     import numpy as np
+
+    # Read defaults from rcParams if not provided
+    linewidth = resolve_param("lines.linewidth", linewidth)
+    active_color = resolve_param("color", active_color)
+    alpha = resolve_param("alpha", alpha)
 
     n_sets = len(set_names)
     n_intersections = len(membership_matrix)
@@ -201,7 +215,7 @@ def draw_matrix(
             ax.scatter(
                 i,
                 j,
-                s=dot_size,
+                s=dotsize,
                 color=inactive_color if j not in active_sets else "white",
                 marker="o",
                 zorder=2,
@@ -224,7 +238,7 @@ def draw_matrix(
             ax.scatter(
                 i,
                 j,
-                s=dot_size,
+                s=dotsize,
                 color=to_rgba(active_color, alpha=alpha),
                 marker="o",
                 edgecolors=active_color,
@@ -260,7 +274,7 @@ def draw_matrix(
             str(name),
             ha="right",
             va="center",
-            fontsize=matplotlib.rcParams["ytick.labelsize"],
+            fontsize=resolve_param("ytick.labelsize"),
             fontweight="normal",
         )
 
@@ -269,8 +283,7 @@ def setup_upset_axes(
     fig: plt.Figure,
     set_names: List[str],
     n_intersections: int,
-    figsize: Optional[Tuple[float, float]] = None,
-    element_size: Optional[float] = None,
+    elementsize: float,
 ) -> Tuple[Axes, Axes, Axes]:
     """
     Set up the three-panel layout for UpSet plot with proper sizing.
@@ -283,15 +296,15 @@ def setup_upset_axes(
     Parameters
     ----------
     fig : Figure
-        Matplotlib figure
+        Matplotlib figure (size will be adjusted)
     set_names : list
         Names of sets (for measuring text width)
     n_intersections : int
         Number of intersections to display
-    figsize : tuple, optional
-        Figure size (width, height). If None, calculated automatically.
-    element_size : float, optional
-        Width of each element (bar/dot) in points. If None, calculated from figure width.
+    elementsize : float
+        Width of each element (bar/dot) in figure points. Controls the
+        overall scale of the plot. Figure size is calculated to maintain
+        proper proportions based on this value.
 
     Returns
     -------
@@ -306,14 +319,13 @@ def setup_upset_axes(
     set_bar_width : float
         Optimal bar width for set bars in data coordinates
     """
-    import matplotlib
     from matplotlib import gridspec
     import numpy as np
 
     n_sets = len(set_names)
 
     # Measure text width needed for set labels
-    text_kw = {"size": matplotlib.rcParams["ytick.labelsize"]}
+    text_kw = {"size": resolve_param("ytick.labelsize")}
     # Add "x" for margin
     t = fig.text(
         0,
@@ -330,7 +342,7 @@ def setup_upset_axes(
     # Get figure width in display coordinates
     figw = fig.get_window_extent(renderer=fig.canvas.get_renderer()).width
 
-    # Calculate element size (colw) and adjust figure size
+    # Calculate figure size based on elementsize
     # Key constraint: bars should have same width as matrix elements
     # For square matrix elements: element_width = element_height
     # So: matrix_width / n_intersections = matrix_height / n_sets
@@ -339,45 +351,18 @@ def setup_upset_axes(
     # Number of non-text elements (set bars + intersection bars)
     non_text_nelems = n_sets + n_intersections
 
-    if figsize is None and element_size is None:
-        # Calculate element width from available space
-        render_ratio = figw / fig.get_figwidth() if fig.get_figwidth() > 0 else 72
+    # Calculate element width in display coordinates from elementsize (in points)
+    render_ratio = figw / fig.get_figwidth() if fig.get_figwidth() > 0 else 72
+    colw = elementsize / 72 * render_ratio
 
-        # Element width = (figure width - text width) / non-text elements
-        colw = (figw - textw) / non_text_nelems
+    # Calculate figure width to fit: text + non-text elements
+    # Add +1 to text columns for margin (like UpSetPlot does)
+    figw = colw * (non_text_nelems + np.ceil(textw / colw) + 1)
+    fig.set_figwidth(figw / render_ratio)
+    fig.set_figheight((colw * (n_sets + 2)) / render_ratio)
 
-        # Ensure minimum element size
-        if colw < 20:  # Minimum 20 points per element
-            colw = 20
-            # Recalculate figure width to accommodate text + minimum element size
-            figw = colw * non_text_nelems + textw
-            fig.set_figwidth(figw / render_ratio)
-            # After resize, remeasure figure width
-            figw = fig.get_window_extent(renderer=fig.canvas.get_renderer()).width
-
-        # Height: colw * n_sets for matrix + extra for intersection bars
-        fig_height = (colw * n_sets + colw * 2) / render_ratio
-        fig.set_figheight(fig_height)
-
-    elif figsize is not None:
-        # User specified figure size
-        fig.set_size_inches(figsize)
-        # Remeasure after resize
-        figw = fig.get_window_extent(renderer=fig.canvas.get_renderer()).width
-        render_ratio = figw / fig.get_figwidth()
-        colw = (figw - textw) / non_text_nelems
-
-    else:
-        # User specified element size
-        render_ratio = figw / fig.get_figwidth() if fig.get_figwidth() > 0 else 72
-        colw = element_size / 72 * render_ratio
-        # Calculate figure width to fit: text + non-text elements
-        # Add +1 to text columns for margin (like UpSetPlot does)
-        figw = colw * (non_text_nelems + np.ceil(textw / colw) + 1)
-        fig.set_figwidth(figw / render_ratio)
-        fig.set_figheight((colw * (n_sets + 2)) / render_ratio)
-        # Remeasure after resize
-        figw = fig.get_window_extent(renderer=fig.canvas.get_renderer()).width
+    # Remeasure after resize
+    figw = fig.get_window_extent(renderer=fig.canvas.get_renderer()).width
 
     # Calculate grid columns for each section
     # Use UpSetPlot's approach: text_cols = total_cols - non_text_cols
@@ -472,8 +457,8 @@ def add_upset_labels(
     ax_intersections: Axes,
     ax_sets: Axes,
     title: str = "",
-    intersection_label: str = "Intersection Size",
-    set_label: str = "Set Size",
+    intersection_label: str = "",
+    set_label: str = "",
 ) -> None:
     """
     Add labels and title to UpSet plot.

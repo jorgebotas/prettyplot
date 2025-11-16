@@ -12,9 +12,10 @@ Based on pyvenn by LankyCyril: https://github.com/LankyCyril/pyvenn
 
 from matplotlib.axes import Axes
 from typing import Dict, List, Optional, Tuple, Union
+
+from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 
-from publiplots.config import DEFAULT_ALPHA, DEFAULT_FIGSIZE
 from publiplots.themes.colors import get_palette
 
 from .constants import (
@@ -125,8 +126,8 @@ def venn(
     sets: Union[List[set], Dict[str, set]],
     labels: Optional[List[str]] = None,
     colors: Optional[Union[List[str], str]] = None,
-    alpha: float = DEFAULT_ALPHA,
-    figsize: Tuple[float, float] = DEFAULT_FIGSIZE,
+    alpha: Optional[float] = None,
+    figsize: Optional[Tuple[float, float]] = None,
     ax: Optional[Axes] = None,
     fmt: str = "{size}",
     color_labels: bool = True,
@@ -203,6 +204,10 @@ def venn(
     ...     fmt='{size} ({percentage:.1f}%)'
     ... )
     """
+    # Read defaults from rcParams if not provided
+    alpha = resolve_param("alpha", alpha)
+    figsize = resolve_param("figure.figsize", figsize)
+
     # Parse input sets
     if isinstance(sets, dict):
         labels = list(sets.keys())

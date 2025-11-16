@@ -3,415 +3,200 @@ Matplotlib style presets for publiplots.
 
 This module provides functions to apply consistent styling to matplotlib
 plots, optimized for publication-ready visualizations.
+
+Two main styles:
+- set_notebook_style(): For interactive work in Jupyter notebooks
+- set_publication_style(): For final publication figures (compact, high DPI)
+
+Styles are composed from base defaults plus style-specific overrides.
 """
 
-from typing import  Dict, Any
+from typing import Dict, Any
 import matplotlib.pyplot as plt
-import seaborn as sns
-from matplotlib import rcParams
+
+from .rcparams import (
+    MATPLOTLIB_RCPARAMS,
+    PUBLIPLOTS_RCPARAMS,
+    _PUBLIPLOTS_CUSTOM_DEFAULTS,
+)
 
 
 # =============================================================================
-# Style Dictionaries
+# Style Compositions
 # =============================================================================
 
-
-ILLUSTRATOR_STYLE: Dict[str, Any] = {
-    # Font settings
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-    "font.size": 8,
-    "axes.labelsize": 8,
-    "axes.titlesize": 9,
-    "xtick.labelsize": 8,
-    "ytick.labelsize": 8,
-    "legend.fontsize": 8,
-    "legend.title_fontsize": 9,
-    "figure.titlesize": 10,
-
-    # PDF settings (for vector graphics)
-    "pdf.fonttype": 42,
-    "ps.fonttype": 42,
-
-    # Figure settings
-    "figure.figsize": (3.5, 2.5),
-    "figure.dpi": 100,
-    "savefig.dpi": 600,
-    "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.1,
-
-    # Axes settings
-    "axes.linewidth": 0.75,
-    "axes.edgecolor": "0.3",
-    "axes.labelcolor": "0.3",
-    "axes.grid": False,
-    "axes.spines.top": True,
-    "axes.spines.right": True,
-    "axes.axisbelow": True,
-
-    # Grid settings
-    "grid.color": "0.8",
-    "grid.linestyle": "--",
-    "grid.linewidth": 0.5,
-
-    # Tick settings
-    "xtick.major.width": 1,
-    "ytick.major.width": 1,
-    "xtick.major.size": 5,
-    "ytick.major.size": 5,
-    "xtick.color": "0.3",
-    "ytick.color": "0.3",
-    "xtick.direction": "out",
-    "ytick.direction": "out",
-
-    # Legend settings
-    "legend.frameon": False,
-    "legend.numpoints": 1,
-    "legend.scatterpoints": 1,
-
-    # Line settings
-    "lines.linewidth": 1,
-    "lines.markersize": 8,
-
-    # Patch settings (for bars, etc.)
-    "patch.linewidth": 1,
-    "patch.edgecolor": "0.3",
-}
-
-PUBLICATION_STYLE: Dict[str, Any] = {
-    # Font settings
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-    "font.size": 11,
-    "axes.labelsize": 12,
-    "axes.titlesize": 13,
-    "xtick.labelsize": 10,
-    "ytick.labelsize": 10,
-    "legend.fontsize": 10,
-    "legend.title_fontsize": 12,
-    "figure.titlesize": 14,
-
-    # PDF settings (for vector graphics)
-    "pdf.fonttype": 42,
-    "ps.fonttype": 42,
-
-    # Figure settings
-    "figure.figsize": (6, 4),
-    "figure.dpi": 100,
+# Notebook style: base defaults + larger sizes for interactive work
+NOTEBOOK_STYLE = {
+    **MATPLOTLIB_RCPARAMS,
+    **PUBLIPLOTS_RCPARAMS,
+    # Overrides for notebook/interactive work
+    "figure.figsize": [6.0, 4.0],  # Larger for screens
+    "figure.dpi": 150,
     "savefig.dpi": 300,
-    "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.1,
-
-    # Axes settings
-    "axes.linewidth": 1.5,
-    "axes.edgecolor": "0.2",
-    "axes.labelcolor": "0.2",
-    "axes.grid": False,
-    "axes.spines.top": True,
-    "axes.spines.right": True,
-    "axes.axisbelow": True,
-
-    # Grid settings
-    "grid.color": "0.8",
-    "grid.linestyle": "--",
-    "grid.linewidth": 0.5,
-
-    # Tick settings
-    "xtick.major.width": 1.5,
-    "ytick.major.width": 1.5,
-    "xtick.major.size": 5,
-    "ytick.major.size": 5,
-    "xtick.color": "0.2",
-    "ytick.color": "0.2",
-    "xtick.direction": "out",
-    "ytick.direction": "out",
-
-    # Legend settings
-    "legend.frameon": False,
-    "legend.numpoints": 1,
-    "legend.scatterpoints": 1,
-
-    # Line settings
+    "font.size": 12,  # More readable
+    "axes.labelsize": 14,
+    "axes.titlesize": 14,
+    "axes.linewidth": 1.0,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+    "legend.fontsize": 12,
     "lines.linewidth": 2.0,
     "lines.markersize": 8,
-
-    # Patch settings (for bars, etc.)
     "patch.linewidth": 2.0,
-    "patch.edgecolor": "0.2",
 }
 """
-Publication-ready style optimized for scientific papers and presentations.
+Notebook-ready style optimized for interactive work and exploration.
 
 Features:
-- Clean sans-serif fonts (Arial preferred)
-- High DPI for crisp output
-- Minimal spines (top and right removed)
-- Appropriate sizing for standard figure widths
+- Readable font sizes for screens (11pt base)
+- Larger figure sizes (6×4) for notebooks
+- Medium DPI (300) for good quality
+- Thicker lines for better visibility on screens
+- Ideal for Jupyter notebooks and interactive analysis
 """
 
-MINIMAL_STYLE: Dict[str, Any] = {
-    **PUBLICATION_STYLE,
-    # More minimal - even fewer visual elements
-    "axes.linewidth": 1.0,
-    "axes.spines.left": True,
-    "axes.spines.bottom": True,
-    "xtick.major.width": 1.0,
-    "ytick.major.width": 1.0,
-    "lines.linewidth": 1.5,
+# Publication style: base defaults + compact publication settings
+PUBLICATION_STYLE = {
+    **MATPLOTLIB_RCPARAMS,
+    **PUBLIPLOTS_RCPARAMS,
+    # Overrides for publication
+    # (most values already optimal in MATPLOTLIB_RCPARAMS)
+    "lines.linewidth": 1.0,  # Slightly thinner for compact plots
+    "patch.linewidth": 1.0,
+    "axes.linewidth": 0.75,
+    "figure.dpi": 600,
+    "savefig.dpi": 600,
 }
 """
-Minimal style with reduced visual clutter.
+Publication-ready style optimized for final publication figures.
 
-Lighter lines and simpler appearance, ideal for presentations or
-when multiple figures need to be displayed together.
-"""
-
-POSTER_STYLE: Dict[str, Any] = {
-    **PUBLICATION_STYLE,
-    # Larger sizes for poster presentations
-    "font.size": 16,
-    "axes.labelsize": 18,
-    "axes.titlesize": 20,
-    "xtick.labelsize": 14,
-    "ytick.labelsize": 14,
-    "legend.fontsize": 14,
-    "legend.title_fontsize": 16,
-    "figure.titlesize": 22,
-    "figure.figsize": (8, 6),
-    "lines.linewidth": 3.0,
-    "lines.markersize": 10,
-    "axes.linewidth": 2.0,
-    "xtick.major.width": 2.0,
-    "ytick.major.width": 2.0,
-    "patch.linewidth": 3.0,
-}
-"""
-Poster presentation style with larger fonts and thicker lines.
-
-Optimized for viewing from a distance, such as conference posters
-or large-screen presentations.
+Features:
+- Small fonts (8pt base) for compact figures
+- High DPI (600) for print quality
+- Compact figure size (3.5×2.5) for publications
+- Clean, minimal styling
+- Perfect for creating figures for papers or Adobe Illustrator
 """
 
 
 # =============================================================================
-# Functions
+# Helper Functions
 # =============================================================================
 
-def set_publication_style(
-    font: str = "Arial",
-    font_scale: float = 1.6,
-    context: str = "paper",
-    palette: str = "pastel_categorical"
-) -> None:
+def _apply_style(style_dict: Dict[str, Any]) -> None:
+    """
+    Apply a complete style (both matplotlib and publiplots params).
+
+    Parameters
+    ----------
+    style_dict : dict
+        Complete style dictionary containing both matplotlib rcParams
+        and publiplots-specific parameters.
+    """
+    # Separate matplotlib params from publiplots params
+    matplotlib_params = {
+        k: v for k, v in style_dict.items() if k not in PUBLIPLOTS_RCPARAMS
+    }
+    publiplots_params = {
+        k: v for k, v in style_dict.items() if k in PUBLIPLOTS_RCPARAMS
+    }
+
+    # Apply to respective stores
+    plt.rcParams.update(matplotlib_params)
+    _PUBLIPLOTS_CUSTOM_DEFAULTS.clear()
+    _PUBLIPLOTS_CUSTOM_DEFAULTS.update(publiplots_params)
+
+
+# =============================================================================
+# Public Style Functions
+# =============================================================================
+
+def set_notebook_style() -> None:
+    """
+    Apply notebook-ready style to all matplotlib plots.
+
+    This style is optimized for interactive work in Jupyter notebooks with
+    readable font sizes and larger figure dimensions.
+
+    The style includes both matplotlib rcParams and publiplots parameters
+    (color, alpha, capsize, palette, hatch_mode).
+
+    Examples
+    --------
+    Apply notebook style for interactive work:
+    >>> import publiplots as pp
+    >>> pp.set_notebook_style()
+    >>> fig, ax = pp.barplot(data=df, x='x', y='y')  # Uses notebook defaults
+
+    Check current parameters:
+    >>> pp.rcParams['font.size']  # 11
+    >>> pp.rcParams['alpha']  # 0.1
+    >>> pp.rcParams['figure.figsize']  # [6.0, 4.0]
+
+    Notes
+    -----
+    This style sets:
+    - Font size: 11pt (readable on screens)
+    - Figure size: 6×4 inches
+    - DPI: 300 (good quality for screens)
+    - Line width: 2.0 (thicker for visibility)
+    - All publiplots params: color, alpha, capsize, palette, hatch_mode
+    """
+    _apply_style(NOTEBOOK_STYLE)
+
+
+def set_publication_style() -> None:
     """
     Apply publication-ready style to all matplotlib plots.
 
-    This is the main styling function that should be called at the beginning
-    of a script to ensure consistent, publication-ready plots.
+    This style is optimized for final publication figures with small fonts,
+    high DPI (600), and compact dimensions. Perfect for creating figures that
+    will be edited in Adobe Illustrator or directly included in papers.
 
-    Parameters
-    ----------
-    font : str, default='Arial'
-        Font family to use. Common options: 'Arial', 'Helvetica', 'Times'.
-    font_scale : float, default=1.0
-        Scaling factor for all font sizes. Use >1 for larger fonts.
-    context : str, default='paper'
-        Seaborn context: 'paper', 'notebook', 'talk', or 'poster'.
-    palette : str, default='pastel_categorical'
-        Default color palette name from publiplots.themes.colors.
+    The style includes both matplotlib rcParams and publiplots parameters
+    (color, alpha, capsize, palette, hatch_mode).
 
     Examples
     --------
-    Apply default publication style:
+    Apply publication style for final figures:
     >>> import publiplots as pp
     >>> pp.set_publication_style()
+    >>> fig, ax = pp.barplot(data=df, x='x', y='y')  # Uses publication defaults
 
-    Use larger fonts for a presentation:
-    >>> pp.set_publication_style(font_scale=1.3, context='talk')
+    Check current parameters:
+    >>> pp.rcParams['font.size']  # 8
+    >>> pp.rcParams['alpha']  # 0.15
+    >>> pp.rcParams['figure.figsize']  # [3.5, 2.5]
+    >>> pp.rcParams['savefig.dpi']  # 600
 
-    Use Times font for a specific journal:
-    >>> pp.set_publication_style(font='Times New Roman')
+    Notes
+    -----
+    This style sets:
+    - Font size: 8pt (compact for publications)
+    - Figure size: 3.5×2.5 inches (fits journal columns)
+    - DPI: 600 (print quality)
+    - Line width: 1.2 (appropriate for small plots)
+    - Alpha: 0.15 (more visible on compact figures)
+    - All publiplots params: color, capsize, palette, hatch_mode
     """
-    # Apply seaborn style first
-    sns.set_theme(context=context, style="white", font=font, font_scale=font_scale)
-
-    # Apply publiplots style
-    for key, value in PUBLICATION_STYLE.items():
-        rcParams[key] = value
-
-    # Override font if specified
-    if font != "Arial":
-        rcParams["font.sans-serif"] = [font, "Arial", "Helvetica", "DejaVu Sans"]
-
-    # Apply font scaling
-    if font_scale != 1.0:
-        for key in rcParams.keys():
-            if 'size' in key and isinstance(rcParams[key], (int, float)):
-                rcParams[key] = rcParams[key] * font_scale
-
-    # Set default color palette
-    from publiplots.themes.colors import get_palette
-    try:
-        colors = get_palette(palette)
-        if isinstance(colors, list):
-            sns.set_palette(colors)
-    except ValueError:
-        pass  # If palette doesn't exist, keep seaborn default
-
-
-def set_illustrator_style(
-    font: str = "Arial",
-    font_scale: float = 1.0,
-    context: str = "paper",
-    palette: str = "pastel_categorical"
-) -> None:
-    """
-    Apply illustrator-ready style to all matplotlib plots.
-
-    This is the main styling function that should be called at the beginning
-    of a script to ensure consistent, illustrator-ready plots.
-
-    Parameters
-    ----------
-    font : str, default='Arial'
-        Font family to use. Common options: 'Arial', 'Helvetica', 'Times'.
-    font_scale : float, default=1.0
-        Scaling factor for all font sizes. Use >1 for larger fonts.
-    context : str, default='paper'
-        Seaborn context: 'paper', 'notebook', 'talk', or 'poster'.
-    palette : str, default='pastel_categorical'
-        Default color palette name from publiplots.themes.colors.
-
-    Examples
-    --------
-    Apply default illustrator style:
-    >>> import publiplots as pp
-    >>> pp.set_illustrator_style()
-
-    Use larger fonts for a presentation:
-    >>> pp.set_illustrator_style(font_scale=1.3, context='talk')
-
-    Use Times font for a specific journal:
-    >>> pp.set_illustrator_style(font='Times New Roman')
-    """
-    # Apply seaborn style first
-    sns.set_theme(context=context, style="white", font=font, font_scale=font_scale)
-
-    # Apply publiplots style
-    for key, value in ILLUSTRATOR_STYLE.items():
-        rcParams[key] = value
-
-    # Override font if specified
-    if font != "Arial":
-        rcParams["font.sans-serif"] = [font, "Arial", "Helvetica", "DejaVu Sans"]
-
-    # Apply font scaling
-    if font_scale != 1.0:
-        for key in rcParams.keys():
-            if 'size' in key and isinstance(rcParams[key], (int, float)):
-                rcParams[key] = rcParams[key] * font_scale
-
-    # Set default color palette
-    from publiplots.themes.colors import get_palette
-    try:
-        colors = get_palette(palette)
-        if isinstance(colors, list):
-            sns.set_palette(colors)
-    except ValueError:
-        pass  # If palette doesn't exist, keep seaborn default
-
-def set_minimal_style(
-    font: str = "Arial",
-    font_scale: float = 1.0
-) -> None:
-    """
-    Apply minimal style with reduced visual elements.
-
-    Parameters
-    ----------
-    font : str, default='Arial'
-        Font family to use.
-    font_scale : float, default=1.0
-        Scaling factor for all font sizes.
-
-    Examples
-    --------
-    >>> import publiplots as pp
-    >>> pp.set_minimal_style()
-    """
-    sns.set_theme(context="paper", style="white", font=font, font_scale=font_scale)
-
-    for key, value in MINIMAL_STYLE.items():
-        rcParams[key] = value
-
-    if font != "Arial":
-        rcParams["font.sans-serif"] = [font, "Arial", "Helvetica", "DejaVu Sans"]
-
-    if font_scale != 1.0:
-        for key in rcParams.keys():
-            if 'size' in key and isinstance(rcParams[key], (int, float)):
-                rcParams[key] = rcParams[key] * font_scale
-
-
-def set_poster_style(
-    font: str = "Arial",
-    font_scale: float = 2.0,
-    palette: str = "pastel_categorical"
-) -> None:
-    """
-    Apply poster presentation style with larger elements.
-
-    Parameters
-    ----------
-    font : str, default='Arial'
-        Font family to use.
-    font_scale : float, default=1.0
-        Additional scaling factor on top of poster defaults.
-    palette : str, default='pastel_categorical'
-        Default color palette name.
-
-    Examples
-    --------
-    >>> import publiplots as pp
-    >>> pp.set_poster_style()
-    """
-    sns.set_theme(context="poster", style="white", font=font, font_scale=font_scale)
-
-    for key, value in POSTER_STYLE.items():
-        rcParams[key] = value
-
-    if font != "Arial":
-        rcParams["font.sans-serif"] = [font, "Arial", "Helvetica", "DejaVu Sans"]
-
-    if font_scale != 1.0:
-        for key in rcParams.keys():
-            if 'size' in key and isinstance(rcParams[key], (int, float)):
-                rcParams[key] = rcParams[key] * font_scale
-
-    from publiplots.themes.colors import get_palette
-    try:
-        colors = get_palette(palette)
-        if isinstance(colors, list):
-            sns.set_palette(colors)
-    except ValueError:
-        pass
+    _apply_style(PUBLICATION_STYLE)
 
 
 def reset_style() -> None:
     """
-    Reset matplotlib rcParams to defaults.
+    Reset matplotlib rcParams to matplotlib defaults.
 
     Useful when you want to revert to matplotlib's default styling.
+    Does not affect publiplots custom parameters.
 
     Examples
     --------
     >>> import publiplots as pp
     >>> pp.set_publication_style()
     >>> # ... create plots ...
-    >>> pp.reset_style()  # Reset to defaults
+    >>> pp.reset_style()  # Reset to matplotlib defaults
     """
     plt.rcdefaults()
-    sns.reset_defaults()
 
 
 def get_current_style() -> Dict[str, Any]:
@@ -419,11 +204,12 @@ def get_current_style() -> Dict[str, Any]:
     Get current matplotlib rcParams as a dictionary.
 
     Useful for debugging or saving current style settings.
+    Only returns matplotlib rcParams, not publiplots parameters.
 
     Returns
     -------
     Dict[str, Any]
-        Dictionary of current rcParams.
+        Dictionary of current matplotlib rcParams.
 
     Examples
     --------
@@ -431,14 +217,17 @@ def get_current_style() -> Dict[str, Any]:
     >>> pp.set_publication_style()
     >>> current = pp.get_current_style()
     >>> print(current['font.size'])
-    11
+    8
     """
-    return dict(rcParams)
+    return dict(plt.rcParams)
 
 
 def apply_custom_style(style_dict: Dict[str, Any]) -> None:
     """
     Apply a custom style dictionary to matplotlib.
+
+    Only applies matplotlib rcParams. To set publiplots parameters,
+    use pp.rcParams directly.
 
     Parameters
     ----------
@@ -447,9 +236,13 @@ def apply_custom_style(style_dict: Dict[str, Any]) -> None:
 
     Examples
     --------
+    Apply custom matplotlib settings:
     >>> import publiplots as pp
     >>> custom = {'font.size': 14, 'lines.linewidth': 3}
     >>> pp.apply_custom_style(custom)
+
+    For publiplots parameters, use rcParams directly:
+    >>> pp.rcParams['alpha'] = 0.2
+    >>> pp.rcParams['hatch_mode'] = 3
     """
-    for key, value in style_dict.items():
-        rcParams[key] = value
+    plt.rcParams.update(style_dict)

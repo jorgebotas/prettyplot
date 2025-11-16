@@ -1,9 +1,29 @@
 """
 Global configuration settings for publiplots.
 
-This module contains default settings that can be modified to change
-the behavior of publiplots functions globally.
+.. deprecated::
+    This module is deprecated and will be removed in a future version.
+    publiplots now uses matplotlib's rcParams for all configuration.
+
+    All settings are now managed through matplotlib's rcParams system:
+    - Standard matplotlib params: figure.figsize, savefig.dpi, lines.linewidth, etc.
+    - Custom publiplots params: via get_default('color'), get_default('alpha'), etc.
+
+    To customize defaults:
+    1. Use style functions:
+       - pp.set_notebook_style() - For interactive work (larger figures, readable fonts)
+       - pp.set_publication_style() - For final figures (compact, high DPI, Illustrator-ready)
+    2. Modify rcParams directly: plt.rcParams["figure.figsize"] = (8, 6)
+    3. Use from publiplots.themes.rcparams import get_default, reset_to_publiplots_defaults()
 """
+
+import warnings
+warnings.warn(
+    "publiplots.config is deprecated and will be removed in a future version. "
+    "Use matplotlib's rcParams instead. See module docstring for details.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 from typing import Tuple
 

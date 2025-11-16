@@ -6,13 +6,14 @@ flexible styling and grouping options.
 """
 
 from typing import Optional, List, Dict, Tuple, Union
+
+from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 import seaborn as sns
 import pandas as pd
 
-from publiplots.config import DEFAULT_LINEWIDTH, DEFAULT_ALPHA, DEFAULT_CAPSIZE, DEFAULT_FIGSIZE
-from publiplots.themes.colors import resolve_palette_mapping, DEFAULT_COLOR
+from publiplots.themes.colors import resolve_palette_mapping
 from publiplots.themes.hatches import resolve_hatch_mapping
 from publiplots.utils import is_categorical, create_legend_handles, create_legend_builder
 
@@ -24,15 +25,15 @@ def barplot(
     y: str,
     hue: Optional[str] = None,
     hatch: Optional[str] = None,
-    color: Optional[str] = DEFAULT_COLOR,
+    color: Optional[str] = None,
     ax: Optional[Axes] = None,
     title: str = "",
     xlabel: str = "",
     ylabel: str = "",
-    linewidth: float = DEFAULT_LINEWIDTH,
-    capsize: float = DEFAULT_CAPSIZE,
-    alpha: float = DEFAULT_ALPHA,
-    figsize: Tuple[float, float] = DEFAULT_FIGSIZE,
+    linewidth: Optional[float] = None,
+    capsize: Optional[float] = None,
+    alpha: Optional[float] = None,
+    figsize: Optional[Tuple[float, float]] = None,
     palette: Optional[Union[str, Dict, List]] = None,
     hatch_mapping: Optional[Dict[str, str]] = None,
     legend: bool = True,
@@ -135,6 +136,13 @@ def barplot(
     --------
     barplot_enrichment : Specialized bar plot for enrichment analysis
     """
+    # Read defaults from rcParams if not provided
+    figsize = resolve_param("figure.figsize", figsize)
+    linewidth = resolve_param("lines.linewidth", linewidth)
+    alpha = resolve_param("alpha", alpha)
+    capsize = resolve_param("capsize", capsize)
+    color = resolve_param("color", color)
+
     # Create figure if not provided
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
