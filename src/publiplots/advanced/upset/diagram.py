@@ -226,14 +226,14 @@ def upsetplot(
     # Handle elementsize and dotsize relationship using proper circle geometry
     # elementsize: physical dimensions (bars/cells width in points)
     # dotsize: scatter marker area in points² (area = π * r²)
-    # Relationship: dot diameter ≈ elementsize * 0.7 (dot takes 70% of cell width)
+    # Relationship: dot diameter ≈ elementsize * 0.5 (dot takes 50% of cell width)
     import numpy as np
 
-    DOT_TO_CELL_RATIO = 0.7  # Dot diameter as fraction of cell width
+    DOT_TO_CELL_RATIO = 0.5  # Dot diameter as fraction of cell width
 
     if elementsize is None and dotsize is None:
         # Both unspecified: use sensible defaults
-        elementsize = 48  # Medium size (32=compact, 48=default, 64=spacious)
+        elementsize = resolve_param("lines.markersize") * 5
         dot_diameter = elementsize * DOT_TO_CELL_RATIO
         dotsize = np.pi * (dot_diameter / 2) ** 2  # Area = π * r²
     elif elementsize is None:

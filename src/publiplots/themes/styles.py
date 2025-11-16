@@ -31,6 +31,8 @@ NOTEBOOK_STYLE = {
     **PUBLIPLOTS_RCPARAMS,
     # Overrides for notebook/interactive work
     "figure.figsize": [6.0, 4.0],  # Larger for screens
+    "figure.dpi": 150,
+    "savefig.dpi": 300,
     "font.size": 12,  # More readable
     "axes.labelsize": 14,
     "axes.titlesize": 14,
@@ -38,8 +40,8 @@ NOTEBOOK_STYLE = {
     "xtick.labelsize": 12,
     "ytick.labelsize": 12,
     "legend.fontsize": 12,
-    "savefig.dpi": 300,
     "lines.linewidth": 2.0,
+    "lines.markersize": 8,
     "patch.linewidth": 2.0,
 }
 """
@@ -62,6 +64,8 @@ PUBLICATION_STYLE = {
     "lines.linewidth": 1.0,  # Slightly thinner for compact plots
     "patch.linewidth": 1.0,
     "axes.linewidth": 0.75,
+    "figure.dpi": 600,
+    "savefig.dpi": 600,
 }
 """
 Publication-ready style optimized for final publication figures.

@@ -22,23 +22,33 @@ import matplotlib.pyplot as plt
 
 MATPLOTLIB_RCPARAMS: Dict[str, Any] = {
     # Figure settings - compact by default (publication-ready)
-    "figure.figsize": [3.5, 2.5],
-    "figure.dpi": 100,
+    "figure.figsize": [3.25, 2.5],
+    "figure.dpi": 600,
     "figure.facecolor": "none",
     "figure.edgecolor": "none",
+    
 
     # Font settings - optimized for readability
     "font.size": 8,
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "sans-serif"],
 
+    # Text settings
+    "text.color": "0.2",
+    "axes.labelcolor": "0.2",
+    "axes.titlecolor": "0.2",
+    "xtick.color": "0.2",
+    "xtick.labelcolor": "0.2",
+    "ytick.color": "0.2",
+    "ytick.labelcolor": "0.2",
+    "legend.labelcolor": "0.2",
+
     # Axes settings
     "axes.linewidth": 1.0,
     "axes.edgecolor": "0.3",
-    "axes.labelcolor": "0.3",
     "axes.facecolor": "white",
     "axes.labelsize": 8,
-    "axes.titlesize": 9,
+    "axes.titlesize": 10,
     "axes.titleweight": "normal",
     "axes.spines.top": True,
     "axes.spines.right": True,
@@ -78,8 +88,7 @@ MATPLOTLIB_RCPARAMS: Dict[str, Any] = {
     "savefig.dpi": 600,
     "savefig.bbox": "tight",
     "savefig.pad_inches": 0.1,
-    "savefig.facecolor": "none",
-    "savefig.edgecolor": "none",
+    "savefig.transparent": True,
 
     # PDF settings for vector graphics
     "pdf.fonttype": 42,
