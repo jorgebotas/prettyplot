@@ -122,7 +122,7 @@ def barplot(
 
     Bar plot with color groups:
     >>> fig, ax = pp.barplot(data=df, x="category", y="value",
-    ...                       hue="group", palette="pastel_categorical")
+    ...                       hue="group", palette="pastel")
 
     Bar plot with hatched bars and patterns:
     >>> fig, ax = pp.barplot(

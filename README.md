@@ -83,7 +83,7 @@ fig, ax = pp.scatterplot(
     x='measurement_a',
     y='measurement_b',
     hue='condition',
-    palette=pp.get_palette('pastel_categorical', n_colors=3)
+    palette=pp.color_palette('pastel', n_colors=3)
 )
 
 # Save with publication-ready settings
