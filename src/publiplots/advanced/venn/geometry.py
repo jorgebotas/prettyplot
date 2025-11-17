@@ -258,66 +258,34 @@ def compute_4way_geometry() -> Tuple[List[Circle], Dict[str, Tuple[float, float]
     return circles, label_positions, set_label_positions
 
 
-def _convert_rlabel_to_binary(name: str, n_sets: int = 5) -> str:
-    """
-    Convert R-style label name (e.g., 'ABC') to binary logic (e.g., '11100').
-
-    Parameters
-    ----------
-    name : str
-        Label name using letters A, B, C, D, E
-    n_sets : int
-        Total number of sets (default 5)
-
-    Returns
-    -------
-    binary : str
-        Binary string representation
-    """
-    if name == "-" or name == "ABCDE":
-        return "11111" if name == "ABCDE" else "-"
-
-    result = ['0'] * n_sets
-    for char in name:
-        idx = ord(char) - ord('A')
-        if idx < n_sets:
-            result[idx] = '1'
-    return ''.join(result)
-
-
-def _compute_radial_label_positions(name_list: List[str], radius: float, start_angle: float, n_sets: int = 5) -> Dict[str, Tuple[float, float]]:
+def _compute_radial_label_positions(binary_labels: List[str], radius: float, start_angle: float) -> Dict[str, Tuple[float, float]]:
     """
     Compute label positions in a radial/circular arrangement.
 
     Distributes labels evenly around a circle at the specified radius.
-    Mimics R's gen_label_pos_list function.
 
     Parameters
     ----------
-    name_list : List[str]
-        List of R-style label names (e.g., ["A", "AB", "ABC"])
+    binary_labels : List[str]
+        List of binary label strings (e.g., ["10000", "11000", "11100"])
     radius : float
         Radial distance from origin
     start_angle : float
         Starting angle in radians
-    n_sets : int
-        Total number of sets (default 5)
 
     Returns
     -------
     positions : Dict[str, Tuple[float, float]]
         Dictionary mapping binary label to (x, y) position
     """
-    n = len(name_list)
+    n = len(binary_labels)
     positions = {}
 
-    for i, name in enumerate(name_list):
+    for i, binary in enumerate(binary_labels):
         theta = start_angle + i * 2 * np.pi / n
         x = radius * np.cos(theta)
         y = radius * np.sin(theta)
-        binary = _convert_rlabel_to_binary(name, n_sets)
-        if binary != "-":
-            positions[binary] = (x, y)
+        positions[binary] = (x, y)
 
     return positions
 
@@ -372,38 +340,38 @@ def compute_5way_geometry() -> Tuple[List[Circle], Dict[str, Tuple[float, float]
 
     # Four-way intersections (radius 1.42, start 1.12π)
     label_positions.update(_compute_radial_label_positions(
-        ["BCDE", "ACDE", "ABDE", "ABCE", "ABCD"],
-        radius=1.42, start_angle=np.pi * 1.12, n_sets=5
+        ["01111", "10111", "11011", "11101", "11110"],  # BCDE, ACDE, ABDE, ABCE, ABCD
+        radius=1.42, start_angle=np.pi * 1.12
     ))
 
     # Three-way intersections - first ring (radius 1.55, start 1.33π)
     label_positions.update(_compute_radial_label_positions(
-        ["CDE", "ADE", "ABE", "ABC", "BCD"],
-        radius=1.55, start_angle=np.pi * 1.33, n_sets=5
+        ["00111", "10011", "11001", "11100", "01110"],  # CDE, ADE, ABE, ABC, BCD
+        radius=1.55, start_angle=np.pi * 1.33
     ))
 
     # Three-way intersections - second ring (radius 1.88, start 1.13π)
     label_positions.update(_compute_radial_label_positions(
-        ["BCE", "ACD", "BDE", "ACE", "ABD"],
-        radius=1.88, start_angle=np.pi * 1.13, n_sets=5
+        ["01101", "10110", "01011", "10101", "11010"],  # BCE, ACD, BDE, ACE, ABD
+        radius=1.88, start_angle=np.pi * 1.13
     ))
 
     # Two-way intersections - first ring (radius 1.98, start 0.44π)
     label_positions.update(_compute_radial_label_positions(
-        ["AC", "BD", "CE", "AD", "BE"],
-        radius=1.98, start_angle=np.pi * 0.44, n_sets=5
+        ["10100", "01010", "00101", "10010", "01001"],  # AC, BD, CE, AD, BE
+        radius=1.98, start_angle=np.pi * 0.44
     ))
 
     # Two-way intersections - second ring (radius 2.05, start 0.68π)
     label_positions.update(_compute_radial_label_positions(
-        ["AB", "BC", "CD", "DE", "AE"],
-        radius=2.05, start_angle=np.pi * 0.68, n_sets=5
+        ["11000", "01100", "00110", "00011", "10001"],  # AB, BC, CD, DE, AE
+        radius=2.05, start_angle=np.pi * 0.68
     ))
 
     # Single sets (radius 3.0, start 0.52π)
     label_positions.update(_compute_radial_label_positions(
-        ["A", "B", "C", "D", "E"],
-        radius=3.0, start_angle=np.pi * 0.52, n_sets=5
+        ["10000", "01000", "00100", "00010", "00001"],  # A, B, C, D, E
+        radius=3.0, start_angle=np.pi * 0.52
     ))
 
     # Set name label positions (pushed outward from ellipses)
