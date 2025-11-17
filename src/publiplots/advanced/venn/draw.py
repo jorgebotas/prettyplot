@@ -35,13 +35,13 @@ def draw_ellipse(
     ax : matplotlib.axes.Axes
         The axes on which to draw the ellipse
     x : float
-        X-coordinate of the ellipse center (normalized coordinates 0-1)
+        X-coordinate of the ellipse center (data coordinates)
     y : float
-        Y-coordinate of the ellipse center (normalized coordinates 0-1)
+        Y-coordinate of the ellipse center (data coordinates)
     w : float
-        Width of the ellipse (normalized coordinates)
+        Width of the ellipse (data coordinates)
     h : float
-        Height of the ellipse (normalized coordinates)
+        Height of the ellipse (data coordinates)
     a : float
         Rotation angle of the ellipse in degrees (counterclockwise from horizontal)
     color : color-like
@@ -56,7 +56,7 @@ def draw_ellipse(
     Examples
     --------
     >>> fig, ax = plt.subplots()
-    >>> draw_ellipse(ax, 0.5, 0.5, 0.3, 0.2, 45, 'blue')
+    >>> draw_ellipse(ax, 0, 0, 1.5, 1.5, 45, 'blue', 0.3)
     """
     ax.add_patch(
         Ellipse(
@@ -92,9 +92,9 @@ def draw_text(
     ax : matplotlib.axes.Axes
         The axes on which to draw the text
     x : float
-        X-coordinate for text position (normalized coordinates 0-1)
+        X-coordinate for text position (data coordinates)
     y : float
-        Y-coordinate for text position (normalized coordinates 0-1)
+        Y-coordinate for text position (data coordinates)
     text : str
         The text string to display
     fontsize : int
@@ -114,8 +114,8 @@ def draw_text(
     Examples
     --------
     >>> fig, ax = plt.subplots()
-    >>> draw_text(ax, 0.5, 0.5, '42', fontsize=12, color='black')
-    >>> draw_text(ax, 0.5, 0.9, 'Label', fontsize=14, va='bottom')
+    >>> draw_text(ax, 0, 0, '42', fontsize=12, color='black')
+    >>> draw_text(ax, 0, 1.5, 'Label', fontsize=14, va='bottom')
     """
     ax.text(
         x, y, text,
@@ -126,13 +126,18 @@ def draw_text(
     )
 
 
-def init_axes(ax: Optional[Axes], figsize: Tuple[float, float]) -> Axes:
+def init_axes(
+    ax: Optional[Axes],
+    figsize: Tuple[float, float],
+    xlim: Optional[Tuple[float, float]] = None,
+    ylim: Optional[Tuple[float, float]] = None,
+) -> Axes:
     """
     Initialize or configure axes for Venn diagram plotting.
 
     This function creates new axes if none are provided, or configures existing axes
     with the appropriate settings for Venn diagrams. It sets up an equal aspect ratio,
-    removes frame and ticks, and establishes normalized coordinate limits.
+    removes frame and ticks, and establishes coordinate limits based on the geometry.
 
     Parameters
     ----------
@@ -140,6 +145,10 @@ def init_axes(ax: Optional[Axes], figsize: Tuple[float, float]) -> Axes:
         Existing axes to configure, or None to create new axes
     figsize : tuple of float
         Figure size as (width, height) in inches, used only when creating new axes
+    xlim : tuple of float, optional
+        X-axis limits. If None, uses automatic limits.
+    ylim : tuple of float, optional
+        Y-axis limits. If None, uses automatic limits.
 
     Returns
     -------
@@ -148,19 +157,24 @@ def init_axes(ax: Optional[Axes], figsize: Tuple[float, float]) -> Axes:
 
     Examples
     --------
-    >>> ax = init_axes(None, figsize=(8, 8))
+    >>> ax = init_axes(None, figsize=(8, 8), xlim=(-2, 2), ylim=(-2, 2))
     >>> # Or with existing axes:
     >>> fig, ax = plt.subplots()
     >>> ax = init_axes(ax, figsize=(8, 8))
     """
     if ax is None:
         _, ax = subplots(nrows=1, ncols=1, figsize=figsize)
-    ax.set(
-        aspect="equal",
-        frame_on=False,
-        xlim=(-.05, 1.05),
-        ylim=(-.05, 1.05),
-        xticks=[],
-        yticks=[]
-    )
+
+    # Set basic properties
+    ax.set_aspect("equal")
+    ax.set_frame_on(False)
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    # Set limits if provided
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
+
     return ax
