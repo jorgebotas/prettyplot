@@ -46,7 +46,7 @@ MATPLOTLIB_RCPARAMS: Dict[str, Any] = {
     "axes.linewidth": 1.0,
     "axes.edgecolor": "0.3",
     "axes.facecolor": "white",
-    "axes.labelsize": 8,
+    "axes.labelsize": 9,
     "axes.titlesize": 10,
     "axes.titleweight": "normal",
     "axes.spines.top": True,
@@ -63,12 +63,12 @@ MATPLOTLIB_RCPARAMS: Dict[str, Any] = {
     "patch.edgecolor": "0.2",
 
     # Tick settings
-    "xtick.labelsize": 7,
-    "ytick.labelsize": 7,
-    "xtick.major.width": 0.0,
-    "ytick.major.width": 0.0,
-    "xtick.major.size": 3,
-    "ytick.major.size": 3,
+    "xtick.labelsize": 8,
+    "ytick.labelsize": 8,
+    "xtick.major.width": 1.0,
+    "ytick.major.width": 1.0,
+    "xtick.major.size": 0,
+    "ytick.major.size": 0,
 
     # Grid settings
     "axes.grid": False,

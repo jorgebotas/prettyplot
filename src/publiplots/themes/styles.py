@@ -30,12 +30,12 @@ NOTEBOOK_STYLE = {
     **MATPLOTLIB_RCPARAMS,
     **PUBLIPLOTS_RCPARAMS,
     # Overrides for notebook/interactive work
-    "figure.figsize": [6.0, 4.0],  # Larger for screens
+    "figure.figsize": [6.0, 4.0],
     "figure.dpi": 150,
     "savefig.dpi": 300,
-    "font.size": 12,  # More readable
+    "font.size": 12,
     "axes.labelsize": 14,
-    "axes.titlesize": 14,
+    "axes.titlesize": 15,
     "axes.linewidth": 1.0,
     "xtick.labelsize": 12,
     "ytick.labelsize": 12,
@@ -48,7 +48,7 @@ NOTEBOOK_STYLE = {
 Notebook-ready style optimized for interactive work and exploration.
 
 Features:
-- Readable font sizes for screens (11pt base)
+- Readable font sizes for screens (12pt base)
 - Larger figure sizes (6×4) for notebooks
 - Medium DPI (300) for good quality
 - Thicker lines for better visibility on screens
@@ -60,10 +60,11 @@ PUBLICATION_STYLE = {
     **MATPLOTLIB_RCPARAMS,
     **PUBLIPLOTS_RCPARAMS,
     # Overrides for publication
-    # (most values already optimal in MATPLOTLIB_RCPARAMS)
-    "lines.linewidth": 1.0,  # Slightly thinner for compact plots
+    "lines.linewidth": 1.0,
     "patch.linewidth": 1.0,
     "axes.linewidth": 0.75,
+    "xtick.major.width": 0.75,
+    "ytick.major.width": 0.75,
     "figure.dpi": 600,
     "savefig.dpi": 600,
 }
@@ -73,7 +74,7 @@ Publication-ready style optimized for final publication figures.
 Features:
 - Small fonts (8pt base) for compact figures
 - High DPI (600) for print quality
-- Compact figure size (3.5×2.5) for publications
+- Compact figure size (3×2) for publications
 - Clean, minimal styling
 - Perfect for creating figures for papers or Adobe Illustrator
 """
