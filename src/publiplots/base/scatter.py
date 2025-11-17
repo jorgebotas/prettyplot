@@ -70,7 +70,7 @@ def scatterplot(
         Overrides default color. Example: "#ff0000" or "red".
     palette : str, dict, list, or None
         Color palette for hue values:
-        - str: palette name (e.g., "viridis", "pastel_categorical")
+        - str: palette name (e.g., "viridis", "pastel")
         - dict: mapping of hue values to colors (categorical only)
         - list: list of colors
         - None: uses default palette
@@ -133,7 +133,7 @@ def scatterplot(
 
     Scatterplot with categorical color encoding:
     >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
-    ...                           hue="group", palette="pastel_categorical")
+    ...                           hue="group", palette="pastel")
 
     Scatterplot with continuous color encoding:
     >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",

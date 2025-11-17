@@ -16,7 +16,7 @@ from typing import Dict, List, Optional, Tuple, Union
 from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 
-from publiplots.themes.colors import get_palette
+from publiplots.themes.colors import color_palette
 
 from .draw import (
     init_axes,
@@ -46,10 +46,10 @@ def _prepare_colors(colors, n_sets: int) -> Union[List[str], List[Tuple[float, .
     """
     if colors is None:
         # Use default publiplots palette
-        color_list = get_palette('pastel_categorical', n_colors=n_sets)
+        color_list = color_palette('pastel', n_colors=n_sets)
     elif isinstance(colors, str):
         # Use publiplots palette or colormap by name
-        color_list = get_palette(colors, n_colors=n_sets)
+        color_list = color_palette(colors, n_colors=n_sets)
     elif isinstance(colors, list):
         # Use provided color list
         color_list = colors[:n_sets]
@@ -224,8 +224,8 @@ def venn(
     colors : list of str, str, or None, optional
         Colors for each set. Can be:
         - List of color names/codes for each set
-        - String name of a publiplots palette or matplotlib colormap
-        - None (uses 'pastel_categorical' palette)
+        - String name of a publiplots palette or seaborn palette
+        - None (uses 'pastel' palette)
     alpha : float, default=0.3
         Transparency of set regions (0=transparent, 1=opaque).
     figsize : tuple, default=(10, 6)

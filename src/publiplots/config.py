@@ -44,7 +44,7 @@ DEFAULT_ALPHA: float = 0.1
 DEFAULT_CAPSIZE: float = 0.0
 
 # Color settings
-DEFAULT_PALETTE: str = 'pastel_categorical'
+DEFAULT_PALETTE: str = 'pastel'
 
 # Hatch settings
 DEFAULT_HATCH_MODE: int = 1
