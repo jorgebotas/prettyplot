@@ -67,7 +67,7 @@ def barplot(
         When specified, creates grouped bars within each x category.
     color : str, optional
         Fixed color for all bars (only used when hue is None).
-        Overrides DEFAULT_COLOR. Example: "#ff0000" or "red".
+        Overrides default color. Example: "#ff0000" or "red".
     ax : Axes, optional
         Matplotlib axes object. If None, creates new figure.
     title : str, default=""
@@ -76,7 +76,7 @@ def barplot(
         X-axis label. If empty and hatch is used, uses x column name.
     ylabel : str, default=""
         Y-axis label. If empty, uses y column name.
-    linewidth : float, default=2.0
+    linewidth : float, default=1.0
         Width of bar edges.
     capsize : float, default=0.0
         Width of error bar caps.
@@ -459,7 +459,7 @@ def _legend(
         builder.add_legend(
             handles=create_legend_handles(
                 labels=list(hatch_mapping.keys()),
-                colors=[color or DEFAULT_COLOR] * len(hatch_mapping),
+                colors=[resolve_param("color", color)] * len(hatch_mapping),
                 hatches=list(hatch_mapping.values()),
                 **handle_kwargs
             ),
@@ -494,7 +494,7 @@ def _legend(
         # Add hatch legend second
         if hatch_mapping is not None and len(hatch_mapping) > 0:
             # Use gray for hatch legend if hue exists, otherwise use color
-            hatch_color = "gray" if hue is not None else (color or DEFAULT_COLOR)
+            hatch_color = "gray" if hue is not None else resolve_param("color", color)
             builder.add_legend(
                 handles=create_legend_handles(
                     labels=list(hatch_mapping.keys()),
