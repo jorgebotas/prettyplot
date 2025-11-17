@@ -1,0 +1,16 @@
+# Sphinx build outputs
+build/
+_build/
+
+# Auto-generated content
+source/auto_examples/
+source/api/generated/
+source/gen_modules/
+
+# Sphinx cache
+.doctrees/
+*.doctree
+
+# Common build artifacts
+*.pyc
+__pycache__/
