@@ -230,13 +230,14 @@ def generate_circle_4() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], L
     }
 
     # Set name label positions (outside ellipses)
-    # Top petals (B and C): push labels up, outside the ellipse
-    # Bottom petals (A and D): pull labels down just below the center
+    # Top petals (B and C): push labels up (y=1.2), outside the ellipse
+    # Bottom petals (A and D): pull labels down (y=-0.9), just below the center
+    # X-coordinates match original positions for consistency
     set_label_positions = [
-        (-0.7, -0.9),    # A (left-bottom) - below center
-        (-0.72+2/3, 1.2),    # B (upper left) - pushed up outside ellipse
-        (0.72-2/3, 1.2),     # C (upper right) - pushed up outside ellipse
-        (0.7, -0.9),     # D (right-bottom) - below center
+        (-1.5, -0.9),    # A (left-bottom)
+        (-0.6, 1.2),     # B (upper left)
+        (0.6, 1.2),      # C (upper right)
+        (1.5, -0.9),     # D (right-bottom)
     ]
 
     return circles, label_positions, set_label_positions
