@@ -173,6 +173,12 @@ def _get_set_label_alignments(
         else:
             ha = "center"
 
+        if i == 0 and n_sets == 5:
+            # Special case for first set in 5-way Venn diagram
+            # located at the top center of the diagram
+            # Take into account ellipse offset from center
+            ha = "center"
+
         # Vertical alignment
         if label_y < circle.y_offset - 0.1:
             va = "top"

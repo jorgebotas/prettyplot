@@ -154,12 +154,12 @@ def generate_circle_3(radius_scale: float = 1.3) -> Tuple[List[Circle], Dict[str
     bottom_intersection_y = -0.2 - (radius_scale - 1.0) * 0.5
 
     label_positions = {
-        "100": (-1.2, (sqrt3 + 2)/6),           # Left only
-        "010": (1.2, (sqrt3 + 2)/6),            # Right only
+        "100": (-1.2, (sqrt3 + 2)/6 + 0.2),           # Left only
+        "010": (1.2, (sqrt3 + 2)/6 + 0.2),            # Right only
         "001": (0, -(sqrt3 + 2)/6 - 0.7),       # Bottom only
         "110": (0, (sqrt3 + 2)/6 + 0.4),        # Top intersection
-        "101": (-0.5, bottom_intersection_y),   # Left-bottom intersection (adjusted for radius)
-        "011": (0.5, bottom_intersection_y),    # Right-bottom intersection (adjusted for radius)
+        "101": (-0.8, bottom_intersection_y),   # Left-bottom intersection (adjusted for radius)
+        "011": (0.8, bottom_intersection_y),    # Right-bottom intersection (adjusted for radius)
         "111": (0, 0.1),                         # Center (all three)
     }
 
