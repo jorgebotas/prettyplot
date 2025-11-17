@@ -6,19 +6,8 @@ for creating consistent, publication-ready visualizations.
 """
 
 from publiplots.themes.colors import (
-    get_palette,
-    list_palettes,
-    show_palette,
-    resolve_palette,
-    PASTEL_CATEGORICAL,
-    PASTEL_CATEGORICAL_MINIMAL,
-    PASTEL_SEQUENTIAL_GREEN,
-    PASTEL_SEQUENTIAL_BLUE,
-    PASTEL_SEQUENTIAL_PURPLE,
-    PASTEL_DIVERGING_RED_BLUE,
-    PASTEL_DIVERGING_GREEN_PURPLE,
-    PASTEL_SIGNIFICANCE,
-    PASTEL_POSITIVE_NEGATIVE,
+    color_palette,
+    PALETTES,
 )
 
 from publiplots.themes.rcparams import (
@@ -52,20 +41,9 @@ __all__ = [
     "rcParams",
     "resolve_param",
     # Color functions
-    "get_palette",
-    "list_palettes",
-    "show_palette",
-    "resolve_palette",
+    "color_palette",
     # Color palettes
-    "PASTEL_CATEGORICAL",
-    "PASTEL_CATEGORICAL_MINIMAL",
-    "PASTEL_SEQUENTIAL_GREEN",
-    "PASTEL_SEQUENTIAL_BLUE",
-    "PASTEL_SEQUENTIAL_PURPLE",
-    "PASTEL_DIVERGING_RED_BLUE",
-    "PASTEL_DIVERGING_GREEN_PURPLE",
-    "PASTEL_SIGNIFICANCE",
-    "PASTEL_POSITIVE_NEGATIVE",
+    "PALETTES",
     # Style functions
     "set_notebook_style",
     "set_publication_style",

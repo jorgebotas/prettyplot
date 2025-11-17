@@ -46,7 +46,7 @@ from publiplots.utils.legend import (
 )
 
 # Theming
-from publiplots.themes.colors import get_palette, list_palettes, show_palette, resolve_palette
+from publiplots.themes.colors import color_palette
 from publiplots.themes.rcparams import rcParams, resolve_param, init_rcparams
 from publiplots.themes.styles import (
     set_notebook_style,
@@ -94,10 +94,7 @@ __all__ = [
     "LegendBuilder",
     "create_legend_builder",
     # Color/palette functions
-    "get_palette",
-    "list_palettes",
-    "show_palette",
-    "resolve_palette",
+    "color_palette",
     # Parameter system
     "rcParams",
     "resolve_param",

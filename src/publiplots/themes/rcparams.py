@@ -109,7 +109,7 @@ PUBLIPLOTS_RCPARAMS: Dict[str, Any] = {
     "capsize": 0.0,  # Error bar cap size
 
     # Color palettes
-    "palette": "pastel_categorical",  # Default color palette
+    "palette": "pastel",  # Default color palette
 
     # Hatch patterns
     "hatch_mode": 2,  # Default hatch density mode (2=medium)
