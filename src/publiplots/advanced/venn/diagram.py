@@ -69,6 +69,8 @@ def _venn(
     figsize: Tuple[float, float],
     ax: Optional[Axes],
     color_labels: bool = True,
+    overlap_size: float = 1/3,
+    radius_scale: float = 1.0,
 ) -> Axes:
     """
     Draw a true Venn diagram with ellipses (2-5 sets).
@@ -82,8 +84,12 @@ def _venn(
     if n_sets < 2 or n_sets > 5:
         raise ValueError("Number of sets must be between 2 and 5. Consider using upset plot instead.")
 
-    # Get dynamic geometry
-    circles, label_positions, set_label_positions = get_geometry(n_sets)
+    # Get dynamic geometry with optional scaling parameters
+    circles, label_positions, set_label_positions = get_geometry(
+        n_sets,
+        overlap_size=overlap_size,
+        radius_scale=radius_scale
+    )
 
     # Calculate coordinate ranges with padding
     x_range, y_range = get_coordinate_ranges(circles)
@@ -200,6 +206,8 @@ def venn(
     ax: Optional[Axes] = None,
     fmt: str = "{size}",
     color_labels: bool = True,
+    overlap_size: Optional[float] = None,
+    radius_scale: Optional[float] = None,
 ) -> Tuple[plt.Figure, Axes]:
     """
     Create a Venn diagram for 2-5 sets.
@@ -233,6 +241,15 @@ def venn(
         - {percentage}: percentage of total elements
     color_labels : bool, default=True
         Whether to color the set labels with the same color as the petals.
+    overlap_size : float, optional
+        Overlap size for 2-way Venn diagrams. Larger values create bigger intersections.
+        Default: 1/3 (from ggvenn R package). Typical range: 0.5-0.7.
+        Only affects 2-way diagrams.
+    radius_scale : float, optional
+        Radius scale for 3-way Venn diagrams. Values > 1.0 increase overlap.
+        Default: 1.0. Typical range: 1.2-1.5 for larger intersections.
+        Only affects 3-way diagrams.
+
     Returns
     -------
     fig : Figure
@@ -272,6 +289,14 @@ def venn(
     ...     [set1, set2, set3, set4, set5],
     ...     fmt='{size} ({percentage:.1f}%)'
     ... )
+
+    2-way Venn with larger intersection:
+
+    >>> fig, ax = pp.venn([set1, set2], overlap_size=0.6)
+
+    3-way Venn with larger intersection:
+
+    >>> fig, ax = pp.venn([set1, set2, set3], radius_scale=1.3)
     """
     # Read defaults from rcParams if not provided
     alpha = resolve_param("alpha", alpha)
@@ -308,6 +333,12 @@ def venn(
     else:
         fig = ax.get_figure()
 
+    # Set defaults for overlap parameters
+    if overlap_size is None:
+        overlap_size = 1/3
+    if radius_scale is None:
+        radius_scale = 1.0
+
     # Draw the Venn diagram
     ax = _venn(
         petal_labels=petal_labels,
@@ -317,6 +348,8 @@ def venn(
         figsize=figsize,
         ax=ax,
         color_labels=color_labels,
+        overlap_size=overlap_size,
+        radius_scale=radius_scale,
     )
 
     return fig, ax
