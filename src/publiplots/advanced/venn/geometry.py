@@ -164,24 +164,28 @@ def compute_3way_geometry(radius_scale: float = 1.3) -> Tuple[List[Circle], Dict
     }
 
     # Set name label positions (outside circles)
-    # Use radial positioning based on circle arrangement
-    # The circles form an equilateral triangle pattern
-    # Compute set labels using radial helper at a larger radius
-    # Labels positioned at angles corresponding to each circle's angle from origin
-    # Start angle computed from first circle's position: atan2((sqrt3+2)/6, -2/3)
-    # Approximately 2.405 rad, which is about 0.765π
-    set_label_positions_dict = _compute_radial_label_positions(
-        ["A", "B", "C"],
-        radius=2.2,  # Radius to place labels outside the circles
-        start_angle=np.pi * 0.765,  # Start at top-left circle's angle
-        n_sets=3
-    )
-    # Convert to list in order [A, B, C] which maps to binary ["100", "010", "001"]
-    set_label_positions = [
-        set_label_positions_dict["100"],  # A
-        set_label_positions_dict["010"],  # B
-        set_label_positions_dict["001"],  # C
-    ]
+    # Place labels by pushing outward from each circle's center
+    # The offset distance adjusts with radius_scale to maintain proper spacing
+    label_offset = base_radius + 0.3
+
+    # For each circle, push the label outward from the circle center
+    # Direction is from origin toward the circle center, then extended
+    set_label_positions = []
+    for circle in circles:
+        # Calculate direction from origin to circle center
+        distance = np.sqrt(circle.x_offset**2 + circle.y_offset**2)
+        if distance > 0:
+            # Normalize and extend
+            dir_x = circle.x_offset / distance
+            dir_y = circle.y_offset / distance
+            # Place label at circle center plus offset in that direction
+            label_x = circle.x_offset + dir_x * label_offset
+            label_y = circle.y_offset + dir_y * label_offset
+        else:
+            # Fallback if circle is at origin (shouldn't happen for 3-way)
+            label_x = circle.x_offset
+            label_y = circle.y_offset + label_offset
+        set_label_positions.append((label_x, label_y))
 
     return circles, label_positions, set_label_positions
 
