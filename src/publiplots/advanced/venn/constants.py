@@ -14,7 +14,6 @@ For the new implementation, see:
 - diagram.py: Updated to use dynamic geometry
 
 Based on ggvenn by yanlinlin82: https://github.com/yanlinlin82/ggvenn
-Previous implementation adapted from pyvenn by LankyCyril
 """
 
 # This file is kept for backward compatibility but no longer contains

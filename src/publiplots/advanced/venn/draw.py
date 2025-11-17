@@ -2,9 +2,7 @@
 Core drawing functions for Venn diagrams.
 
 This module provides the fundamental drawing primitives for creating Venn diagrams,
-including functions to draw ellipses, triangles, and text labels on matplotlib axes.
-
-Adapted from pyvenn by LankyCyril (https://github.com/LankyCyril/pyvenn)
+including functions to draw ellipses and text labels on matplotlib axes.
 """
 
 from matplotlib.pyplot import subplots

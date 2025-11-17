@@ -2,12 +2,12 @@
 Venn diagram visualizations for publiplots.
 
 This module provides functions for creating Venn diagrams for 2-5 sets
-using an implementation based on pyvenn by LankyCyril.
+using geometry based on the ggvenn R package by Yan Linlin.
 
 The module supports:
 - Venn diagrams for 2-5 sets using ellipses
 
-Based on pyvenn by LankyCyril: https://github.com/LankyCyril/pyvenn
+Based on ggvenn by Yan Linlin: https://github.com/yanlinlin82/ggvenn
 """
 
 from matplotlib.axes import Axes

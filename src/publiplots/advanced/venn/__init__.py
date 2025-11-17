@@ -3,7 +3,6 @@ Venn diagram module for publiplots.
 
 This module provides functions for creating Venn diagrams for 2-5 sets.
 Re-engineered based on ggvenn R package (https://github.com/yanlinlin82/ggvenn).
-Previously based on pyvenn library by LankyCyril.
 
 The module exposes:
 - Main API function: venn()

@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Venn diagram support for 2 to upto 5 sets!
-- Thanks to LankyCyril/pyvenn and tctianchi/pyvenn for their amazing work
+- Thanks to yanlinlin82/ggvenn for their amazing work on Venn diagram geometry
 - Removed matplolib-venn dependencies
 
 [0.2.0]: https://github.com/jorgebotas/publiplots/releases/tag/v0.2.0
