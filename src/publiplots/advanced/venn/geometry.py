@@ -71,18 +71,12 @@ class Circle:
         return x, y
 
 
-def generate_circle_2(overlap_size: float = 1/3) -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
+def generate_circle_2(overlap_size: float = 0.5) -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
     """
     Generate geometry for 2-way Venn diagram.
 
     Two circles with horizontal overlap.
     Uses the exact formula from ggvenn R package.
-
-    Parameters
-    ----------
-    overlap_size : float, default=1/3
-        Size of overlap between circles. Larger values create bigger intersections.
-        Default is 1/3 (R package default). Try 0.5-0.7 for larger intersections.
 
     Returns
     -------
@@ -95,6 +89,7 @@ def generate_circle_2(overlap_size: float = 1/3) -> Tuple[List[Circle], Dict[str
     """
     # Two circles with unit radius, horizontally aligned
     # Using R's formula: x_dist = (a_radius + b_radius - overlap_size * 2) / 2
+    # Default overlap_size = 0.5 for larger, more visible intersections
     a_radius = 1.0
     b_radius = 1.0
     x_dist = (a_radius + b_radius - overlap_size * 2) / 2
@@ -121,18 +116,12 @@ def generate_circle_2(overlap_size: float = 1/3) -> Tuple[List[Circle], Dict[str
     return circles, label_positions, set_label_positions
 
 
-def generate_circle_3(radius_scale: float = 1.0) -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
+def generate_circle_3(radius_scale: float = 1.3) -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
     """
     Generate geometry for 3-way Venn diagram.
 
     Three circles arranged in an equilateral triangle pattern.
-    Based on ggvenn R package geometry.
-
-    Parameters
-    ----------
-    radius_scale : float, default=1.0
-        Scale factor for circle radii. Values > 1.0 increase overlap.
-        Try 1.2-1.5 for larger intersections while maintaining positions.
+    Based on ggvenn R package geometry with increased radius for better visibility.
 
     Returns
     -------
@@ -144,7 +133,8 @@ def generate_circle_3(radius_scale: float = 1.0) -> Tuple[List[Circle], Dict[str
         Positions for set name labels
     """
     # Circle arrangement from ggvenn
-    # Equilateral triangle with proper overlaps
+    # Equilateral triangle with scaled radius for larger, more visible intersections
+    # Default radius_scale = 1.3
     sqrt3 = np.sqrt(3)
     base_radius = 1.0 * radius_scale
 
@@ -160,13 +150,16 @@ def generate_circle_3(radius_scale: float = 1.0) -> Tuple[List[Circle], Dict[str
     # Intersection label positions
     # Binary logic: "100" = only first, "010" = only second, "001" = only third
     # "110" = first+second, "101" = first+third, "011" = second+third, "111" = all three
+    # Adjust bottom intersection positions based on radius scale
+    bottom_intersection_y = -0.2 - (radius_scale - 1.0) * 0.5
+
     label_positions = {
         "100": (-1.2, (sqrt3 + 2)/6),           # Left only
         "010": (1.2, (sqrt3 + 2)/6),            # Right only
         "001": (0, -(sqrt3 + 2)/6 - 0.7),       # Bottom only
         "110": (0, (sqrt3 + 2)/6 + 0.4),        # Top intersection
-        "101": (-0.5, -0.2),                     # Left-bottom intersection
-        "011": (0.5, -0.2),                      # Right-bottom intersection
+        "101": (-0.5, bottom_intersection_y),   # Left-bottom intersection (adjusted for radius)
+        "011": (0.5, bottom_intersection_y),    # Right-bottom intersection (adjusted for radius)
         "111": (0, 0.1),                         # Center (all three)
     }
 
@@ -387,11 +380,7 @@ def generate_circle_5() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], L
     return circles, label_positions, set_label_positions
 
 
-def get_geometry(
-    n_sets: int,
-    overlap_size: float = 1/3,
-    radius_scale: float = 1.0
-) -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
+def get_geometry(n_sets: int) -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
     """
     Get geometry for n-way Venn diagram.
 
@@ -399,12 +388,6 @@ def get_geometry(
     ----------
     n_sets : int
         Number of sets (2-5)
-    overlap_size : float, default=1/3
-        Overlap size for 2-way diagrams. Larger values = bigger intersections.
-        Typical range: 0.3-0.7. Only affects 2-way diagrams.
-    radius_scale : float, default=1.0
-        Radius scale for 3-way diagrams. Values > 1.0 increase overlap.
-        Typical range: 1.0-1.5. Only affects 3-way diagrams.
 
     Returns
     -------
@@ -421,9 +404,9 @@ def get_geometry(
         If n_sets is not between 2 and 5
     """
     if n_sets == 2:
-        return generate_circle_2(overlap_size=overlap_size)
+        return generate_circle_2()
     elif n_sets == 3:
-        return generate_circle_3(radius_scale=radius_scale)
+        return generate_circle_3()
     elif n_sets == 4:
         return generate_circle_4()
     elif n_sets == 5:
