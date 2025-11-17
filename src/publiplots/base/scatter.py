@@ -64,10 +64,10 @@ def scatterplot(
         Column name for marker sizes. If None, all markers have the same size.
     hue : str, optional
         Column name for marker colors. Can be categorical or continuous.
-        If None, uses DEFAULT_COLOR or the value from `color` parameter.
+        If None, uses default color or the value from `color` parameter.
     color : str, optional
         Fixed color for all markers (only used when hue is None).
-        Overrides DEFAULT_COLOR. Example: "#ff0000" or "red".
+        Overrides default color. Example: "#ff0000" or "red".
     palette : str, dict, list, or None
         Color palette for hue values:
         - str: palette name (e.g., "viridis", "pastel_categorical")
@@ -188,7 +188,7 @@ def scatterplot(
         x_labels, y_labels = None, None
 
     # Determine color/palette to use
-    color = color if color is not None else DEFAULT_COLOR
+    color = resolve_param("color", color)
     palette = resolve_palette_mapping(
         values=data[hue].unique() if hue is not None else None,
         palette=palette,
