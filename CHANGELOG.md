@@ -36,3 +36,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed matplolib-venn dependencies
 
 [0.2.0]: https://github.com/jorgebotas/publiplots/releases/tag/v0.2.0
+
+
+
+## [0.3.0] - 2025-11-17
+
+### Added
+
+- Dynamic Venn diagrams (not precomputed) based on **[ggvenn](https://github.com/yanlinlin82/ggvenn)** geometry
+
+- UpSet plots based on **[UpSetPlot](https://github.com/jnothman/UpSetPlot)**
+ 
+
+[0.3.0]: https://github.com/jorgebotas/publiplots/releases/tag/v0.3.0
