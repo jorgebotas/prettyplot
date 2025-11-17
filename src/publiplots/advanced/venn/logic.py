@@ -3,8 +3,6 @@ Set logic and label generation for Venn diagrams.
 
 This module handles the logical operations on sets to determine intersection sizes
 and generate appropriate labels for each region (petal) of the Venn diagram.
-
-Adapted from pyvenn by LankyCyril (https://github.com/LankyCyril/pyvenn)
 """
 
 from typing import List, Dict, Iterator

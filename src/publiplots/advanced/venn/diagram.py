@@ -2,12 +2,12 @@
 Venn diagram visualizations for publiplots.
 
 This module provides functions for creating Venn diagrams for 2-5 sets
-using an implementation based on pyvenn by LankyCyril.
+using geometry based on the ggvenn R package by Yan Linlin.
 
 The module supports:
 - Venn diagrams for 2-5 sets using ellipses
 
-Based on pyvenn by LankyCyril: https://github.com/LankyCyril/pyvenn
+Based on ggvenn by Yan Linlin: https://github.com/yanlinlin82/ggvenn
 """
 
 from matplotlib.axes import Axes
@@ -18,20 +18,14 @@ import matplotlib.pyplot as plt
 
 from publiplots.themes.colors import get_palette
 
-from .constants import (
-    SHAPE_COORDS,
-    SHAPE_DIMS,
-    SHAPE_ANGLES,
-    PETAL_LABEL_COORDS,
-    SET_LABEL_COORDS,
-    SET_LABEL_ALIGNMENTS
-)
 from .draw import (
     init_axes,
     draw_ellipse,
     draw_text,
 )
 from .logic import get_n_sets, generate_petal_labels
+from .geometry import get_geometry, get_coordinate_ranges
+import numpy as np
 
 
 def _prepare_colors(colors, n_sets: int) -> Union[List[str], List[Tuple[float, ...]]]:
@@ -80,6 +74,7 @@ def _venn(
     Draw a true Venn diagram with ellipses (2-5 sets).
 
     Internal function that handles the actual drawing logic.
+    Uses dynamic geometry calculation based on ggvenn approach.
     """
     n_sets = get_n_sets(petal_labels, dataset_labels)
 
@@ -87,34 +82,114 @@ def _venn(
     if n_sets < 2 or n_sets > 5:
         raise ValueError("Number of sets must be between 2 and 5. Consider using upset plot instead.")
 
-    # Initialize axes
-    ax = init_axes(ax, figsize)
+    # Get dynamic geometry
+    circles, label_positions, set_label_positions = get_geometry(n_sets)
 
-    # Draw all shapes
-    shape_params = zip(
-        SHAPE_COORDS[n_sets],
-        SHAPE_DIMS[n_sets],
-        SHAPE_ANGLES[n_sets],
-        colors
-    )
-    for coords, dims, angle, color in shape_params:
-        draw_ellipse(ax, *coords, *dims, angle, color, alpha=alpha)
+    # Calculate coordinate ranges with padding
+    x_range, y_range = get_coordinate_ranges(circles)
+    padding = 0.15
+    x_width = x_range[1] - x_range[0]
+    y_height = y_range[1] - y_range[0]
+
+    xlim = (x_range[0] - padding * x_width, x_range[1] + padding * x_width)
+    ylim = (y_range[0] - padding * y_height, y_range[1] + padding * y_height)
+
+    # Initialize axes with proper limits
+    ax = init_axes(ax, figsize, xlim=xlim, ylim=ylim)
+
+    # Draw all circles/ellipses
+    for circle, color in zip(circles, colors):
+        # Convert angle from radians to degrees for matplotlib
+        angle_deg = np.degrees(circle.theta_offset)
+
+        # Width and height are diameter (2 * radius)
+        width = 2 * circle.radius_a
+        height = 2 * circle.radius_b
+
+        draw_ellipse(
+            ax,
+            circle.x_offset,
+            circle.y_offset,
+            width,
+            height,
+            angle_deg,
+            color,
+            alpha=alpha
+        )
 
     # Draw labels for each petal (intersection region)
     # Font size controlled by rcParams['font.size']
     for logic, petal_label in petal_labels.items():
-        if logic in PETAL_LABEL_COORDS[n_sets]:
-            x, y = PETAL_LABEL_COORDS[n_sets][logic]
+        if logic in label_positions:
+            x, y = label_positions[logic]
             draw_text(ax, x, y, petal_label, fontsize=plt.rcParams['font.size'])
 
     # Draw set labels on diagram
+    # Set label alignments based on position
+    set_label_alignments = _get_set_label_alignments(n_sets, set_label_positions, circles)
+
     for i, label in enumerate(dataset_labels):
-        x, y = SET_LABEL_COORDS[n_sets][i]
-        ha, va = SET_LABEL_ALIGNMENTS[n_sets][i]
+        x, y = set_label_positions[i]
+        ha, va = set_label_alignments[i]
         color = colors[i] if color_labels else None
         draw_text(ax, x, y, label, fontsize=plt.rcParams['font.size'] * 1.2, color=color, ha=ha, va=va)
 
     return ax
+
+
+def _get_set_label_alignments(
+    n_sets: int,
+    set_label_positions: List[Tuple[float, float]],
+    circles: List,
+) -> List[Tuple[str, str]]:
+    """
+    Calculate text alignments for set labels based on their position relative to circles.
+
+    Parameters
+    ----------
+    n_sets : int
+        Number of sets
+    set_label_positions : List[Tuple[float, float]]
+        Positions of set labels
+    circles : List[Circle]
+        Circle objects
+
+    Returns
+    -------
+    alignments : List[Tuple[str, str]]
+        List of (horizontal_alignment, vertical_alignment) tuples
+    """
+    alignments = []
+
+    for i, (label_x, label_y) in enumerate(set_label_positions):
+        circle = circles[i]
+
+        # Determine alignment based on relative position
+        # Horizontal alignment
+        if label_x < circle.x_offset - 0.1:
+            ha = "right"
+        elif label_x > circle.x_offset + 0.1:
+            ha = "left"
+        else:
+            ha = "center"
+
+        if i == 0 and n_sets == 5:
+            # Special case for first set in 5-way Venn diagram
+            # located at the top center of the diagram
+            # Take into account ellipse offset from center
+            ha = "center"
+
+        # Vertical alignment
+        if label_y < circle.y_offset - 0.1:
+            va = "top"
+        elif label_y > circle.y_offset + 0.1:
+            va = "bottom"
+        else:
+            va = "center"
+
+        alignments.append((ha, va))
+
+    return alignments
 
 
 # =============================================================================
@@ -164,6 +239,7 @@ def venn(
         - {percentage}: percentage of total elements
     color_labels : bool, default=True
         Whether to color the set labels with the same color as the petals.
+
     Returns
     -------
     fig : Figure

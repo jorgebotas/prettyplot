@@ -141,7 +141,7 @@ Jorge Botas ([@jorgebotas](https://github.com/jorgebotas))
 
 PubliPlots builds upon excellent work from the Python visualization community:
 
-- **[pyvenn](https://github.com/LankyCyril/pyvenn)** by LankyCyril - The Venn diagram implementation (2-6 sets) is adapted from this library
+- **[ggvenn](https://github.com/yanlinlin82/ggvenn)** by Yan Linlin - The Venn diagram implementation (2-5 sets) is based on the geometry from this R package
 - **[UpSetPlot](https://github.com/jnothman/UpSetPlot)** by Joel Nothman - The UpSet plot implementation is inspired by concepts from this library (BSD-3-Clause license)
 - **[matplotlib](https://matplotlib.org/)** - The foundational plotting library that powers PubliPlots
 - **[seaborn](https://seaborn.pydata.org/)** - Inspiration for API design and color palettes
