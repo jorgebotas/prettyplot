@@ -170,7 +170,7 @@ def generate_circle_4() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], L
     Generate geometry for 4-way Venn diagram.
 
     Four ellipses arranged with rotation to create all intersections.
-    Uses the same approach as ggvenn R package.
+    Uses exact coordinates from ggvenn R package.
 
     Returns
     -------
@@ -182,44 +182,99 @@ def generate_circle_4() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], L
         Positions for set name labels
     """
     # Four ellipses with rotation
-    # Following ggvenn geometry
+    # Exact coordinates from ggvenn gen_circle_4:
+    # gen_circle(1L, -.7, -1/2, .75, 1.5, pi/4),
+    # gen_circle(2L, -.72+2/3, -1/6, .75, 1.5, pi/4),
+    # gen_circle(3L, .72-2/3, -1/6, .75, 1.5, -pi/4),
+    # gen_circle(4L, .7, -1/2, .75, 1.5, -pi/4)
 
     circles = [
-        Circle(x_offset=-0.7, y_offset=-0.5, radius_a=0.75, radius_b=1.5, theta_offset=np.pi/4),
-        Circle(x_offset=-0.7, y_offset=0.5, radius_a=0.75, radius_b=1.5, theta_offset=-np.pi/4),
-        Circle(x_offset=0.7, y_offset=0.5, radius_a=0.75, radius_b=1.5, theta_offset=np.pi/4),
-        Circle(x_offset=0.7, y_offset=-0.5, radius_a=0.75, radius_b=1.5, theta_offset=-np.pi/4),
+        Circle(x_offset=-0.7, y_offset=-1/2, radius_a=0.75, radius_b=1.5, theta_offset=np.pi/4),
+        Circle(x_offset=-0.72+2/3, y_offset=-1/6, radius_a=0.75, radius_b=1.5, theta_offset=np.pi/4),
+        Circle(x_offset=0.72-2/3, y_offset=-1/6, radius_a=0.75, radius_b=1.5, theta_offset=-np.pi/4),
+        Circle(x_offset=0.7, y_offset=-1/2, radius_a=0.75, radius_b=1.5, theta_offset=-np.pi/4),
     ]
 
-    # Intersection label positions for 4-way Venn
-    # Binary logic: "1000", "0100", "0010", "0001" for individual sets
+    # Intersection label positions from gen_text_pos_4
+    # Converting R labels (A, B, C, D) to binary logic (1000, 0100, 0010, 0001)
     label_positions = {
-        "1000": (-1.5, -0.5),       # Left-bottom only
-        "0100": (-1.5, 0.5),        # Left-top only
-        "0010": (1.5, 0.5),         # Right-top only
-        "0001": (1.5, -0.5),        # Right-bottom only
-        "1100": (-1.1, 0),          # Left two
-        "0110": (-0.5, 1.0),        # Top two
-        "0011": (1.1, 0),           # Right two
-        "1001": (-0.5, -1.0),       # Bottom two
-        "1010": (-0.3, -0.3),       # Diagonal LB-RT
-        "0101": (-0.3, 0.3),        # Diagonal LT-RB
-        "1110": (-0.7, 0.3),        # Left three (LB, LT, RT)
-        "1101": (-0.7, -0.3),       # LB, LT, RB
-        "1011": (-0.3, -0.7),       # LB, RT, RB
-        "0111": (0.3, 0.3),         # LT, RT, RB
-        "1111": (0, 0),             # All four
+        # Individual sets
+        "1000": (-1.5, 0.0),        # A
+        "0100": (-0.6, 0.7),        # B
+        "0010": (0.6, 0.7),         # C
+        "0001": (1.5, 0.0),         # D
+        # Two-way intersections
+        "1100": (-0.9, 0.3),        # AB
+        "0110": (0.0, 0.4),         # BC
+        "0011": (0.9, 0.3),         # CD
+        "1010": (-0.8, -0.9),       # AC
+        "0101": (0.8, -0.9),        # BD
+        "1001": (0.0, -1.4),        # AD
+        # Three-way intersections
+        "1110": (-0.5, -0.2),       # ABC
+        "0111": (0.5, -0.2),        # BCD
+        "1011": (-0.3, -1.1),       # ACD
+        "1101": (0.3, -1.1),        # ABD
+        # All four
+        "1111": (0.0, -0.7),        # ABCD
     }
 
     # Set name label positions (outside ellipses)
     set_label_positions = [
-        (-1.2, -1.3),   # Below left-bottom ellipse
-        (-1.2, 1.3),    # Above left-top ellipse
-        (1.2, 1.3),     # Above right-top ellipse
-        (1.2, -1.3),    # Below right-bottom ellipse
+        (-1.5, 0.0),    # A (left)
+        (-0.6, 0.7),    # B (upper left)
+        (0.6, 0.7),     # C (upper right)
+        (1.5, 0.0),     # D (right)
     ]
 
     return circles, label_positions, set_label_positions
+
+
+def _label_name_to_binary(name: str, n_sets: int = 5) -> str:
+    """
+    Convert R-style label name (e.g., 'ABC') to binary logic (e.g., '11100').
+
+    Parameters
+    ----------
+    name : str
+        Label name using letters A, B, C, D, E
+    n_sets : int
+        Total number of sets (default 5)
+
+    Returns
+    -------
+    binary : str
+        Binary string representation
+    """
+    if name == "-" or name == "ABCDE":
+        return "11111" if name == "ABCDE" else "-"
+
+    result = ['0'] * n_sets
+    for char in name:
+        idx = ord(char) - ord('A')
+        if idx < n_sets:
+            result[idx] = '1'
+    return ''.join(result)
+
+
+def _gen_label_pos_list(name_list: List[str], radius: float, start_angle: float, n_sets: int = 5) -> Dict[str, Tuple[float, float]]:
+    """
+    Generate label positions in a circular arrangement.
+
+    Mimics R's gen_label_pos_list function.
+    """
+    n = len(name_list)
+    positions = {}
+
+    for i, name in enumerate(name_list):
+        theta = start_angle + i * 2 * np.pi / n
+        x = radius * np.cos(theta)
+        y = radius * np.sin(theta)
+        binary = _label_name_to_binary(name, n_sets)
+        if binary != "-":
+            positions[binary] = (x, y)
+
+    return positions
 
 
 def generate_circle_5() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
@@ -227,7 +282,7 @@ def generate_circle_5() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], L
     Generate geometry for 5-way Venn diagram.
 
     Five ellipses arranged in a pentagonal pattern with rotation.
-    Based on ggvenn R package implementation.
+    Uses exact coordinates from ggvenn R package.
 
     Returns
     -------
@@ -238,71 +293,79 @@ def generate_circle_5() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], L
     set_label_positions : List[Tuple[float, float]]
         Positions for set name labels
     """
-    # Five ellipses in pentagonal arrangement
-    # Following ggvenn geometry
+    # Five ellipses using gen_circle_list parameters:
+    # gen_circle_list(5, 1, 3.1, 1.5, pi * 0.45, pi * 0.1)
+    # center_radius = 1, ellipse_a = 3.1, ellipse_b = 1.5
+    # start_angle = 0.45π, rotation_offset = 0.1π
 
-    circles = [
-        Circle(x_offset=0, y_offset=0.55, radius_a=1.13, radius_b=0.64, theta_offset=np.radians(0)),
-        Circle(x_offset=0.53, y_offset=-0.12, radius_a=1.13, radius_b=0.64, theta_offset=np.radians(72)),
-        Circle(x_offset=0.33, y_offset=-0.60, radius_a=1.13, radius_b=0.64, theta_offset=np.radians(144)),
-        Circle(x_offset=-0.33, y_offset=-0.60, radius_a=1.13, radius_b=0.64, theta_offset=np.radians(216)),
-        Circle(x_offset=-0.53, y_offset=-0.12, radius_a=1.13, radius_b=0.64, theta_offset=np.radians(288)),
-    ]
+    circles = []
+    n = 5
+    center_radius = 1.0
+    ellipse_a = 3.1
+    ellipse_b = 1.5
+    start_angle = np.pi * 0.45
+    rotation_offset = np.pi * 0.1
 
-    # Intersection label positions for 5-way Venn
-    # This is complex with 31 possible intersections (2^5 - 1)
-    # Approximate positions - these may need fine-tuning
-    label_positions = {
-        # Single sets
-        "10000": (0, 1.2),
-        "01000": (0.9, 0.3),
-        "00100": (0.7, -0.9),
-        "00010": (-0.7, -0.9),
-        "00001": (-0.9, 0.3),
+    for i in range(n):
+        theta = start_angle + 2 * np.pi * i / n
+        x = center_radius * np.cos(theta)
+        y = center_radius * np.sin(theta)
+        rotation = theta + rotation_offset
+        circles.append(Circle(
+            x_offset=x,
+            y_offset=y,
+            radius_a=ellipse_a,
+            radius_b=ellipse_b,
+            theta_offset=rotation
+        ))
 
-        # Two-way intersections
-        "11000": (0.5, 0.7),
-        "01100": (0.9, -0.3),
-        "00110": (0.3, -0.9),
-        "00011": (-0.3, -0.9),
-        "10001": (-0.5, 0.7),
-        "10100": (0.4, 0.1),
-        "01010": (0.4, -0.5),
-        "00101": (0, -0.8),
-        "10010": (-0.4, 0.1),
-        "01001": (-0.4, -0.5),
+    # Generate label positions using gen_text_pos_5 logic
+    label_positions = {}
 
-        # Three-way intersections
-        "11100": (0.6, 0.2),
-        "01110": (0.5, -0.5),
-        "00111": (0, -0.7),
-        "10011": (-0.5, 0.2),
-        "11001": (-0.6, -0.5),
-        "11010": (0.2, 0.4),
-        "01101": (0.5, -0.2),
-        "00110": (0.2, -0.6),
-        "10110": (-0.2, -0.2),
-        "11000": (-0.2, 0.4),
+    # Center: ABCDE
+    label_positions["11111"] = (0.0, 0.0)
 
-        # Four-way intersections
-        "11110": (0.3, 0.1),
-        "01111": (0.2, -0.4),
-        "10111": (-0.2, -0.3),
-        "11011": (-0.3, 0.1),
-        "11101": (0.1, -0.1),
+    # Four-way intersections (radius 1.42, start 1.12π)
+    label_positions.update(_gen_label_pos_list(
+        ["BCDE", "ACDE", "ABDE", "ABCE", "ABCD"],
+        radius=1.42, start_angle=np.pi * 1.12, n_sets=5
+    ))
 
-        # All five
-        "11111": (0, 0),
-    }
+    # Three-way intersections - first ring (radius 1.55, start 1.33π)
+    label_positions.update(_gen_label_pos_list(
+        ["CDE", "ADE", "ABE", "ABC", "BCD"],
+        radius=1.55, start_angle=np.pi * 1.33, n_sets=5
+    ))
 
-    # Set name label positions (outside ellipses)
-    set_label_positions = [
-        (0, 1.5),       # Top
-        (1.2, 0.5),     # Upper right
-        (1.0, -1.2),    # Lower right
-        (-1.0, -1.2),   # Lower left
-        (-1.2, 0.5),    # Upper left
-    ]
+    # Three-way intersections - second ring (radius 1.88, start 1.13π)
+    label_positions.update(_gen_label_pos_list(
+        ["BCE", "ACD", "BDE", "ACE", "ABD"],
+        radius=1.88, start_angle=np.pi * 1.13, n_sets=5
+    ))
+
+    # Two-way intersections - first ring (radius 1.98, start 0.44π)
+    label_positions.update(_gen_label_pos_list(
+        ["AC", "BD", "CE", "AD", "BE"],
+        radius=1.98, start_angle=np.pi * 0.44, n_sets=5
+    ))
+
+    # Two-way intersections - second ring (radius 2.05, start 0.68π)
+    label_positions.update(_gen_label_pos_list(
+        ["AB", "BC", "CD", "DE", "AE"],
+        radius=2.05, start_angle=np.pi * 0.68, n_sets=5
+    ))
+
+    # Single sets (radius 3.0, start 0.52π)
+    label_positions.update(_gen_label_pos_list(
+        ["A", "B", "C", "D", "E"],
+        radius=3.0, start_angle=np.pi * 0.52, n_sets=5
+    ))
+
+    # Set name label positions (same as individual set positions)
+    set_label_positions = []
+    for name in ["A", "B", "C", "D", "E"]:
+        binary = _label_name_to_binary(name, 5)
+        set_label_positions.append(label_positions[binary])
 
     return circles, label_positions, set_label_positions
 
