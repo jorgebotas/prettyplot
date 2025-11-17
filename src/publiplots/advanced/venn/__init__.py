@@ -27,10 +27,10 @@ from .geometry import (
     Circle,
     get_geometry,
     get_coordinate_ranges,
-    generate_circle_2,
-    generate_circle_3,
-    generate_circle_4,
-    generate_circle_5,
+    compute_2way_geometry,
+    compute_3way_geometry,
+    compute_4way_geometry,
+    compute_5way_geometry,
 )
 
 # Export public API
@@ -48,8 +48,8 @@ __all__ = [
     'Circle',
     'get_geometry',
     'get_coordinate_ranges',
-    'generate_circle_2',
-    'generate_circle_3',
-    'generate_circle_4',
-    'generate_circle_5',
+    'compute_2way_geometry',
+    'compute_3way_geometry',
+    'compute_4way_geometry',
+    'compute_5way_geometry',
 ]

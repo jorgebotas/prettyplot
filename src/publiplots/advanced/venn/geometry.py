@@ -71,9 +71,9 @@ class Circle:
         return x, y
 
 
-def generate_circle_2(overlap_size: float = 0.5) -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
+def compute_2way_geometry(overlap_size: float = 0.5) -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
     """
-    Generate geometry for 2-way Venn diagram.
+    Compute geometry for 2-way Venn diagram.
 
     Two circles with horizontal overlap.
     Uses the exact formula from ggvenn R package.
@@ -116,9 +116,9 @@ def generate_circle_2(overlap_size: float = 0.5) -> Tuple[List[Circle], Dict[str
     return circles, label_positions, set_label_positions
 
 
-def generate_circle_3(radius_scale: float = 1.3) -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
+def compute_3way_geometry(radius_scale: float = 1.3) -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
     """
-    Generate geometry for 3-way Venn diagram.
+    Compute geometry for 3-way Venn diagram.
 
     Three circles arranged in an equilateral triangle pattern.
     Based on ggvenn R package geometry with increased radius for better visibility.
@@ -164,20 +164,31 @@ def generate_circle_3(radius_scale: float = 1.3) -> Tuple[List[Circle], Dict[str
     }
 
     # Set name label positions (outside circles)
-    # Adjust based on radius scale
-    label_offset = base_radius + 0.3
+    # Use radial positioning based on circle arrangement
+    # The circles form an equilateral triangle pattern
+    # Compute set labels using radial helper at a larger radius
+    # Labels positioned at angles corresponding to each circle's angle from origin
+    # Start angle computed from first circle's position: atan2((sqrt3+2)/6, -2/3)
+    # Approximately 2.405 rad, which is about 0.765π
+    set_label_positions_dict = _compute_radial_label_positions(
+        ["A", "B", "C"],
+        radius=2.2,  # Radius to place labels outside the circles
+        start_angle=np.pi * 0.765,  # Start at top-left circle's angle
+        n_sets=3
+    )
+    # Convert to list in order [A, B, C] which maps to binary ["100", "010", "001"]
     set_label_positions = [
-        (-1.3, (sqrt3 + 2)/6 + label_offset),    # Above left circle
-        (1.3, (sqrt3 + 2)/6 + label_offset),     # Above right circle
-        (0, -(sqrt3 + 2)/6 - label_offset),      # Below bottom circle
+        set_label_positions_dict["100"],  # A
+        set_label_positions_dict["010"],  # B
+        set_label_positions_dict["001"],  # C
     ]
 
     return circles, label_positions, set_label_positions
 
 
-def generate_circle_4() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
+def compute_4way_geometry() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
     """
-    Generate geometry for 4-way Venn diagram.
+    Compute geometry for 4-way Venn diagram.
 
     Four ellipses arranged with rotation to create all intersections.
     Uses exact coordinates from ggvenn R package.
@@ -243,7 +254,7 @@ def generate_circle_4() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], L
     return circles, label_positions, set_label_positions
 
 
-def _label_name_to_binary(name: str, n_sets: int = 5) -> str:
+def _convert_rlabel_to_binary(name: str, n_sets: int = 5) -> str:
     """
     Convert R-style label name (e.g., 'ABC') to binary logic (e.g., '11100').
 
@@ -270,11 +281,28 @@ def _label_name_to_binary(name: str, n_sets: int = 5) -> str:
     return ''.join(result)
 
 
-def _gen_label_pos_list(name_list: List[str], radius: float, start_angle: float, n_sets: int = 5) -> Dict[str, Tuple[float, float]]:
+def _compute_radial_label_positions(name_list: List[str], radius: float, start_angle: float, n_sets: int = 5) -> Dict[str, Tuple[float, float]]:
     """
-    Generate label positions in a circular arrangement.
+    Compute label positions in a radial/circular arrangement.
 
+    Distributes labels evenly around a circle at the specified radius.
     Mimics R's gen_label_pos_list function.
+
+    Parameters
+    ----------
+    name_list : List[str]
+        List of R-style label names (e.g., ["A", "AB", "ABC"])
+    radius : float
+        Radial distance from origin
+    start_angle : float
+        Starting angle in radians
+    n_sets : int
+        Total number of sets (default 5)
+
+    Returns
+    -------
+    positions : Dict[str, Tuple[float, float]]
+        Dictionary mapping binary label to (x, y) position
     """
     n = len(name_list)
     positions = {}
@@ -283,16 +311,16 @@ def _gen_label_pos_list(name_list: List[str], radius: float, start_angle: float,
         theta = start_angle + i * 2 * np.pi / n
         x = radius * np.cos(theta)
         y = radius * np.sin(theta)
-        binary = _label_name_to_binary(name, n_sets)
+        binary = _convert_rlabel_to_binary(name, n_sets)
         if binary != "-":
             positions[binary] = (x, y)
 
     return positions
 
 
-def generate_circle_5() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
+def compute_5way_geometry() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], List[Tuple[float, float]]]:
     """
-    Generate geometry for 5-way Venn diagram.
+    Compute geometry for 5-way Venn diagram.
 
     Five ellipses arranged in a pentagonal pattern with rotation.
     Uses exact coordinates from ggvenn R package.
@@ -339,37 +367,37 @@ def generate_circle_5() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], L
     label_positions["11111"] = (0.0, 0.0)
 
     # Four-way intersections (radius 1.42, start 1.12π)
-    label_positions.update(_gen_label_pos_list(
+    label_positions.update(_compute_radial_label_positions(
         ["BCDE", "ACDE", "ABDE", "ABCE", "ABCD"],
         radius=1.42, start_angle=np.pi * 1.12, n_sets=5
     ))
 
     # Three-way intersections - first ring (radius 1.55, start 1.33π)
-    label_positions.update(_gen_label_pos_list(
+    label_positions.update(_compute_radial_label_positions(
         ["CDE", "ADE", "ABE", "ABC", "BCD"],
         radius=1.55, start_angle=np.pi * 1.33, n_sets=5
     ))
 
     # Three-way intersections - second ring (radius 1.88, start 1.13π)
-    label_positions.update(_gen_label_pos_list(
+    label_positions.update(_compute_radial_label_positions(
         ["BCE", "ACD", "BDE", "ACE", "ABD"],
         radius=1.88, start_angle=np.pi * 1.13, n_sets=5
     ))
 
     # Two-way intersections - first ring (radius 1.98, start 0.44π)
-    label_positions.update(_gen_label_pos_list(
+    label_positions.update(_compute_radial_label_positions(
         ["AC", "BD", "CE", "AD", "BE"],
         radius=1.98, start_angle=np.pi * 0.44, n_sets=5
     ))
 
     # Two-way intersections - second ring (radius 2.05, start 0.68π)
-    label_positions.update(_gen_label_pos_list(
+    label_positions.update(_compute_radial_label_positions(
         ["AB", "BC", "CD", "DE", "AE"],
         radius=2.05, start_angle=np.pi * 0.68, n_sets=5
     ))
 
     # Single sets (radius 3.0, start 0.52π)
-    label_positions.update(_gen_label_pos_list(
+    label_positions.update(_compute_radial_label_positions(
         ["A", "B", "C", "D", "E"],
         radius=3.0, start_angle=np.pi * 0.52, n_sets=5
     ))
@@ -414,55 +442,15 @@ def get_geometry(n_sets: int) -> Tuple[List[Circle], Dict[str, Tuple[float, floa
         If n_sets is not between 2 and 5
     """
     if n_sets == 2:
-        return generate_circle_2()
+        return compute_2way_geometry()
     elif n_sets == 3:
-        return generate_circle_3()
+        return compute_3way_geometry()
     elif n_sets == 4:
-        return generate_circle_4()
+        return compute_4way_geometry()
     elif n_sets == 5:
-        return generate_circle_5()
+        return compute_5way_geometry()
     else:
         raise ValueError(f"Venn diagrams support 2-5 sets, got {n_sets}")
-
-
-def normalize_coordinates(
-    coords: Tuple[float, float],
-    x_range: Tuple[float, float],
-    y_range: Tuple[float, float],
-    padding: float = 0.05
-) -> Tuple[float, float]:
-    """
-    Normalize coordinates from raw geometry to 0-1 range for matplotlib.
-
-    Parameters
-    ----------
-    coords : Tuple[float, float]
-        Raw (x, y) coordinates
-    x_range : Tuple[float, float]
-        (min, max) of x coordinates in raw space
-    y_range : Tuple[float, float]
-        (min, max) of y coordinates in raw space
-    padding : float
-        Padding to add around the diagram (in normalized units)
-
-    Returns
-    -------
-    normalized_coords : Tuple[float, float]
-        Normalized (x, y) coordinates in 0-1 range
-    """
-    x, y = coords
-    x_min, x_max = x_range
-    y_min, y_max = y_range
-
-    # Calculate range
-    x_width = x_max - x_min
-    y_height = y_max - y_min
-
-    # Normalize to 0-1, leaving room for padding
-    x_norm = padding + (x - x_min) / x_width * (1 - 2 * padding)
-    y_norm = padding + (y - y_min) / y_height * (1 - 2 * padding)
-
-    return x_norm, y_norm
 
 
 def get_coordinate_ranges(circles: List[Circle]) -> Tuple[Tuple[float, float], Tuple[float, float]]:
