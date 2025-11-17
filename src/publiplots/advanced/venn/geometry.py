@@ -230,11 +230,13 @@ def generate_circle_4() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], L
     }
 
     # Set name label positions (outside ellipses)
+    # Top petals (B and C): push labels up, outside the ellipse
+    # Bottom petals (A and D): pull labels down just below the center
     set_label_positions = [
-        (-1.5, 0.0),    # A (left)
-        (-0.6, 0.7),    # B (upper left)
-        (0.6, 0.7),     # C (upper right)
-        (1.5, 0.0),     # D (right)
+        (-0.7, -0.9),    # A (left-bottom) - below center
+        (-0.72+2/3, 1.2),    # B (upper left) - pushed up outside ellipse
+        (0.72-2/3, 1.2),     # C (upper right) - pushed up outside ellipse
+        (0.7, -0.9),     # D (right-bottom) - below center
     ]
 
     return circles, label_positions, set_label_positions
@@ -371,11 +373,18 @@ def generate_circle_5() -> Tuple[List[Circle], Dict[str, Tuple[float, float]], L
         radius=3.0, start_angle=np.pi * 0.52, n_sets=5
     ))
 
-    # Set name label positions (same as individual set positions)
+    # Set name label positions (pushed outward from ellipses)
+    # Generate positions at a radius just outside the ellipse extent
+    # Max ellipse extent ≈ center_radius + ellipse_a = 1.0 + 3.1 = 4.1
+    # Use radius = 4.3 to place labels clearly outside
+    label_radius = 4.3
+    label_start_angle = np.pi * 0.52  # Same start angle as individual sets
     set_label_positions = []
-    for name in ["A", "B", "C", "D", "E"]:
-        binary = _label_name_to_binary(name, 5)
-        set_label_positions.append(label_positions[binary])
+    for i in range(5):
+        theta = label_start_angle + 2 * np.pi * i / 5
+        x = label_radius * np.cos(theta)
+        y = label_radius * np.sin(theta)
+        set_label_positions.append((x, y))
 
     return circles, label_positions, set_label_positions
 
