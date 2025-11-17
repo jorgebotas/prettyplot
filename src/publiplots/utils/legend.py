@@ -17,6 +17,11 @@ from matplotlib.legend import Legend
 from matplotlib.legend_handler import HandlerBase, HandlerPatch
 from matplotlib.patches import Circle, Rectangle, Patch
 import matplotlib.pyplot as plt
+import matplotlib
+
+# Version checking for matplotlib compatibility
+_MPL_VERSION = tuple(int(x) for x in matplotlib.__version__.split('.')[:2])
+_HAS_LEGEND_ALIGNMENT = _MPL_VERSION >= (3, 6)
 
 
 # =============================================================================
@@ -411,9 +416,11 @@ class LegendBuilder:
             "borderpad": 0,
             "handletextpad": 0.5,
             "labelspacing": 0.3,
-            "alignment": "left",
             "handler_map": kwargs.pop("handler_map", get_legend_handler_map())
         }
+        # Add alignment parameter only for matplotlib >= 3.6
+        if _HAS_LEGEND_ALIGNMENT:
+            default_kwargs["alignment"] = "left"
         default_kwargs.update(kwargs)
         
         existing_legends = [e[1] for e in self.elements if e[0] == "legend"]

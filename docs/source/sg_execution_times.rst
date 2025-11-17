@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:13.869** total execution time for 6 files **from all galleries**:
+**00:12.921** total execution time for 6 files **from all galleries**:
 
 .. container::
 
@@ -33,20 +33,20 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_auto_examples_plot_upset_plots.py` (``../../examples/plot_upset_plots.py``)
-     - 00:04.649
+     - 00:04.445
      - 0.0
    * - :ref:`sphx_glr_auto_examples_plot_configuration.py` (``../../examples/plot_configuration.py``)
-     - 00:02.506
+     - 00:02.324
      - 0.0
    * - :ref:`sphx_glr_auto_examples_plot_scatter_plots.py` (``../../examples/plot_scatter_plots.py``)
-     - 00:02.279
+     - 00:02.096
      - 0.0
    * - :ref:`sphx_glr_auto_examples_plot_hatch_patterns.py` (``../../examples/plot_hatch_patterns.py``)
-     - 00:01.853
+     - 00:01.674
      - 0.0
    * - :ref:`sphx_glr_auto_examples_plot_bar_plots.py` (``../../examples/plot_bar_plots.py``)
-     - 00:01.661
+     - 00:01.506
      - 0.0
    * - :ref:`sphx_glr_auto_examples_plot_venn_diagrams.py` (``../../examples/plot_venn_diagrams.py``)
-     - 00:00.922
+     - 00:00.876
      - 0.0
