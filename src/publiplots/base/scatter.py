@@ -275,10 +275,10 @@ def scatterplot(
         ax.set_yticks(range(len(y_labels)))
         ax.set_yticklabels(y_labels)
 
-    # Set labels
-    ax.set_xlabel(xlabel if xlabel else x)
-    ax.set_ylabel(ylabel if ylabel else y)
-    ax.set_title(title)
+    # Set labels and title
+    if xlabel is not None: ax.set_xlabel(xlabel)
+    if ylabel is not None: ax.set_ylabel(ylabel)
+    if title is not None: ax.set_title(title)
 
     if legend:
         _legend(
@@ -346,7 +346,7 @@ def _handle_categorical_axes(
     data = data.copy()
 
     if x_is_categorical:
-        x_cats = sorted(data[x].unique())
+        x_cats = data[x].unique()
         x_positions = {cat: i for i, cat in enumerate(x_cats)}
         data["_x_pos"] = data[x].map(x_positions)
         x_col = "_x_pos"
@@ -356,7 +356,7 @@ def _handle_categorical_axes(
         x_labels = None
 
     if y_is_categorical:
-        y_cats = sorted(data[y].unique())
+        y_cats = data[y].unique()
         y_positions = {cat: i for i, cat in enumerate(y_cats)}
         data["_y_pos"] = data[y].map(y_positions)
         y_col = "_y_pos"
