@@ -229,41 +229,31 @@ def scatterplot(
     # Merge with user kwargs
     scatter_kwargs.update(kwargs)
 
-    # Layer 1: Filled markers with transparency
-    fill_kwargs = scatter_kwargs.copy()
-    fill_kwargs.update({
-        "alpha": alpha,
-        "edgecolor": "none",
-        "linewidth": 0,
+    # Create scatter plot with edges
+    scatter_kwargs.update({
+        "linewidth": linewidth,
         "zorder": 2,
     })
-    sns.scatterplot(**fill_kwargs)
+    sns.scatterplot(**scatter_kwargs)
 
-    # Layer 2: Edge-only markers
-    edge_kwargs = scatter_kwargs.copy()
-    edge_kwargs.update({
-        "alpha": 1.0,
-        "linewidth": linewidth,
-        "zorder": 3,
-    })
-    sns.scatterplot(**edge_kwargs)
+    # Apply differential transparency to face vs edge
+    from publiplots.utils.transparency import apply_edge_transparency
+    collection = ax.collections[0]
+    apply_edge_transparency(collection, face_alpha=alpha, edge_alpha=1.0)
 
-    # Make second layer hollow
-    collections = ax.collections
-    face_collection = collections[0]
-    edge_collection = collections[1]
-    edge_collection.set_facecolors("none")
-    edge_collection.set_edgecolors(
-        edgecolor if edgecolor else face_collection.get_facecolors()
-    )
-    edge_collection.set_linewidths(linewidth)
-    # Set colormap and normalization for face collection
-    # Could be used by legend builder to create colorbar
+    # Override edge colors if specified
+    if edgecolor is not None:
+        from matplotlib.colors import to_rgba
+        n_points = len(collection.get_edgecolors())
+        collection.set_edgecolors([to_rgba(edgecolor, alpha=1.0)] * n_points)
+
+    # Set colormap and normalization for collection
+    # Used by legend builder to create colorbar
     if hue is not None:
-        face_collection.set_label(hue)
+        collection.set_label(hue)
         if hue_norm is not None:
-            face_collection.set_cmap(palette) # is a string or cmap
-            face_collection.set_norm(hue_norm)
+            collection.set_cmap(palette)  # is a string or cmap
+            collection.set_norm(hue_norm)
 
     # Handle categorical axis labels
     if x_labels is not None:

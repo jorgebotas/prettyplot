@@ -54,6 +54,10 @@ from publiplots.utils.legend import (
     create_legend_builder,
 )
 
+from publiplots.utils.transparency import (
+    apply_edge_transparency,
+)
+
 # Register fonts globally
 _register_fonts()
 
@@ -96,4 +100,6 @@ __all__ = [
     "create_legend_handles",
     "LegendBuilder",
     "create_legend_builder",
+    # Transparency functions
+    "apply_edge_transparency",
 ]

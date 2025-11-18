@@ -224,20 +224,12 @@ def barplot(
     # Merge with user-provided kwargs
     barplot_kwargs.update(kwargs)
 
-    # Create outline bars
+    # Create bars with fill and edges
+    barplot_kwargs.update({
+        "fill": True,
+        "linewidth": linewidth,
+    })
     sns.barplot(**barplot_kwargs)
-
-    # Add filled bars with alpha if needed
-    if 0 < alpha <= 1:
-        fill_kwargs = barplot_kwargs.copy()
-        fill_kwargs.update({
-            "fill": True,
-            "alpha": alpha,
-            "linewidth": 0,
-            "errorbar": None,
-            "err_kws": {"linewidth": 0},
-        })
-        sns.barplot(**fill_kwargs)
 
     # Apply hatch patterns and override colors if needed
     if hatch is not None:
@@ -253,6 +245,10 @@ def barplot(
             palette=palette,
             hatch_mapping=hatch_mapping,
         )
+
+    # Apply differential transparency to face vs edge
+    from publiplots.utils.transparency import apply_edge_transparency
+    apply_edge_transparency(ax.patches, face_alpha=alpha, edge_alpha=1.0)
 
     # Add legend if hue or hatch is used
     if legend:
@@ -398,31 +394,23 @@ def _apply_hatches_and_override_colors(
             hatch_idx if hue == hatch else axis_idx
         )
 
-        # Determine which layer (outline -> alpha == 1, fill -> alpha < 1)
-        alpha = patch.get_alpha()
-        outline = alpha is None or (alpha == 1)
-        if outline:
-            # Apply hatch pattern
-            hatch_pattern = hatch_mapping.get(hatch_order[hatch_idx], "")
-            patch.set_hatch(hatch_pattern)
-            # set_hatch_linewidth is only available in matplotlib >= 3.7
-            if _HAS_HATCH_LINEWIDTH:
-                patch.set_hatch_linewidth(linewidth)
-        
-        # Repaint the bars when needed
-        color = palette[hue_order[hue_idx]] if hue is not None else color
+        # Apply hatch pattern to all patches
+        hatch_pattern = hatch_mapping.get(hatch_order[hatch_idx], "")
+        patch.set_hatch(hatch_pattern)
+        # set_hatch_linewidth is only available in matplotlib >= 3.7
+        if _HAS_HATCH_LINEWIDTH:
+            patch.set_hatch_linewidth(linewidth)
+
+        # Repaint the bars when needed (override colors if not using double split)
+        bar_color = palette[hue_order[hue_idx]] if hue is not None else color
         if not (double_split or hatch == categorical_axis):
             # Use the same color for all bars
-            patch.set_edgecolor(color)
-            if not outline: 
-                patch.set_facecolor(color)
-                patch.set_alpha(alpha)
+            patch.set_edgecolor(bar_color)
+            patch.set_facecolor(bar_color)
 
             # Match error bar colors to bar colors
-            # Only need to color the error bars 
-            # for the outline bars (errorbar = None for fill bars)
             if bar_idx < len(errorbars):
-                errorbars[bar_idx].set_color(color)
+                errorbars[bar_idx].set_color(bar_color)
 
 def _legend(
         ax: Axes,
