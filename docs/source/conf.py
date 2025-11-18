@@ -110,8 +110,8 @@ intersphinx_mapping = {
 import publiplots  # This will register the custom fonts
 
 sphinx_gallery_conf = {
-    'examples_dirs': '../../examples',   # path to your example scripts
-    'gallery_dirs': 'auto_examples',     # path to where to save gallery generated output
+    'examples_dirs': ['../../examples/01_basic', '../../examples/02_advanced', '../../examples/03_customization'],
+    'gallery_dirs': ['auto_examples/01_basic', 'auto_examples/02_advanced', 'auto_examples/03_customization'],
     'filename_pattern': r'.*\.py$',
     'backreferences_dir': 'gen_modules/backreferences',
     'doc_module': ('publiplots',),
