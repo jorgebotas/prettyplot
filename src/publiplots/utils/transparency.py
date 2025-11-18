@@ -91,27 +91,29 @@ def _apply_to_collection(
     edge_alpha : float
         Alpha for edge colors.
     """
-    # Get current colors as RGBA arrays
+    # Get current face colors as RGBA arrays
     face_colors = collection.get_facecolors()
-    edge_colors = collection.get_edgecolors()
 
-    # Handle case where colors might be a single color broadcasted
-    # or an array with one color per point
-    if len(face_colors) > 0:
-        # Apply face alpha to each face color
-        new_face_colors = np.array([
-            to_rgba(face_colors[i], alpha=face_alpha)
-            for i in range(len(face_colors))
-        ])
-        collection.set_facecolors(new_face_colors)
+    if len(face_colors) == 0:
+        return
 
-    if len(edge_colors) > 0:
-        # Apply edge alpha to each edge color
-        new_edge_colors = np.array([
-            to_rgba(edge_colors[i], alpha=edge_alpha)
-            for i in range(len(edge_colors))
-        ])
-        collection.set_edgecolors(new_edge_colors)
+    # CRITICAL: First ensure edge colors match face colors
+    # (seaborn may set edge colors to black/white by default)
+    # We want edges to be the same color as fill, just different alpha
+    collection.set_edgecolors(face_colors)
+
+    # Now apply different alpha to face vs edge
+    new_face_colors = np.array([
+        to_rgba(face_colors[i], alpha=face_alpha)
+        for i in range(len(face_colors))
+    ])
+    collection.set_facecolors(new_face_colors)
+
+    new_edge_colors = np.array([
+        to_rgba(face_colors[i], alpha=edge_alpha)
+        for i in range(len(face_colors))
+    ])
+    collection.set_edgecolors(new_edge_colors)
 
 
 def _apply_to_patches(
@@ -136,13 +138,17 @@ def _apply_to_patches(
             # Skip non-patch artists
             continue
 
-        # Get current colors
+        # Get current face color
         face_color = patch.get_facecolor()
-        edge_color = patch.get_edgecolor()
 
-        # Apply new alpha values
+        # CRITICAL: Set edge color to match face color first
+        # (seaborn may set edge color to black/white by default)
+        # We want edges to be the same color as fill, just different alpha
+        patch.set_edgecolor(face_color)
+
+        # Now apply different alpha to face vs edge
         patch.set_facecolor(to_rgba(face_color, alpha=face_alpha))
-        patch.set_edgecolor(to_rgba(edge_color, alpha=edge_alpha))
+        patch.set_edgecolor(to_rgba(face_color, alpha=edge_alpha))
 
 
 __all__ = [
