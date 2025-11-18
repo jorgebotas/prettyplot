@@ -10,12 +10,17 @@ from typing import Optional, List, Dict, Tuple, Union
 from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
+import matplotlib
 import seaborn as sns
 import pandas as pd
 
 from publiplots.themes.colors import resolve_palette_mapping
 from publiplots.themes.hatches import resolve_hatch_mapping
 from publiplots.utils import is_categorical, create_legend_handles, create_legend_builder
+
+# Version checking for matplotlib compatibility
+_MPL_VERSION = tuple(int(x) for x in matplotlib.__version__.split('.')[:2])
+_HAS_HATCH_LINEWIDTH = _MPL_VERSION >= (3, 7)
 
 _SPLIT_SEPARATOR = "---"
 
@@ -397,7 +402,9 @@ def _apply_hatches_and_override_colors(
             # Apply hatch pattern
             hatch_pattern = hatch_mapping.get(hatch_order[hatch_idx], "")
             patch.set_hatch(hatch_pattern)
-            patch.set_hatch_linewidth(linewidth)
+            # set_hatch_linewidth is only available in matplotlib >= 3.7
+            if _HAS_HATCH_LINEWIDTH:
+                patch.set_hatch_linewidth(linewidth)
         
         # Repaint the bars when needed
         color = palette[hue_order[hue_idx]] if hue is not None else color
