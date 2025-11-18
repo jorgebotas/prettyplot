@@ -40,21 +40,27 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'shibuya'
 html_static_path = ['_static']
 html_logo = None
 html_favicon = None
 
 html_theme_options = {
-    'logo_only': False,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': False,
-    'collapse_navigation': True,
-    'sticky_navigation': True,
-    'navigation_depth': 4,
-    'includehidden': True,
-    'titles_only': False
+    'github_url': 'https://github.com/jorgebotas/publiplots',
+    'nav_links': [
+        {
+            'title': 'Home',
+            'url': 'index',
+        },
+        {
+            'title': 'API Reference',
+            'url': 'api/modules',
+        },
+        {
+            'title': 'Examples',
+            'url': 'auto_examples/index',
+        },
+    ],
 }
 
 # -- Extension configuration -------------------------------------------------
