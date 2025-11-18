@@ -127,6 +127,8 @@ sphinx_gallery_conf = {
     'default_thumb_file': None,
     'line_numbers': False,
     'nested_sections': True,
+    'subsection_order': lambda x: x,  # Preserve directory order as specified in examples_dirs
+    'within_subsection_order': lambda x: x,  # Preserve file order within each subsection
 }
 
 # NumPyDoc settings

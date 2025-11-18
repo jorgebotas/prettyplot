@@ -10,4 +10,5 @@ automatically generated from docstrings.
    plotting
    styling
    utilities
+   legend
    configuration
