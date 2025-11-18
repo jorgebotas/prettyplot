@@ -86,7 +86,7 @@ Table of Contents
    :maxdepth: 2
    :caption: Examples Gallery
 
-   auto_examples/index
+   auto_examples_index
 
 .. toctree::
    :maxdepth: 3

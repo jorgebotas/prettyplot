@@ -54,11 +54,11 @@ html_theme_options = {
         },
         {
             'title': 'API Reference',
-            'url': 'api/modules',
+            'url': 'api/index',
         },
         {
             'title': 'Examples',
-            'url': 'auto_examples/index',
+            'url': 'auto_examples_index',
         },
     ],
 }
@@ -108,7 +108,6 @@ intersphinx_mapping = {
 # Sphinx-gallery configuration
 # First, ensure fonts are registered for gallery plots
 import publiplots  # This will register the custom fonts
-from sphinx_gallery.sorting import FileNameSortKey
 
 sphinx_gallery_conf = {
     'examples_dirs': ['../../examples/01_basic', '../../examples/02_advanced', '../../examples/03_customization'],
@@ -128,7 +127,7 @@ sphinx_gallery_conf = {
     'default_thumb_file': None,
     'line_numbers': False,
     'nested_sections': True,
-    'within_subsection_order': FileNameSortKey,  # Sort by filename (respects numeric prefixes)
+    # Sorting by filename (default) respects numeric prefixes: plot_01_*, plot_02_*, etc.
 }
 
 # NumPyDoc settings
