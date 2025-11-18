@@ -43,7 +43,7 @@ dev = [
 docs = [
     "sphinx>=7.0.0",
     "sphinx-gallery>=0.15.0",
-    "sphinx-rtd-theme>=2.0.0",
+    "shibuya>=2024.0.0",
     "numpydoc>=1.6.0",
     "pillow>=10.0.0",
 ]
