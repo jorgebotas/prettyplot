@@ -110,7 +110,7 @@ pp.savefig(fig, 'figure.pdf')
 
 ## Documentation
 
-Full documentation is available at [github.com/jorgebotas/publiplots](https://github.com/jorgebotas/publiplots)
+Full documentation is available at [jorgebotas.github.io/publiplots](https://jorgebotas.github.io/publiplots/)
 
 ## Development Status
 
