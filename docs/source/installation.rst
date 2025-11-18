@@ -14,7 +14,19 @@ PubliPlots requires Python 3.9 or later and the following packages:
 Installing from PyPI
 --------------------
 
-The easiest way to install PubliPlots is using pip:
+Using uv (Recommended)
+~~~~~~~~~~~~~~~~~~~~~~
+
+For the fastest installation, we recommend using `uv <https://github.com/astral-sh/uv>`_:
+
+.. code-block:: bash
+
+   uv pip install publiplots
+
+Using pip
+~~~~~~~~~
+
+Alternatively, you can use pip:
 
 .. code-block:: bash
 
@@ -29,12 +41,24 @@ To install the latest development version from GitHub:
 
    git clone https://github.com/jorgebotas/publiplots.git
    cd publiplots
+   uv pip install -e .
+
+Or with pip:
+
+.. code-block:: bash
+
    pip install -e .
 
 Development Installation
 ------------------------
 
 If you want to contribute to PubliPlots, install the development dependencies:
+
+.. code-block:: bash
+
+   uv pip install -e ".[dev]"
+
+Or with pip:
 
 .. code-block:: bash
 
@@ -52,6 +76,12 @@ Documentation Dependencies
 --------------------------
 
 To build the documentation locally:
+
+.. code-block:: bash
+
+   uv pip install -e ".[docs]"
+
+Or with pip:
 
 .. code-block:: bash
 
