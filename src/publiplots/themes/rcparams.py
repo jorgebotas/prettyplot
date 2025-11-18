@@ -25,7 +25,8 @@ MATPLOTLIB_RCPARAMS: Dict[str, Any] = {
     "figure.figsize": [3.25, 2.5],
     "figure.dpi": 600,
     "figure.edgecolor": "none",
-    
+    "figure.subplot.hspace": 0.05,
+    "figure.subplot.wspace": 0.05,
 
     # Font settings - optimized for readability
     "font.size": 8,
@@ -87,6 +88,8 @@ MATPLOTLIB_RCPARAMS: Dict[str, Any] = {
     "savefig.bbox": "tight",
     "savefig.pad_inches": 0.1,
     "savefig.transparent": True,
+    "savefig.facecolor": "none",
+    "savefig.edgecolor": "none",
 
     # PDF settings for vector graphics
     "pdf.fonttype": 42,

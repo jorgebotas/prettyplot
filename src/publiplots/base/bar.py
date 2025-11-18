@@ -321,9 +321,11 @@ def _prepare_split_data(
     prepareB = colB is not None and orderB is not None
     if prepareA:
         data[colA] = pd.Categorical(data[colA], categories=orderA, ordered=True)
+        data[colA] = data[colA].cat.remove_unused_categories()
         data = data.sort_values([colA])
     if prepareB:
         data[colB] = pd.Categorical(data[colB], categories=orderB, ordered=True)
+        data[colB] = data[colB].cat.remove_unused_categories()
         data = data.sort_values([colB])
 
     # Sort the data by the columns in the order of the columns
@@ -334,6 +336,7 @@ def _prepare_split_data(
             categories=order_categorical_axis, 
             ordered=True
         )
+        data[categorical_axis] = data[categorical_axis].cat.remove_unused_categories()
         columns.insert(0, categorical_axis)
     data.sort_values(columns, inplace=True)
     
