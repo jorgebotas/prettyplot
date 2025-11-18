@@ -93,10 +93,11 @@ def get_hatch_patterns(mode: Optional[int] = None) -> List[str]:
 
     The density mode controls how dense/sparse the hatch patterns are by
     multiplying the base patterns:
-        - Mode 1: base × 1 (e.g., '/', '.' → '/', '.')
-        - Mode 2: base × 2 (e.g., '/', '.' → '//', '..')
-        - Mode 3: base × 3 (e.g., '/', '.' → '///', '...')
-        - Mode 4: base × 4 (e.g., '/', '.' → '////', '....')
+
+    - Mode 1: base × 1 (e.g., '/', '.' becomes '/', '.')
+    - Mode 2: base × 2 (e.g., '/', '.' becomes '//', '..')
+    - Mode 3: base × 3 (e.g., '/', '.' becomes '///', '...')
+    - Mode 4: base × 4 (e.g., '/', '.' becomes '////', '....')
 
     Denser patterns provide stronger visual distinction but may appear
     cluttered in small plot areas. Mode 1 is recommended for most use cases.
@@ -448,24 +449,24 @@ def list_hatch_patterns(mode: Optional[int] = None) -> None:
 
     Examples
     --------
-    List current mode patterns:
-    >>> import publiplots as pp
-    >>> pp.list_hatch_patterns()
-    Hatch Patterns (Mode 1):
-      0: '' (no hatch)
-      1: '/'
-      2: '\\'
-      3: '.'
-      4: '|'
-      ...
+    List current mode patterns::
 
-    List specific mode:
-    >>> pp.list_hatch_patterns(mode=4)
-    Hatch Patterns (Mode 4):
-      0: '' (no hatch)
-      1: '////'
-      2: '....'
-      ...
+        >>> import publiplots as pp
+        >>> pp.list_hatch_patterns()
+        Hatch Patterns (Mode 1):
+          0: '' (no hatch)
+          1: '/'
+          2: '\\'
+          3: '.'
+          4: '|'
+
+    List specific mode::
+
+        >>> pp.list_hatch_patterns(mode=4)
+        Hatch Patterns (Mode 4):
+          0: '' (no hatch)
+          1: '////'
+          2: '....'
     """
     if mode is None:
         mode = get_hatch_mode()

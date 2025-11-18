@@ -108,6 +108,7 @@ intersphinx_mapping = {
 # Sphinx-gallery configuration
 # First, ensure fonts are registered for gallery plots
 import publiplots  # This will register the custom fonts
+from sphinx_gallery.sorting import FileNameSortKey
 
 sphinx_gallery_conf = {
     'examples_dirs': ['../../examples/01_basic', '../../examples/02_advanced', '../../examples/03_customization'],
@@ -127,8 +128,7 @@ sphinx_gallery_conf = {
     'default_thumb_file': None,
     'line_numbers': False,
     'nested_sections': True,
-    'subsection_order': lambda x: x,  # Preserve directory order as specified in examples_dirs
-    'within_subsection_order': lambda x: x,  # Preserve file order within each subsection
+    'within_subsection_order': FileNameSortKey,  # Sort by filename (respects numeric prefixes)
 }
 
 # NumPyDoc settings
