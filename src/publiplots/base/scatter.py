@@ -100,12 +100,10 @@ def scatterplot(
         Y-axis label. If empty, uses y column name.
     legend_kws : dict, optional
         Keyword arguments for legend builder:
-        - hue_title : str, optional
-            Title for the hue legend. If None, uses hue column name.
-        - size_title : str, optional
-            Title for the size legend. If None, uses size column name.
-        - size_reverse : bool, default=True
-            Whether to reverse the size legend (descending order).
+
+        - hue_title : str, optional - Title for the hue legend. If None, uses hue column name.
+        - size_title : str, optional - Title for the size legend. If None, uses size column name.
+        - size_reverse : bool, default=True - Whether to reverse the size legend (descending order).
     legend : bool, default=True
         Whether to show legend.
     margins : float or tuple, default=0.1

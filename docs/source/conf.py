@@ -54,11 +54,11 @@ html_theme_options = {
         },
         {
             'title': 'API Reference',
-            'url': 'api/modules',
+            'url': 'api/index',
         },
         {
             'title': 'Examples',
-            'url': 'auto_examples/index',
+            'url': 'auto_examples_index',
         },
     ],
 }
@@ -106,9 +106,12 @@ intersphinx_mapping = {
 }
 
 # Sphinx-gallery configuration
+# First, ensure fonts are registered for gallery plots
+import publiplots  # This will register the custom fonts
+
 sphinx_gallery_conf = {
-    'examples_dirs': '../../examples',   # path to your example scripts
-    'gallery_dirs': 'auto_examples',     # path to where to save gallery generated output
+    'examples_dirs': ['../../examples/01_basic', '../../examples/02_advanced', '../../examples/03_customization'],
+    'gallery_dirs': ['auto_examples/01_basic', 'auto_examples/02_advanced', 'auto_examples/03_customization'],
     'filename_pattern': r'.*\.py$',
     'backreferences_dir': 'gen_modules/backreferences',
     'doc_module': ('publiplots',),
@@ -124,6 +127,7 @@ sphinx_gallery_conf = {
     'default_thumb_file': None,
     'line_numbers': False,
     'nested_sections': True,
+    # Sorting by filename (default) respects numeric prefixes: plot_01_*, plot_02_*, etc.
 }
 
 # NumPyDoc settings

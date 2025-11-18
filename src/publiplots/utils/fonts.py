@@ -13,7 +13,8 @@ def _register_fonts():
     """
     
     # Get the directory containing this file
-    package_dir = Path(__file__).parent
+    # Go up one level from utils/ to get to the package root
+    package_dir = Path(__file__).parent.parent
     fonts_dir = package_dir / "fonts"
 
     existing_fonts = list_registered_fonts()

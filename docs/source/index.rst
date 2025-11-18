@@ -28,6 +28,15 @@ Quick Start
 Installation
 ~~~~~~~~~~~~
 
+.. tip::
+   For faster installation, we recommend using `uv <https://github.com/astral-sh/uv>`_:
+
+   .. code-block:: bash
+
+      uv pip install publiplots
+
+   Or using pip:
+
 .. code-block:: bash
 
    pip install publiplots
@@ -77,10 +86,10 @@ Table of Contents
    :maxdepth: 2
    :caption: Examples Gallery
 
-   auto_examples/index
+   auto_examples_index
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: API Reference
 
    api/index

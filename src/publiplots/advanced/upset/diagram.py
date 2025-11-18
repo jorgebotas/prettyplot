@@ -50,9 +50,10 @@ def upsetplot(
     """
     Create an UpSet plot for visualizing set intersections.
 
-    UpSet plots are an effective way to visualize intersections of multiple sets,
+    UpSet plots [1]_ are an effective way to visualize intersections of multiple sets,
     providing more clarity than Venn diagrams when dealing with many sets or
-    complex intersection patterns.
+    complex intersection patterns. This implementation is based on the UpSetPlot
+    package [2]_.
 
     Parameters
     ----------

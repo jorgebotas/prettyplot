@@ -44,6 +44,9 @@ from publiplots.utils.legend import (
     LegendBuilder,
     create_legend_builder,
 )
+# Register custom fonts
+from publiplots.utils.fonts import _register_fonts
+_register_fonts()
 
 # Theming
 from publiplots.themes.colors import color_palette

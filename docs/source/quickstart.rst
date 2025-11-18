@@ -211,6 +211,6 @@ Configure global plotting parameters using ``pp.rcParams``:
 Next Steps
 ----------
 
-* Explore the :doc:`auto_examples/index` for more detailed examples
+* Explore the :doc:`auto_examples_index` for more detailed examples
 * Check the :doc:`api/index` for complete function documentation
 * Read about advanced customization options in the examples gallery
