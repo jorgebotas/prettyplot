@@ -135,7 +135,7 @@ fig, ax = pp.barplot(
     ylabel='Intensity',
     errorbar='se',
     color='#5D83C3',
-    hatch_mapping={'Low': '', 'Medium': '//', 'High': 'xx'},
+    hatch_map={'Low': '', 'Medium': '//', 'High': 'xx'},
     alpha=0.0,
 )
 plt.show()
@@ -183,7 +183,7 @@ fig, ax = pp.barplot(
     ylabel="Viability (%)",
     errorbar="se",
     palette={"Vehicle": "#8E8EC1", "Drug": "#E67E7E"},
-    hatch_mapping={"24h": "", "48h": "///"},
+    hatch_map={"24h": "", "48h": "///"},
     figsize=(8, 5)
 )
 plt.show()
