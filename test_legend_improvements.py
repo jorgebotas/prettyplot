@@ -62,7 +62,7 @@ try:
     )
     # Manual mode using add_legend_for
     builder = pp.legend(ax, auto=False)
-    builder.add_legend_for('hue', title='Custom Score')
+    builder.add_legend_for('hue', label='Custom Score')
     print("✓ Test 2 passed: Colorbar added via add_legend_for")
     pp.savefig('/tmp/test_colorbar_manual.png')
     print("  Saved to /tmp/test_colorbar_manual.png")

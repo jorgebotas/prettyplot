@@ -451,24 +451,24 @@ class LegendBuilder:
     def add_legend(
         self,
         handles: List,
-        title: str = "",
+        label: str = "",
         frameon: bool = False,
         **kwargs
     ) -> Legend:
         """
         Add a legend with automatic handler mapping.
-        
+
         Parameters
         ----------
         handles : list
             Legend handles (from create_legend_handles or plot objects).
-        title : str
-            Legend title.
+        label : str
+            Legend label (title).
         frameon : bool
             Whether to show frame.
         **kwargs
             Additional kwargs for ax.legend().
-        
+
         Returns
         -------
         Legend
@@ -478,7 +478,7 @@ class LegendBuilder:
             "loc": "upper left",
             "bbox_to_anchor": (self.x_offset, self.current_y),
             "bbox_transform": self.ax.transAxes,
-            "title": title,
+            "title": label,
             "frameon": frameon,
             "borderaxespad": 0,
             "borderpad": 0,
@@ -613,7 +613,7 @@ class LegendBuilder:
         # Update position for next element
         self.current_y -= (height + self.spacing)
     
-    def add_legend_for(self, type: str, title: Optional[str] = None, **kwargs):
+    def add_legend_for(self, type: str, label: Optional[str] = None, **kwargs):
         """
         Add legend by auto-detecting from self.ax stored metadata.
 
@@ -621,9 +621,8 @@ class LegendBuilder:
         ----------
         type : str
             Type of legend: 'hue', 'size', or 'style'
-        title : str, optional
-            Legend title (overrides default from metadata).
-            For colorbars, this overrides the 'label' parameter.
+        label : str, optional
+            Legend label (overrides default from metadata).
         **kwargs : dict
             Additional customization passed to add_legend() or add_colorbar()
             (frameon, labelspacing, handletextpad, height, width, etc.)
@@ -631,9 +630,9 @@ class LegendBuilder:
         Examples
         --------
         >>> builder = pp.legend(ax, auto=False)
-        >>> builder.add_legend_for('hue', title='Groups')
-        >>> builder.add_legend_for('size', title='Magnitude')
-        >>> builder.add_legend_for('hue', title='Score')  # Works for colorbar too
+        >>> builder.add_legend_for('hue', label='Groups')
+        >>> builder.add_legend_for('size', label='Magnitude')
+        >>> builder.add_legend_for('hue', label='Score')  # Works for colorbar too
         """
         legend_data = _get_legend_data(self.ax)
 
@@ -644,16 +643,16 @@ class LegendBuilder:
             # Check if this is a colorbar
             if data.get('type') == 'colorbar':
                 # Handle colorbar
-                if title is not None:
-                    data['label'] = title
+                if label is not None:
+                    data['label'] = label
                 data.update(kwargs)
                 # Remove 'type' key as it's not a parameter for add_colorbar
                 data.pop('type', None)
                 self.add_colorbar(**data)
             else:
                 # Handle regular legend
-                if title is not None:
-                    data['title'] = title
+                if label is not None:
+                    data['label'] = label
                 data.update(kwargs)
                 self.add_legend(**data)
         else:
@@ -722,7 +721,7 @@ def legend(
         Vertical spacing between legend elements. Default: 0.03
     **kwargs : dict
         Additional kwargs:
-        - If handles provided: passed to add_legend() (frameon, title, etc.)
+        - If handles provided: passed to add_legend() (frameon, label, etc.)
         - Otherwise: passed to LegendBuilder init (bbox_to_anchor, spacing)
 
     Returns
@@ -738,15 +737,15 @@ def legend(
 
     Manual selective mode:
     >>> builder = pp.legend(ax, auto=False)  # No legends created yet
-    >>> builder.add_legend_for('hue', title='Groups')
-    >>> builder.add_legend_for('size', title='Magnitude')
+    >>> builder.add_legend_for('hue', label='Groups')
+    >>> builder.add_legend_for('size', label='Magnitude')
 
     Expert mode with custom handles:
     >>> builder = pp.legend(ax, auto=False)
-    >>> builder.add_legend(handles=custom_handles, labels=custom_labels, title='Custom')
+    >>> builder.add_legend(handles=custom_handles, labels=custom_labels, label='Custom')
 
     Manual handles mode:
-    >>> builder = pp.legend(ax, handles=custom_handles, labels=custom_labels, title='My Legend')
+    >>> builder = pp.legend(ax, handles=custom_handles, labels=custom_labels, label='My Legend')
     """
     # Extract LegendBuilder-specific kwargs
     builder_kwargs = {
@@ -779,9 +778,11 @@ def legend(
                 else:
                     builder.add_legend(**hue_data, **kwargs)
             if 'size' in legend_data:
-                builder.add_legend(**legend_data['size'], **kwargs)
+                size_data = legend_data['size'].copy()
+                builder.add_legend(**size_data, **kwargs)
             if 'style' in legend_data:
-                builder.add_legend(**legend_data['style'], **kwargs)
+                style_data = legend_data['style'].copy()
+                builder.add_legend(**style_data, **kwargs)
 
     # If auto=False, just return empty builder for manual control
     return builder

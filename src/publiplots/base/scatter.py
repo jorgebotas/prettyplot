@@ -495,7 +495,7 @@ def _legend(
             )
             legend_data["hue"] = {
                 "handles": hue_handles,
-                "title": hue_label,
+                "label": hue_label,
             }
         else:
             mappable = ScalarMappable(norm=hue_norm, cmap=palette)
@@ -527,7 +527,7 @@ def _legend(
         )
         legend_data["size"] = {
             "handles": size_handles,
-            "title": kwargs.pop("size_label", size),
+            "label": kwargs.pop("size_label", size),
             "labelspacing": kwargs.pop("labelspacing", 1/3 * max(1, sizes[1] / 200)),
         }
 
@@ -558,7 +558,7 @@ def _legend(
         )
         legend_data["style"] = {
             "handles": style_handles,
-            "title": style_label,
+            "label": style_label,
         }
 
     # Store metadata on collection
