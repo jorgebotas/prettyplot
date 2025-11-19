@@ -37,19 +37,6 @@ Example:
     ...     pp.scatterplot(data[data.cat==category], marker=markers[i])
 """
 
-SIMPLE_MARKERS: List[str] = [
-    'o',   # Circle
-    's',   # Square
-    '^',   # Triangle up
-    'D',   # Diamond
-]
-"""
-Simple marker set with 4 easily distinguishable shapes.
-
-Use case: When only a few categories need to be represented, these
-provide maximum clarity and are easily distinguishable even at small sizes.
-"""
-
 FILLED_UNFILLED_MARKERS: Dict[str, Tuple[str, str]] = {
     "circle": ('o', 'o'),          # Circle (same filled/unfilled)
     "square": ('s', 's'),          # Square
@@ -233,7 +220,7 @@ def resolve_markers(
 
     See Also
     --------
-    resolve_marker_mapping : Create a mapping from values to markers
+    resolve_marker_map : Create a mapping from values to markers
     get_marker_cycle : Get a cycle of n markers
     """
     # Get default markers if not provided
@@ -241,7 +228,7 @@ def resolve_markers(
         if style == "standard":
             markers = STANDARD_MARKERS
         elif style == "simple":
-            markers = SIMPLE_MARKERS
+            markers = STANDARD_MARKERS[:4]  # First 4 markers for simple style
         else:
             raise ValueError(f"Unknown marker style '{style}'. Use 'standard' or 'simple'.")
 
@@ -256,9 +243,9 @@ def resolve_markers(
     return markers
 
 
-def resolve_marker_mapping(
+def resolve_marker_map(
     values: Optional[List[str]] = None,
-    marker_mapping: Optional[Union[Dict[str, str], List[str]]] = None,
+    marker_map: Optional[Union[Dict[str, str], List[str]]] = None,
     reverse: bool = False,
     style: str = "standard"
 ) -> Dict[str, str]:
@@ -274,17 +261,17 @@ def resolve_marker_mapping(
     ----------
     values : list of str, optional
         List of category values to map to markers. If None, returns empty dict.
-    marker_mapping : dict or list, optional
+    marker_map : dict or list, optional
         Marker specification:
         - dict: Explicit mapping from values to markers (returned as-is)
         - list: List of markers to cycle through for values
         - None: Uses default markers from STANDARD_MARKERS
     reverse : bool, default=False
         Whether to reverse the marker assignment order. Only applicable
-        when marker_mapping is a list or None.
+        when marker_map is a list or None.
     style : str, default='standard'
         Marker style: 'standard' or 'simple'. Only applicable when
-        marker_mapping is None.
+        marker_map is None.
 
     Returns
     -------
@@ -295,28 +282,28 @@ def resolve_marker_mapping(
     --------
     Create mapping for categories:
     >>> categories = ['A', 'B', 'C', 'D']
-    >>> mapping = resolve_marker_mapping(values=categories)
+    >>> mapping = resolve_marker_map(values=categories)
     >>> mapping['A']
     'o'
     >>> mapping['B']
     's'
 
     Use custom markers:
-    >>> mapping = resolve_marker_mapping(
+    >>> mapping = resolve_marker_map(
     ...     values=['cat', 'dog', 'bird'],
-    ...     marker_mapping=['o', '^', 's']
+    ...     marker_map=['o', '^', 's']
     ... )
 
     Use explicit mapping:
-    >>> mapping = resolve_marker_mapping(
+    >>> mapping = resolve_marker_map(
     ...     values=['A', 'B'],
-    ...     marker_mapping={'A': 'o', 'B': '^'}
+    ...     marker_map={'A': 'o', 'B': '^'}
     ... )
     >>> mapping
     {'A': 'o', 'B': '^'}
 
     Use simple style:
-    >>> mapping = resolve_marker_mapping(values=['A', 'B', 'C'], style='simple')
+    >>> mapping = resolve_marker_map(values=['A', 'B', 'C'], style='simple')
 
     See Also
     --------
@@ -328,12 +315,12 @@ def resolve_marker_mapping(
         return {}
 
     # If already a dict, return as-is
-    if isinstance(marker_mapping, dict):
-        return marker_mapping
+    if isinstance(marker_map, dict):
+        return marker_map
 
     # Resolve markers and create mapping
     markers = resolve_markers(
-        markers=marker_mapping,
+        markers=marker_map,
         n_markers=len(values),
         reverse=reverse,
         style=style

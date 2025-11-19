@@ -28,9 +28,8 @@ from publiplots.themes.markers import (
     get_hatch_cycle,
     get_size_mapping,
     resolve_markers,
-    resolve_marker_mapping,
+    resolve_marker_map,
     STANDARD_MARKERS,
-    SIMPLE_MARKERS,
     FILLED_UNFILLED_MARKERS,
     MARKER_SIZES,
     SIZE_RANGE_CATEGORICAL,
@@ -43,7 +42,7 @@ from publiplots.themes.hatches import (
     get_hatch_mode,
     list_hatch_patterns,
     resolve_hatches,
-    resolve_hatch_mapping,
+    resolve_hatch_map,
     HATCH_PATTERNS,
 )
 
@@ -66,10 +65,9 @@ __all__ = [
     "get_hatch_cycle",
     "get_size_mapping",
     "resolve_markers",
-    "resolve_marker_mapping",
+    "resolve_marker_map",
     # Marker constants
     "STANDARD_MARKERS",
-    "SIMPLE_MARKERS",
     "FILLED_UNFILLED_MARKERS",
     "MARKER_SIZES",
     "SIZE_RANGE_CATEGORICAL",
@@ -80,7 +78,7 @@ __all__ = [
     "get_hatch_mode",
     "list_hatch_patterns",
     "resolve_hatches",
-    "resolve_hatch_mapping",
+    "resolve_hatch_map",
     # Hatch constants
     "HATCH_PATTERNS",
 ]

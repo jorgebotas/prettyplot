@@ -71,8 +71,8 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
-# Test 3: Style with resolve_marker_mapping
-print("\nTest 3: Style with resolve_marker_mapping")
+# Test 3: Style with resolve_marker_map
+print("\nTest 3: Style with resolve_marker_map")
 try:
     fig, ax = pp.scatterplot(
         data=data,
@@ -82,7 +82,7 @@ try:
         style='condition',
         figsize=(8, 6)
     )
-    print("✓ Test 3 passed: Style uses resolve_marker_mapping internally")
+    print("✓ Test 3 passed: Style uses resolve_marker_map internally")
     pp.savefig('/tmp/test_style_with_resolve.png')
     print("  Saved to /tmp/test_style_with_resolve.png")
 except Exception as e:
@@ -90,15 +90,15 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
-# Test 4: Test resolve_marker_mapping directly
-print("\nTest 4: Test resolve_marker_mapping helper")
+# Test 4: Test resolve_marker_map directly
+print("\nTest 4: Test resolve_marker_map helper")
 try:
     categories = ['A', 'B', 'C', 'D', 'E']
-    mapping = pp.resolve_marker_mapping(values=categories)
+    mapping = pp.resolve_marker_map(values=categories)
     assert mapping['A'] == 'o', f"Expected 'o', got {mapping['A']}"
     assert mapping['B'] == 's', f"Expected 's', got {mapping['B']}"
     assert mapping['C'] == '^', f"Expected '^', got {mapping['C']}"
-    print("✓ Test 4 passed: resolve_marker_mapping works correctly")
+    print("✓ Test 4 passed: resolve_marker_map works correctly")
     print(f"  Mapping: {mapping}")
 except Exception as e:
     print(f"✗ Test 4 failed: {e}")
@@ -122,22 +122,21 @@ except Exception as e:
 # Test 6: Test SIMPLE_MARKERS constant
 print("\nTest 6: Test SIMPLE_MARKERS export")
 try:
-    assert hasattr(pp, 'SIMPLE_MARKERS'), "SIMPLE_MARKERS not exported"
-    assert len(pp.SIMPLE_MARKERS) == 4, f"Expected 4 markers, got {len(pp.SIMPLE_MARKERS)}"
-    print("✓ Test 6 passed: SIMPLE_MARKERS exported")
-    print(f"  SIMPLE_MARKERS: {pp.SIMPLE_MARKERS}")
+    # SIMPLE_MARKERS removed - using STANDARD_MARKERS[:4], "SIMPLE_MARKERS not exported"
+    print("✓ Test 6 passed: SIMPLE_MARKERS removed (using STANDARD_MARKERS[:4])")
+    print(f"  STANDARD_MARKERS[:4]: {pp.STANDARD_MARKERS[:4]}")
 except Exception as e:
     print(f"✗ Test 6 failed: {e}")
     import traceback
     traceback.print_exc()
 
-# Test 7: Test resolve_hatch_mapping export
-print("\nTest 7: Test resolve_hatch_mapping export")
+# Test 7: Test resolve_hatch_map export
+print("\nTest 7: Test resolve_hatch_map export")
 try:
-    assert hasattr(pp, 'resolve_hatch_mapping'), "resolve_hatch_mapping not exported"
+    assert hasattr(pp, 'resolve_hatch_map'), "resolve_hatch_map not exported"
     categories = ['A', 'B', 'C']
-    hatch_mapping = pp.resolve_hatch_mapping(values=categories)
-    print("✓ Test 7 passed: resolve_hatch_mapping exported")
+    hatch_mapping = pp.resolve_hatch_map(values=categories)
+    print("✓ Test 7 passed: resolve_hatch_map exported")
     print(f"  Hatch mapping: {hatch_mapping}")
 except Exception as e:
     print(f"✗ Test 7 failed: {e}")

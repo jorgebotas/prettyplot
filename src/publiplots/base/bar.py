@@ -14,8 +14,8 @@ import matplotlib
 import seaborn as sns
 import pandas as pd
 
-from publiplots.themes.colors import resolve_palette_mapping
-from publiplots.themes.hatches import resolve_hatch_mapping
+from publiplots.themes.colors import resolve_palette_map
+from publiplots.themes.hatches import resolve_hatch_map
 from publiplots.utils import is_categorical, create_legend_handles, legend
 
 # Version checking for matplotlib compatibility
@@ -156,11 +156,11 @@ def barplot(
 
 
     # Get hue palette and hatch mappings
-    palette = resolve_palette_mapping(
+    palette = resolve_palette_map(
         values=data[hue].unique() if hue is not None else None,
         palette=palette,
     )
-    hatch_mapping = resolve_hatch_mapping(
+    hatch_mapping = resolve_hatch_map(
         values=data[hatch].unique() if hatch is not None else None,
         hatch_mapping=hatch_mapping,
     )

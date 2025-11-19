@@ -308,7 +308,7 @@ def resolve_hatches(
 
     See Also
     --------
-    resolve_hatch_mapping : Create a mapping from values to patterns
+    resolve_hatch_map : Create a mapping from values to patterns
     get_hatch_patterns : Get patterns for a specific mode
     """
     # Get default patterns if not provided
@@ -326,9 +326,9 @@ def resolve_hatches(
     return hatches
 
 
-def resolve_hatch_mapping(
+def resolve_hatch_map(
     values: Optional[List[str]] = None,
-    hatch_mapping: Optional[Union[Dict[str, str], List[str]]] = None,
+    hatch_map: Optional[Union[Dict[str, str], List[str]]] = None,
     reverse: bool = False,
     mode: Optional[int] = None
 ) -> Dict[str, str]:
@@ -343,17 +343,17 @@ def resolve_hatch_mapping(
     ----------
     values : list of str, optional
         List of category values to map to patterns. If None, returns empty dict.
-    hatch_mapping : dict or list, optional
+    hatch_map : dict or list, optional
         Hatch pattern specification:
         - dict: Explicit mapping from values to patterns (returned as-is)
         - list: List of patterns to cycle through for values
         - None: Uses default patterns from get_hatch_patterns()
     reverse : bool, default=False
         Whether to reverse the pattern assignment order. Only applicable
-        when hatch_mapping is a list or None.
+        when hatch_map is a list or None.
     mode : int, optional
         Pattern density mode (1, 2, or 3). If None, uses current global mode.
-        Only applicable when hatch_mapping is None.
+        Only applicable when hatch_map is None.
 
     Returns
     -------
@@ -364,28 +364,28 @@ def resolve_hatch_mapping(
     --------
     Create mapping for categories:
     >>> categories = ['A', 'B', 'C', 'D']
-    >>> mapping = resolve_hatch_mapping(values=categories)
+    >>> mapping = resolve_hatch_map(values=categories)
     >>> mapping['A']
     ''
     >>> mapping['B']
     '///'
 
     Use custom patterns:
-    >>> mapping = resolve_hatch_mapping(
+    >>> mapping = resolve_hatch_map(
     ...     values=['cat', 'dog', 'bird'],
-    ...     hatch_mapping=['///', '|||', 'xxx']
+    ...     hatch_map=['///', '|||', 'xxx']
     ... )
 
     Use explicit mapping:
-    >>> mapping = resolve_hatch_mapping(
+    >>> mapping = resolve_hatch_map(
     ...     values=['A', 'B'],
-    ...     hatch_mapping={'A': '///', 'B': '|||'}
+    ...     hatch_map={'A': '///', 'B': '|||'}
     ... )
     >>> mapping
     {'A': '///', 'B': '|||'}
 
     Use dense patterns:
-    >>> mapping = resolve_hatch_mapping(values=['A', 'B', 'C'], mode=3)
+    >>> mapping = resolve_hatch_map(values=['A', 'B', 'C'], mode=3)
 
     See Also
     --------
@@ -397,12 +397,12 @@ def resolve_hatch_mapping(
         return {}
 
     # If already a dict, return as-is
-    if isinstance(hatch_mapping, dict):
-        return hatch_mapping
+    if isinstance(hatch_map, dict):
+        return hatch_map
 
     # Resolve patterns and create mapping
     hatches = resolve_hatches(
-        hatches=hatch_mapping,
+        hatches=hatch_map,
         n_hatches=len(values),
         reverse=reverse,
         mode=mode

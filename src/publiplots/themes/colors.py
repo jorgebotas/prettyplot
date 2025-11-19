@@ -91,7 +91,7 @@ def color_palette(palette=None, n_colors=None, desat=None, as_cmap=False):
     return sns.color_palette(palette, n_colors=n_colors, desat=desat, as_cmap=as_cmap)
 
 
-def resolve_palette_mapping(
+def resolve_palette_map(
     values: Optional[List[str]] = None,
     palette: Optional[Union[str, Dict, List]] = None,
 ) -> Dict[str, str]:

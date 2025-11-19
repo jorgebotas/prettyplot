@@ -17,8 +17,8 @@ from typing import Optional, Tuple, Union, Dict, List
 
 from publiplots.themes.rcparams import resolve_param
 
-from publiplots.themes.colors import resolve_palette_mapping
-from publiplots.themes.markers import resolve_marker_mapping
+from publiplots.themes.colors import resolve_palette_map
+from publiplots.themes.markers import resolve_marker_map
 from publiplots.utils import is_categorical, is_numeric, create_legend_handles, legend
 
 
@@ -207,7 +207,7 @@ def scatterplot(
 
     # Determine color/palette to use
     color = resolve_param("color", color)
-    palette = resolve_palette_mapping(
+    palette = resolve_palette_map(
         values=data[hue].unique() if hue is not None else None,
         palette=palette,
     ) if hue is not None else None
@@ -494,8 +494,8 @@ def _legend(
                 **handle_kwargs
             )
             legend_data["hue"] = {
-                "mappable": hue_handles,
-                "label": hue_label,
+                "handles": hue_handles,
+                "title": hue_label,
             }
         else:
             mappable = ScalarMappable(norm=hue_norm, cmap=palette)
@@ -527,7 +527,7 @@ def _legend(
         )
         legend_data["size"] = {
             "handles": size_handles,
-            "label": kwargs.pop("size_label", size),
+            "title": kwargs.pop("size_label", size),
             "labelspacing": kwargs.pop("labelspacing", 1/3 * max(1, sizes[1] / 200)),
         }
 
@@ -536,12 +536,12 @@ def _legend(
         style_values = data[style].unique()
         style_label = kwargs.pop("style_label", style)
 
-        # Use resolve_marker_mapping to get marker mapping
+        # Use resolve_marker_map to get marker mapping
         # If markers is True (from seaborn default), treat as None for our mapping
         marker_param = markers if isinstance(markers, (list, dict)) else None
-        marker_mapping = resolve_marker_mapping(
+        marker_map = resolve_marker_map(
             values=list(style_values),
-            marker_mapping=marker_param
+            marker_map=marker_param
         )
 
         # Determine color for style legend
@@ -553,12 +553,12 @@ def _legend(
         # Create legend handles with different markers
         style_handles = create_legend_handles(
             labels=[str(val) for val in style_values],
-            markers=[marker_mapping[val] for val in style_values],
+            markers=[marker_map[val] for val in style_values],
             **style_handle_kwargs
         )
         legend_data["style"] = {
             "handles": style_handles,
-            "label": style_label,
+            "title": style_label,
         }
 
     # Store metadata on collection
