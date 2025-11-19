@@ -18,9 +18,6 @@ from publiplots.themes.colors import resolve_palette_map
 from publiplots.themes.hatches import resolve_hatch_map
 from publiplots.utils import is_categorical, create_legend_handles, legend
 
-# Version checking for matplotlib compatibility
-_MPL_VERSION = tuple(int(x) for x in matplotlib.__version__.split('.')[:2])
-_HAS_HATCH_LINEWIDTH = _MPL_VERSION >= (3, 7)
 
 _SPLIT_SEPARATOR = "---"
 
@@ -394,9 +391,8 @@ def _apply_hatches_and_override_colors(
         # Apply hatch pattern to all patches
         hatch_pattern = hatch_map.get(hatch_order[hatch_idx], "")
         patch.set_hatch(hatch_pattern)
-        # set_hatch_linewidth is only available in matplotlib >= 3.7
-        if _HAS_HATCH_LINEWIDTH:
-            patch.set_hatch_linewidth(linewidth)
+        # set_hatch_linewidth
+        patch.set_hatch_linewidth(linewidth)
 
         # Repaint the bars when needed (override colors if not using double split)
         bar_color = palette[hue_order[hue_idx]] if hue is not None else color
