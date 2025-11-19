@@ -24,8 +24,6 @@ from publiplots.themes.styles import (
 )
 
 from publiplots.themes.markers import (
-    get_marker_cycle,
-    get_hatch_cycle,
     get_size_mapping,
     resolve_markers,
     resolve_marker_map,
@@ -61,8 +59,6 @@ __all__ = [
     "get_current_style",
     "apply_custom_style",
     # Marker functions
-    "get_marker_cycle",
-    "get_hatch_cycle",
     "get_size_mapping",
     "resolve_markers",
     "resolve_marker_map",
