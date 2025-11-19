@@ -86,9 +86,9 @@ def scatterplot(
     markers : bool, list, dict, optional
         Markers to use for different levels of the style variable:
         - True: use default marker set
-        - list: list of marker symbols (e.g., ['o', '^', 's'])
-        - dict: mapping of style values to markers (e.g., {'A': 'o', 'B': '^'})
-        - None: uses default marker 'o' for all points
+        - list: list of marker symbols (e.g., ["o", "^", "s"])
+        - dict: mapping of style values to markers (e.g., {"A": "o", "B": "^"})
+        - None: uses default marker "o" for all points
     size_norm : tuple of float, optional
         (vmin, vmax) for size normalization. If None, computed from data.
     hue_norm : tuple of float, optional
@@ -158,7 +158,7 @@ def scatterplot(
     Scatterplot with different marker styles:
     >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
     ...                           hue="group", style="condition",
-    ...                           markers=['o', '^', 's'])
+    ...                           markers=["o", "^", "s"])
 
     Categorical scatterplot (positions on grid):
     >>> fig, ax = pp.scatterplot(data=df, x="category", y="condition",
@@ -493,9 +493,18 @@ def _legend(
                 colors=list(palette.values()),
                 **handle_kwargs
             )
-            legend_data['hue'] = {
-                'handles': hue_handles,
-                'title': hue_label,
+            legend_data["hue"] = {
+                "mappable": hue_handles,
+                "label": hue_label,
+            }
+        else:
+            mappable = ScalarMappable(norm=hue_norm, cmap=palette)
+            legend_data["hue"] = {
+                "mappable": mappable,
+                "label": hue_label,
+                "height": kwargs.pop("hue_height", 0.2),
+                "width": kwargs.pop("hue_width", 0.05),
+                "type": "colorbar",
             }
 
     # Prepare size legend data
@@ -516,10 +525,10 @@ def _legend(
             sizes=tick_sizes,
             **size_handle_kwargs
         )
-        legend_data['size'] = {
-            'handles': size_handles,
-            'title': kwargs.pop("size_label", size),
-            'labelspacing': kwargs.pop("labelspacing", 1/3 * max(1, sizes[1] / 200)),
+        legend_data["size"] = {
+            "handles": size_handles,
+            "label": kwargs.pop("size_label", size),
+            "labelspacing": kwargs.pop("labelspacing", 1/3 * max(1, sizes[1] / 200)),
         }
 
     # Prepare style legend data
@@ -547,21 +556,9 @@ def _legend(
             markers=[marker_mapping[val] for val in style_values],
             **style_handle_kwargs
         )
-        legend_data['style'] = {
-            'handles': style_handles,
-            'title': style_label,
-        }
-
-    # Prepare colorbar data for continuous hue
-    if hue is not None and not isinstance(palette, dict):
-        hue_label = kwargs.pop("hue_label", hue) if 'hue_label' not in locals() else hue_label
-        mappable = ScalarMappable(norm=hue_norm, cmap=palette)
-        legend_data['hue'] = {
-            'mappable': mappable,
-            'label': hue_label,
-            'height': kwargs.pop("hue_height", 0.2),
-            'width': kwargs.pop("hue_width", 0.05),
-            'type': 'colorbar',  # Mark as colorbar for add_legend_for()
+        legend_data["style"] = {
+            "handles": style_handles,
+            "label": style_label,
         }
 
     # Store metadata on collection
