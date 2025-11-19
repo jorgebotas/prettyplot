@@ -46,12 +46,18 @@ from publiplots.utils.fonts import (
 )
 
 from publiplots.utils.legend import (
-    HandlerCircle,
     HandlerRectangle,
+    HandlerMarker,
+    RectanglePatch,
+    MarkerPatch,
     get_legend_handler_map,
     create_legend_handles,
     LegendBuilder,
-    create_legend_builder,
+    legend,
+)
+
+from publiplots.utils.transparency import (
+    apply_transparency,
 )
 
 # Register fonts globally
@@ -90,10 +96,14 @@ __all__ = [
     # Fonts functions
     "list_registered_fonts",
     # Legend functions
-    "HandlerCircle",
     "HandlerRectangle",
+    "HandlerMarker",
+    "RectanglePatch",
+    "MarkerPatch",
     "get_legend_handler_map",
     "create_legend_handles",
     "LegendBuilder",
-    "create_legend_builder",
+    "legend",
+    # Transparency functions
+    "apply_transparency",
 ]

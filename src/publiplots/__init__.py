@@ -12,7 +12,7 @@ Basic usage:
     >>> pp.savefig(fig, 'output.png')
 """
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 __author__ = "Jorge Botas"
 __license__ = "MIT"
 __copyright__ = "Copyright 2025, Jorge Botas"
@@ -37,12 +37,14 @@ from publiplots.utils.axes import (
     add_reference_line,
 )
 from publiplots.utils.legend import (
-    HandlerCircle,
     HandlerRectangle,
+    HandlerMarker,
+    RectanglePatch,
+    MarkerPatch,
     get_legend_handler_map,
     create_legend_handles,
     LegendBuilder,
-    create_legend_builder,
+    legend,
 )
 # Register custom fonts
 from publiplots.utils.fonts import _register_fonts
@@ -59,16 +61,18 @@ from publiplots.themes.styles import (
 # Initialize publiplots rcParams defaults
 init_rcparams()
 from publiplots.themes.markers import (
-    get_marker_cycle,
-    get_hatch_cycle,
+    resolve_markers,
+    resolve_marker_map,
     STANDARD_MARKERS,
-    HATCH_PATTERNS,
 )
 from publiplots.themes.hatches import (
     set_hatch_mode,
     get_hatch_mode,
     get_hatch_patterns,
     list_hatch_patterns,
+    resolve_hatches,
+    resolve_hatch_map,
+    HATCH_PATTERNS,
 )
 
 __all__ = [
@@ -90,12 +94,14 @@ __all__ = [
     "set_axis_labels",
     "add_reference_line",
     # Legend utilities
-    "HandlerCircle",
     "HandlerRectangle",
+    "HandlerMarker",
+    "RectanglePatch",
+    "MarkerPatch",
     "get_legend_handler_map",
     "create_legend_handles",
     "LegendBuilder",
-    "create_legend_builder",
+    "legend",
     # Color/palette functions
     "color_palette",
     # Parameter system
@@ -106,13 +112,15 @@ __all__ = [
     "set_publication_style",
     "reset_style",
     # Marker functions
-    "get_marker_cycle",
-    "get_hatch_cycle",
+    "resolve_markers",
+    "resolve_marker_map",
     # Hatch functions
     "set_hatch_mode",
     "get_hatch_mode",
     "get_hatch_patterns",
     "list_hatch_patterns",
+    "resolve_hatches",
+    "resolve_hatch_map",
     # Constants
     "STANDARD_MARKERS",
     "HATCH_PATTERNS",

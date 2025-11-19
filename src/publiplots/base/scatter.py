@@ -17,8 +17,9 @@ from typing import Optional, Tuple, Union, Dict, List
 
 from publiplots.themes.rcparams import resolve_param
 
-from publiplots.themes.colors import resolve_palette_mapping
-from publiplots.utils import is_categorical, is_numeric, create_legend_handles, create_legend_builder
+from publiplots.themes.colors import resolve_palette_map
+from publiplots.themes.markers import resolve_marker_map
+from publiplots.utils import is_categorical, is_numeric, create_legend_handles, legend
 
 
 def scatterplot(
@@ -27,9 +28,11 @@ def scatterplot(
     y: str,
     size: Optional[str] = None,
     hue: Optional[str] = None,
+    style: Optional[str] = None,
     color: Optional[str] = None,
     palette: Optional[Union[str, Dict, List]] = None,
     sizes: Optional[Tuple[float, float]] = None,
+    markers: Optional[Union[bool, List[str], Dict[str, str]]] = None,
     size_norm: Optional[Union[Tuple[float, float], Normalize]] = None,
     hue_norm: Optional[Union[Tuple[float, float], Normalize]] = None,
     alpha: Optional[float] = None,
@@ -65,6 +68,9 @@ def scatterplot(
     hue : str, optional
         Column name for marker colors. Can be categorical or continuous.
         If None, uses default color or the value from `color` parameter.
+    style : str, optional
+        Column name for marker styles. Produces points with different markers.
+        Only categorical data is supported. If None, all markers use the same style.
     color : str, optional
         Fixed color for all markers (only used when hue is None).
         Overrides default color. Example: "#ff0000" or "red".
@@ -77,6 +83,12 @@ def scatterplot(
     sizes : tuple of float, optional
         (min_size, max_size) in points^2 for marker sizes.
         Default: (50, 500) for continuous data, (100, 100) for no size encoding.
+    markers : bool, list, dict, optional
+        Markers to use for different levels of the style variable:
+        - True: use default marker set
+        - list: list of marker symbols (e.g., ["o", "^", "s"])
+        - dict: mapping of style values to markers (e.g., {"A": "o", "B": "^"})
+        - None: uses default marker "o" for all points
     size_norm : tuple of float, optional
         (vmin, vmax) for size normalization. If None, computed from data.
     hue_norm : tuple of float, optional
@@ -103,6 +115,7 @@ def scatterplot(
 
         - hue_title : str, optional - Title for the hue legend. If None, uses hue column name.
         - size_title : str, optional - Title for the size legend. If None, uses size column name.
+        - style_title : str, optional - Title for the style legend. If None, uses style column name.
         - size_reverse : bool, default=True - Whether to reverse the size legend (descending order).
     legend : bool, default=True
         Whether to show legend.
@@ -142,6 +155,11 @@ def scatterplot(
     >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
     ...                           color="#e67e7e")
 
+    Scatterplot with different marker styles:
+    >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
+    ...                           hue="group", style="condition",
+    ...                           markers=["o", "^", "s"])
+
     Categorical scatterplot (positions on grid):
     >>> fig, ax = pp.scatterplot(data=df, x="category", y="condition",
     ...                           size="pvalue", hue="log2fc")
@@ -158,6 +176,8 @@ def scatterplot(
         required_cols.append(size)
     if hue is not None:
         required_cols.append(hue)
+    if style is not None:
+        required_cols.append(style)
 
     missing_cols = [col for col in required_cols if col not in data.columns]
     if missing_cols:
@@ -187,7 +207,7 @@ def scatterplot(
 
     # Determine color/palette to use
     color = resolve_param("color", color)
-    palette = resolve_palette_mapping(
+    palette = resolve_palette_map(
         values=data[hue].unique() if hue is not None else None,
         palette=palette,
     ) if hue is not None else None
@@ -210,6 +230,10 @@ def scatterplot(
         if isinstance(hue_norm, tuple):
             hue_norm = Normalize(vmin=hue_norm[0], vmax=hue_norm[1])
 
+    # If style is provided without markers, use default markers
+    if style is not None and markers is None:
+        markers = True
+
     # Prepare kwargs for seaborn scatterplot
     scatter_kwargs = {
         "data": data,
@@ -220,6 +244,8 @@ def scatterplot(
         "size": size,
         "sizes": sizes if size is not None else None,
         "size_norm": size_norm if size is not None else None,
+        "style": style,
+        "markers": markers if style is not None else None,
         "ax": ax,
         "color": color,
         "palette": palette,
@@ -229,41 +255,31 @@ def scatterplot(
     # Merge with user kwargs
     scatter_kwargs.update(kwargs)
 
-    # Layer 1: Filled markers with transparency
-    fill_kwargs = scatter_kwargs.copy()
-    fill_kwargs.update({
-        "alpha": alpha,
-        "edgecolor": "none",
-        "linewidth": 0,
+    # Create scatter plot with edges
+    scatter_kwargs.update({
+        "linewidth": linewidth,
         "zorder": 2,
     })
-    sns.scatterplot(**fill_kwargs)
+    sns.scatterplot(**scatter_kwargs)
 
-    # Layer 2: Edge-only markers
-    edge_kwargs = scatter_kwargs.copy()
-    edge_kwargs.update({
-        "alpha": 1.0,
-        "linewidth": linewidth,
-        "zorder": 3,
-    })
-    sns.scatterplot(**edge_kwargs)
-
-    # Make second layer hollow
-    collections = ax.collections
-    face_collection = collections[0]
-    edge_collection = collections[1]
-    edge_collection.set_facecolors("none")
-    edge_collection.set_edgecolors(
-        edgecolor if edgecolor else face_collection.get_facecolors()
+    collection = ax.collections[0]
+    
+    collection.set_edgecolors(
+        edgecolor if edgecolor else collection.get_facecolors()
     )
-    edge_collection.set_linewidths(linewidth)
-    # Set colormap and normalization for face collection
-    # Could be used by legend builder to create colorbar
+    collection.set_linewidths(linewidth)
+
+    # Apply differential transparency to face vs edge
+    from publiplots.utils.transparency import apply_transparency
+    apply_transparency(collection, face_alpha=alpha, edge_alpha=1.0)
+
+    # Set colormap and normalization for collection
+    # Used by legend builder to create colorbar
     if hue is not None:
-        face_collection.set_label(hue)
+        collection.set_label(hue)
         if hue_norm is not None:
-            face_collection.set_cmap(palette) # is a string or cmap
-            face_collection.set_norm(hue_norm)
+            collection.set_cmap(palette)  # is a string or cmap
+            collection.set_norm(hue_norm)
 
     # Handle categorical axis labels
     if x_labels is not None:
@@ -284,6 +300,8 @@ def scatterplot(
             data=data,
             hue=hue,
             size=size,
+            style=style,
+            markers=markers,
             color=color,
             palette=palette,
             alpha=alpha,
@@ -442,6 +460,8 @@ def _legend(
         data: pd.DataFrame, # for size legend
         hue: Optional[str],
         size: Optional[str],
+        style: Optional[str],
+        markers: Optional[Union[bool, List[str], Dict[str, str]]],
         color: Optional[str],
         palette: Optional[Union[str, Dict, List]],
         hue_norm: Optional[Normalize],
@@ -460,34 +480,38 @@ def _legend(
 
     kwargs = kwargs or {}
     handle_kwargs = dict(alpha=alpha, linewidth=linewidth, color=color, style="circle")
-    builder = create_legend_builder(ax=ax)
 
-    # Add hue legend
+    # Store legend data in collection for later retrieval
+    legend_data = {}
+
+    # Prepare hue legend data
     if hue is not None:
         hue_label = kwargs.pop("hue_label", hue)
         if isinstance(palette, dict):  # categorical legend
-            builder.add_legend(
-                handles=create_legend_handles(
-                    labels=palette.keys(),
-                    colors=palette.values(),
-                    **handle_kwargs
-                ),
-                title=hue_label,
+            hue_handles = create_legend_handles(
+                labels=list(palette.keys()),
+                colors=list(palette.values()),
+                **handle_kwargs
             )
-
-        else:  # continuous colorbar
+            legend_data["hue"] = {
+                "handles": hue_handles,
+                "label": hue_label,
+            }
+        else:
             mappable = ScalarMappable(norm=hue_norm, cmap=palette)
-            builder.add_colorbar(
-                mappable=mappable, 
-                label=hue_label,
-                height=kwargs.pop("hue_height", 0.2),
-                width=kwargs.pop("hue_width", 0.05),
-            )
+            legend_data["hue"] = {
+                "mappable": mappable,
+                "label": hue_label,
+                "height": kwargs.pop("hue_height", 0.2),
+                "width": kwargs.pop("hue_width", 0.05),
+                "type": "colorbar",
+            }
 
-    # Add size legend
+    # Prepare size legend data
     if size is not None:
         tick_color = color if hue is None else "gray"
-        handle_kwargs["color"] = tick_color
+        size_handle_kwargs = handle_kwargs.copy()
+        size_handle_kwargs["color"] = tick_color
         tick_labels, tick_sizes = _get_size_ticks(
             values=data[size].dropna().values,
             sizes=sizes,
@@ -496,12 +520,50 @@ def _legend(
             min_n_ticks=kwargs.pop("size_min_n_ticks", 3),
             include_min_max=kwargs.pop("size_include_min_max", False),
         )
-        builder.add_legend(
-            handles=create_legend_handles(
-                labels=tick_labels,
-                sizes=tick_sizes,
-                **handle_kwargs
-            ),
-            title=kwargs.pop("size_label", size),
-            labelspacing=kwargs.pop("labelspacing", 1/3 * max(1, sizes[1] / 200)),
+        size_handles = create_legend_handles(
+            labels=tick_labels,
+            sizes=tick_sizes,
+            **size_handle_kwargs
         )
+        legend_data["size"] = {
+            "handles": size_handles,
+            "label": kwargs.pop("size_label", size),
+            "labelspacing": kwargs.pop("labelspacing", 1/3 * max(1, sizes[1] / 200)),
+        }
+
+    # Prepare style legend data
+    if style is not None:
+        style_values = data[style].unique()
+        style_label = kwargs.pop("style_label", style)
+
+        # Use resolve_marker_map to get marker mapping
+        # If markers is True (from seaborn default), treat as None for our mapping
+        marker_param = markers if isinstance(markers, (list, dict)) else None
+        marker_map = resolve_marker_map(
+            values=list(style_values),
+            marker_map=marker_param
+        )
+
+        # Determine color for style legend
+        style_color = color if hue is None else "gray"
+        style_handle_kwargs = handle_kwargs.copy()
+        style_handle_kwargs["color"] = style_color
+        style_handle_kwargs.pop("style")  # Remove style key from handle_kwargs
+
+        # Create legend handles with different markers
+        style_handles = create_legend_handles(
+            labels=[str(val) for val in style_values],
+            markers=[marker_map[val] for val in style_values],
+            **style_handle_kwargs
+        )
+        legend_data["style"] = {
+            "handles": style_handles,
+            "label": style_label,
+        }
+
+    # Store metadata on collection
+    if len(ax.collections) > 0:
+        ax.collections[0]._legend_data = legend_data
+
+    # Create legends using new legend() API
+    builder = legend(ax=ax)

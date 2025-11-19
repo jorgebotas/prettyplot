@@ -116,6 +116,10 @@ PUBLIPLOTS_RCPARAMS: Dict[str, Any] = {
 
     # Hatch patterns
     "hatch_mode": 2,  # Default hatch density mode (2=medium)
+
+    # Scatter plot sizes
+    "scatter.size_min": 50,  # Minimum marker size for size mapping
+    "scatter.size_max": 1000,  # Maximum marker size for size mapping
 }
 """
 PubliPlots custom rcParams.

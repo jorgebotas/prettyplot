@@ -17,12 +17,6 @@ from matplotlib.legend import Legend
 from matplotlib.legend_handler import HandlerBase, HandlerPatch
 from matplotlib.patches import Circle, Rectangle, Patch
 import matplotlib.pyplot as plt
-import matplotlib
-
-# Version checking for matplotlib compatibility
-_MPL_VERSION = tuple(int(x) for x in matplotlib.__version__.split('.')[:2])
-_HAS_LEGEND_ALIGNMENT = _MPL_VERSION >= (3, 6)
-
 
 # =============================================================================
 # Custom Legend Handlers
@@ -36,15 +30,22 @@ class RectanglePatch(Patch):
         if "markersize" in kwargs:
             del kwargs["markersize"]
         super().__init__(**kwargs)
-class CirclePatch(Patch):
+class MarkerPatch(Patch):
     """
-    Custom circle patch object for legend handles.
-    Embeds markersize property.
+    Custom marker patch object for legend handles.
+    Embeds marker symbol and markersize properties.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, marker='o', **kwargs):
         markersize = kwargs.pop("markersize", plt.rcParams["lines.markersize"])
+        self.marker = marker
         self.markersize = markersize
         super().__init__(**kwargs)
+
+    def get_marker(self) -> str:
+        return self.marker
+
+    def set_marker(self, marker: str):
+        self.marker = marker
 
     def get_markersize(self) -> float:
         return self.markersize
@@ -54,95 +55,6 @@ class CirclePatch(Patch):
             markersize = plt.rcParams["lines.markersize"]
         self.markersize = markersize
 
-class HandlerCircle(HandlerBase):
-    """
-    Custom legend handler for double-layer circle markers.
-    
-    Automatically extracts alpha, linewidth, and colors from handles.
-    """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def create_artists(
-        self,
-        legend: Legend,
-        orig_handle: Any,
-        xdescent: float,
-        ydescent: float,
-        width: float,
-        height: float,
-        fontsize: float,
-        trans: Any
-    ) -> List[Circle]:
-        """Create the legend marker artists."""
-        # Center point for the marker
-        cx = 0.5 * width - 0.5 * xdescent
-        cy = 0.5 * height - 0.5 * ydescent
-
-        # Extract all properties from the handle
-        color, size, alpha, linewidth, edgecolor = self._extract_properties(
-            orig_handle, fontsize
-        )
-
-        # Create filled circle with transparency
-        circle_fill = Circle(
-            (cx, cy),
-            size / 2,
-            color=color,
-            alpha=alpha,
-            transform=trans,
-            linewidth=0,
-            zorder=2
-        )
-
-        # Create edge circle
-        circle_edge = Circle(
-            (cx, cy),
-            size / 2,
-            facecolor="none",
-            edgecolor=edgecolor,
-            linewidth=linewidth,
-            transform=trans,
-            alpha=1,
-            zorder=3
-        )
-
-        return [circle_fill, circle_edge]
-
-    def _extract_properties(
-        self,
-        orig_handle: Any,
-        fontsize: float
-    ) -> Tuple[str, float, float, float, str]:
-        """
-        Extract all properties from the handle.
-        
-        Returns
-        -------
-        Tuple[str, float, float, float, str]
-            (color, size, alpha, linewidth, edgecolor)
-        """
-        # Defaults
-        color = "gray"
-        size = fontsize * 0.8
-        alpha = resolve_param("alpha", None)
-        linewidth = resolve_param("lines.linewidth", None)
-        edgecolor = None
-
-        # Extract from Patch (created by create_legend_handles)
-        if isinstance(orig_handle, CirclePatch):
-            color = orig_handle.get_facecolor()
-            edgecolor = orig_handle.get_edgecolor()
-            alpha = orig_handle.get_alpha() if orig_handle.get_alpha() is not None else alpha
-            linewidth = orig_handle.get_linewidth() if orig_handle.get_linewidth() else linewidth
-            size = orig_handle.get_markersize() if orig_handle.get_markersize() is not None else size
-        
-        # Use face color as edge color if not specified
-        if edgecolor is None:
-            edgecolor = color
-
-        return color, size, alpha, linewidth, edgecolor
 
 class HandlerRectangle(HandlerPatch):
     """
@@ -254,6 +166,116 @@ class HandlerRectangle(HandlerPatch):
         return color, alpha, linewidth, edgecolor, hatch_pattern
 
 
+class HandlerMarker(HandlerBase):
+    """
+    Generic legend handler for any matplotlib marker type.
+
+    Automatically creates double-layer markers (transparent fill + opaque edge)
+    for all marker symbols: 'o', '^', 's', 'D', '*', etc.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def create_artists(
+        self,
+        legend: Legend,
+        orig_handle: Any,
+        xdescent: float,
+        ydescent: float,
+        width: float,
+        height: float,
+        fontsize: float,
+        trans: Any
+    ) -> List:
+        """Create the legend marker artists."""
+        from matplotlib.lines import Line2D
+        from matplotlib.colors import to_rgba
+
+        # Center point for the marker
+        cx = 0.5 * width - 0.5 * xdescent
+        cy = 0.5 * height - 0.5 * ydescent
+
+        # Extract all properties from the handle
+        marker, color, size, alpha, linewidth, edgecolor = self._extract_properties(
+            orig_handle, fontsize
+        )
+
+        # Create filled marker with transparency
+        marker_fill = Line2D(
+            [cx], [cy],
+            marker=marker,
+            markersize=size,
+            markerfacecolor=to_rgba(color, alpha),
+            markeredgecolor='none',
+            linestyle='none',
+            transform=trans,
+            zorder=2
+        )
+
+        # Create edge marker
+        marker_edge = Line2D(
+            [cx], [cy],
+            marker=marker,
+            markersize=size,
+            markerfacecolor='none',
+            markeredgecolor=to_rgba(edgecolor, 1.0),
+            markeredgewidth=linewidth,
+            linestyle='none',
+            transform=trans,
+            zorder=3
+        )
+
+        return [marker_fill, marker_edge]
+
+    def _extract_properties(
+        self,
+        orig_handle: Any,
+        fontsize: float
+    ) -> Tuple[str, str, float, float, float, str]:
+        """
+        Extract all properties from the handle.
+
+        Returns
+        -------
+        Tuple[str, str, float, float, float, str]
+            (marker, color, size, alpha, linewidth, edgecolor)
+        """
+        from matplotlib.lines import Line2D
+
+        # Defaults
+        marker = 'o'
+        color = "gray"
+        size = fontsize * 0.8
+        alpha = resolve_param("alpha", None)
+        linewidth = resolve_param("lines.linewidth", None)
+        edgecolor = None
+
+        # Extract from MarkerPatch (created by create_legend_handles)
+        if isinstance(orig_handle, MarkerPatch):
+            marker = orig_handle.get_marker()
+            color = orig_handle.get_facecolor()
+            edgecolor = orig_handle.get_edgecolor()
+            alpha = orig_handle.get_alpha() if orig_handle.get_alpha() is not None else alpha
+            linewidth = orig_handle.get_linewidth() if orig_handle.get_linewidth() else linewidth
+            size = orig_handle.get_markersize() if orig_handle.get_markersize() is not None else size
+
+        # Extract from Line2D (standard matplotlib)
+        elif isinstance(orig_handle, Line2D):
+            marker = orig_handle.get_marker() or 'o'
+            color = orig_handle.get_color() or orig_handle.get_markerfacecolor()
+            size = orig_handle.get_markersize() or size
+            linewidth = orig_handle.get_markeredgewidth() or linewidth
+            # Line2D doesn't store alpha separately - use default
+            # edgecolor will default to face color below
+
+        # Use face color as edge color if not specified
+        if edgecolor is None:
+            edgecolor = color
+
+        return marker, color, size, alpha, linewidth, edgecolor
+
+
 # =============================================================================
 # Helper Functions
 # =============================================================================
@@ -262,18 +284,18 @@ class HandlerRectangle(HandlerPatch):
 def get_legend_handler_map() -> Dict[type, HandlerBase]:
     """
     Get a handler map for automatic legend styling.
-    
+
     Returns
     -------
     Dict[type, HandlerBase]
         Dictionary mapping matplotlib types to handler instances.
     """
-    handler_circle = HandlerCircle()
     handler_rectangle = HandlerRectangle()
-    
+    handler_marker = HandlerMarker()
+
     return {
         Rectangle: handler_rectangle,
-        CirclePatch: handler_circle,
+        MarkerPatch: handler_marker,
         Patch: handler_rectangle,
     }
 
@@ -282,6 +304,7 @@ def create_legend_handles(
     colors: Optional[List[str]] = None,
     hatches: Optional[List[str]] = None,
     sizes: Optional[List[float]] = None,
+    markers: Optional[List[str]] = None,
     alpha: Optional[float] = None,
     linewidth: Optional[float] = None,
     style: str = "rectangle",
@@ -289,7 +312,7 @@ def create_legend_handles(
 ) -> List[Patch]:
     """
     Create custom legend handles with alpha and linewidth embedded.
-    
+
     Parameters
     ----------
     labels : List[str]
@@ -297,18 +320,22 @@ def create_legend_handles(
     colors : List[str], optional
         Colors for each legend entry.
     hatches : List[str], optional
-        Hatch patterns for each legend entry.
+        Hatch patterns for each legend entry (for rectangles).
     sizes : List[float], optional
-        Sizes for each legend entry.
+        Sizes for each legend entry (markersizes).
+    markers : List[str], optional
+        Marker symbols for each legend entry (e.g., ['o', '^', 's']).
+        If provided, creates MarkerPatch handles regardless of style parameter.
     alpha : float, default=DEFAULT_ALPHA
         Transparency level for fill layers.
     linewidth : float, default=DEFAULT_LINEWIDTH
         Width of edge lines.
     style : str, default="rectangle"
-        Style of legend markers: "rectangle" or "circle".
+        Style of legend markers: "rectangle", "circle", or "marker".
+        Ignored if markers parameter is provided.
     color : str, optional
         Single color for all entries if colors not provided.
-    
+
     Returns
     -------
     List[Patch]
@@ -322,25 +349,60 @@ def create_legend_handles(
         default_color = resolve_param("color", None)
         colors = [color if color is not None else default_color] * len(labels)
 
-    if hatches is None or len(hatches) == 0 or style == "circle":
+    if hatches is None or len(hatches) == 0 or style == "circle" or markers is not None:
         hatches = [""] * len(labels)
 
     if sizes is None or len(sizes) == 0:
         sizes = [plt.rcParams["lines.markersize"]] * len(labels)
 
+    if markers is not None and len(markers) == 0:
+        markers = None
+
     handles = []
-    patch = CirclePatch if style == "circle" else RectanglePatch
-    for label, col, hatch, size in zip(labels, colors, hatches, sizes):
-        handle = patch(
-            facecolor=col,
-            edgecolor=col,
-            alpha=alpha,  # Store alpha in handle
-            linewidth=linewidth,  # Store linewidth in handle
-            label=label,
-            hatch=hatch,
-            markersize=size
-        )
-        handles.append(handle)
+
+    # Determine patch type
+    if markers is not None:
+        # Use MarkerPatch when markers are specified
+        patch = MarkerPatch
+        for label, col, hatch, size, marker in zip(labels, colors, hatches, sizes, markers):
+            handle = patch(
+                marker=marker,
+                facecolor=col,
+                edgecolor=col,
+                alpha=alpha,
+                linewidth=linewidth,
+                label=label,
+                markersize=size
+            )
+            handles.append(handle)
+    else:
+        # Use MarkerPatch for circles, RectanglePatch for rectangles
+        if style == "circle":
+            # Circle is just a marker with 'o' symbol
+            for label, col, hatch, size in zip(labels, colors, hatches, sizes):
+                handle = MarkerPatch(
+                    marker='o',
+                    facecolor=col,
+                    edgecolor=col,
+                    alpha=alpha,
+                    linewidth=linewidth,
+                    label=label,
+                    markersize=size
+                )
+                handles.append(handle)
+        else:
+            # Rectangle patches (for bar plots with hatches)
+            for label, col, hatch, size in zip(labels, colors, hatches, sizes):
+                handle = RectanglePatch(
+                    facecolor=col,
+                    edgecolor=col,
+                    alpha=alpha,
+                    linewidth=linewidth,
+                    label=label,
+                    hatch=hatch,
+                    markersize=size
+                )
+                handles.append(handle)
 
     return handles
 
@@ -383,44 +445,45 @@ class LegendBuilder:
     def add_legend(
         self,
         handles: List,
-        title: str = "",
+        label: str = "",
         frameon: bool = False,
         **kwargs
     ) -> Legend:
         """
         Add a legend with automatic handler mapping.
-        
+
         Parameters
         ----------
         handles : list
             Legend handles (from create_legend_handles or plot objects).
-        title : str
-            Legend title.
+        label : str
+            Legend label.
         frameon : bool
             Whether to show frame.
         **kwargs
             Additional kwargs for ax.legend().
-        
+
         Returns
         -------
         Legend
             The created legend object.
         """
+        # Pass label to matplotlib's title parameter if provided
+        if label:
+            kwargs['title'] = label
+
         default_kwargs = {
             "loc": "upper left",
             "bbox_to_anchor": (self.x_offset, self.current_y),
             "bbox_transform": self.ax.transAxes,
-            "title": title,
             "frameon": frameon,
             "borderaxespad": 0,
             "borderpad": 0,
             "handletextpad": 0.5,
             "labelspacing": 0.3,
-            "handler_map": kwargs.pop("handler_map", get_legend_handler_map())
+            "handler_map": kwargs.pop("handler_map", get_legend_handler_map()),
+            "alignment": "left",
         }
-        # Add alignment parameter only for matplotlib >= 3.6
-        if _HAS_LEGEND_ALIGNMENT:
-            default_kwargs["alignment"] = "left"
         default_kwargs.update(kwargs)
         
         existing_legends = [e[1] for e in self.elements if e[0] == "legend"]
@@ -545,49 +608,187 @@ class LegendBuilder:
         # Update position for next element
         self.current_y -= (height + self.spacing)
     
+    def add_legend_for(self, type: str, label: Optional[str] = None, **kwargs):
+        """
+        Add legend by auto-detecting from self.ax stored metadata.
+
+        Parameters
+        ----------
+        type : str
+            Type of legend: 'hue', 'size', or 'style'
+        label : str, optional
+            Legend label (overrides default from metadata).
+        **kwargs : dict
+            Additional customization passed to add_legend() or add_colorbar()
+            (frameon, labelspacing, handletextpad, height, width, etc.)
+
+        Examples
+        --------
+        >>> builder = pp.legend(ax, auto=False)
+        >>> builder.add_legend_for('hue', label='Groups')
+        >>> builder.add_legend_for('size', label='Magnitude')
+        >>> builder.add_legend_for('hue', label='Score')  # Works for colorbar too
+        """
+        legend_data = _get_legend_data(self.ax)
+
+        if legend_data and type in legend_data:
+            # Use stored metadata
+            data = legend_data[type].copy()
+
+            # Check if this is a colorbar
+            if data.get('type') == 'colorbar':
+                # Handle colorbar
+                if label is not None:
+                    data['label'] = label
+                data.update(kwargs)
+                # Remove 'type' key as it's not a parameter for add_colorbar
+                data.pop('type', None)
+                self.add_colorbar(**data)
+            else:
+                # Handle regular legend
+                if label is not None:
+                    data['label'] = label
+                data.update(kwargs)
+                self.add_legend(**data)
+        else:
+            # Fallback: basic auto-detection
+            # This is a simple fallback - may not work for complex cases
+            pass
+
     def get_remaining_height(self) -> float:
         """Get remaining vertical space."""
         return max(0, self.current_y)
 
 
-def create_legend_builder(
-        ax: Axes,
-        bbox_to_anchor: Tuple[float, float] = (1.02, 1),
-        spacing: float = 0.03,
-    ) -> LegendBuilder:
+def _get_legend_data(ax: Axes) -> dict:
     """
-    Create a LegendBuilder for modular legend construction.
-    
-    This is the primary way to create legends in publiplots.
-    
+    Get stored legend data from axes collections/patches.
+
     Parameters
     ----------
     ax : Axes
-        Main plot axes.
-    bbox_to_anchor : Tuple[float, float]
-        Bounding box to anchor the legend to.
-    spacing : float
-        Vertical spacing between elements.
-    
+        Axes to retrieve legend data from
+
+    Returns
+    -------
+    dict
+        Dictionary with legend data for 'hue', 'size', 'style' if available
+    """
+    # Check collections first
+    for collection in ax.collections:
+        if hasattr(collection, '_legend_data'):
+            return collection._legend_data
+
+    # Check patches
+    for patch in ax.patches:
+        if hasattr(patch, '_legend_data'):
+            return patch._legend_data
+
+    return {}
+
+
+def legend(
+    ax: Axes,
+    handles: Optional[List] = None,
+    labels: Optional[List[str]] = None,
+    auto: bool = True,
+    **kwargs
+) -> LegendBuilder:
+    """
+    Create publiplots-styled legend. Returns LegendBuilder for further customization.
+
+    This is the primary interface for legend creation in publiplots.
+
+    Parameters
+    ----------
+    ax : Axes
+        Axes to create legend for
+    handles : list, optional
+        Manual legend handles. If provided, auto is ignored and handles are used directly.
+    labels : list, optional
+        Manual legend labels (used with handles).
+    auto : bool, default=True
+        If True, auto-creates all legends from ._legend_data stored on collections.
+        If False, returns empty builder for manual control via add_legend_for().
+    bbox_to_anchor : tuple, optional
+        Bounding box anchor for legend position. Default: (1.02, 1)
+    spacing : float, optional
+        Vertical spacing between legend elements. Default: 0.03
+    **kwargs : dict
+        Additional kwargs:
+        - If handles provided: passed to add_legend() (frameon, label, etc.)
+        - Otherwise: passed to LegendBuilder init (bbox_to_anchor, spacing)
+
     Returns
     -------
     LegendBuilder
-        Builder object for adding legends.
-    
+        Builder object for adding more legends or customization.
+
     Examples
     --------
-    >>> fig, ax = pp.scatterplot(data=df, x="x", y="y", hue="temp", legend=False)
-    >>> builder = pp.create_legend_builder(ax)
-    >>> builder.add_colorbar(label="Temperature", title_position="top")
-    >>> builder.add_legend(size_handles, title="Size")
+    Auto mode (creates all legends from stored data):
+    >>> fig, ax = pp.scatterplot(data=df, x='x', y='y', hue='group', legend=False)
+    >>> builder = pp.legend(ax)  # Auto-creates hue legend
+
+    Manual selective mode:
+    >>> builder = pp.legend(ax, auto=False)  # No legends created yet
+    >>> builder.add_legend_for('hue', label='Groups')
+    >>> builder.add_legend_for('size', label='Magnitude')
+
+    Expert mode with custom handles:
+    >>> builder = pp.legend(ax, auto=False)
+    >>> builder.add_legend(handles=custom_handles, labels=custom_labels, label='Custom')
+
+    Manual handles mode:
+    >>> builder = pp.legend(ax, handles=custom_handles, labels=custom_labels, label='My Legend')
     """
-    return LegendBuilder(ax, bbox_to_anchor=bbox_to_anchor, spacing=spacing)
+    # Extract LegendBuilder-specific kwargs
+    builder_kwargs = {
+        'bbox_to_anchor': kwargs.pop('bbox_to_anchor', (1.02, 1)),
+        'spacing': kwargs.pop('spacing', 0.03),
+    }
+
+    # Initialize LegendBuilder
+    builder = LegendBuilder(ax, **builder_kwargs)
+
+    # Auto-apply handler_map if not provided
+    if 'handler_map' not in kwargs:
+        kwargs['handler_map'] = get_legend_handler_map()
+
+    # Manual mode with handles
+    if handles is not None:
+        builder.add_legend(handles=handles, labels=labels, **kwargs)
+        return builder
+
+    # Auto mode - create all legends from metadata
+    if auto:
+        legend_data = _get_legend_data(ax)
+        if legend_data:
+            if 'hue' in legend_data:
+                hue_data = legend_data['hue'].copy()
+                # Check if it's a colorbar
+                if hue_data.get('type') == 'colorbar':
+                    hue_data.pop('type', None)
+                    builder.add_colorbar(**hue_data)
+                else:
+                    builder.add_legend(**hue_data, **kwargs)
+            if 'size' in legend_data:
+                size_data = legend_data['size'].copy()
+                builder.add_legend(**size_data, **kwargs)
+            if 'style' in legend_data:
+                style_data = legend_data['style'].copy()
+                builder.add_legend(**style_data, **kwargs)
+
+    # If auto=False, just return empty builder for manual control
+    return builder
 
 __all__ = [
-    "HandlerCircle",
     "HandlerRectangle",
+    "HandlerMarker",
+    "RectanglePatch",
+    "MarkerPatch",
     "get_legend_handler_map",
     "create_legend_handles",
     "LegendBuilder",
-    "create_legend_builder",
+    "legend",
 ]

@@ -5,9 +5,11 @@ Legend Utilities
    :toctree: generated/
    :nosignatures:
 
+   publiplots.legend
    publiplots.LegendBuilder
-   publiplots.create_legend_builder
    publiplots.create_legend_handles
    publiplots.get_legend_handler_map
-   publiplots.HandlerCircle
    publiplots.HandlerRectangle
+   publiplots.HandlerMarker
+   publiplots.RectanglePatch
+   publiplots.MarkerPatch
