@@ -16,7 +16,7 @@ import pandas as pd
 
 from publiplots.themes.colors import resolve_palette_mapping
 from publiplots.themes.hatches import resolve_hatch_mapping
-from publiplots.utils import is_categorical, create_legend_handles, create_legend_builder
+from publiplots.utils import is_categorical, create_legend_handles, legend
 
 # Version checking for matplotlib compatibility
 _MPL_VERSION = tuple(int(x) for x in matplotlib.__version__.split('.')[:2])
@@ -430,7 +430,7 @@ def _legend(
     """
     kwargs = kwargs or {}
 
-    builder = create_legend_builder(ax=ax)
+    builder = legend(ax=ax, auto=False)
 
     handle_kwargs = dict(alpha=alpha, linewidth=linewidth, color=color, style="rectangle")
     hue_label = kwargs.pop("hue_label", hue)

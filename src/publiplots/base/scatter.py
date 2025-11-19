@@ -18,7 +18,7 @@ from typing import Optional, Tuple, Union, Dict, List
 from publiplots.themes.rcparams import resolve_param
 
 from publiplots.themes.colors import resolve_palette_mapping
-from publiplots.utils import is_categorical, is_numeric, create_legend_handles, create_legend_builder
+from publiplots.utils import is_categorical, is_numeric, create_legend_handles, legend
 
 
 def scatterplot(
@@ -450,34 +450,29 @@ def _legend(
 
     kwargs = kwargs or {}
     handle_kwargs = dict(alpha=alpha, linewidth=linewidth, color=color, style="circle")
-    builder = create_legend_builder(ax=ax)
 
-    # Add hue legend
+    # Store legend data in collection for later retrieval
+    legend_data = {}
+
+    # Prepare hue legend data
     if hue is not None:
         hue_label = kwargs.pop("hue_label", hue)
         if isinstance(palette, dict):  # categorical legend
-            builder.add_legend(
-                handles=create_legend_handles(
-                    labels=palette.keys(),
-                    colors=palette.values(),
-                    **handle_kwargs
-                ),
-                title=hue_label,
+            hue_handles = create_legend_handles(
+                labels=list(palette.keys()),
+                colors=list(palette.values()),
+                **handle_kwargs
             )
+            legend_data['hue'] = {
+                'handles': hue_handles,
+                'title': hue_label,
+            }
 
-        else:  # continuous colorbar
-            mappable = ScalarMappable(norm=hue_norm, cmap=palette)
-            builder.add_colorbar(
-                mappable=mappable, 
-                label=hue_label,
-                height=kwargs.pop("hue_height", 0.2),
-                width=kwargs.pop("hue_width", 0.05),
-            )
-
-    # Add size legend
+    # Prepare size legend data
     if size is not None:
         tick_color = color if hue is None else "gray"
-        handle_kwargs["color"] = tick_color
+        size_handle_kwargs = handle_kwargs.copy()
+        size_handle_kwargs["color"] = tick_color
         tick_labels, tick_sizes = _get_size_ticks(
             values=data[size].dropna().values,
             sizes=sizes,
@@ -486,12 +481,31 @@ def _legend(
             min_n_ticks=kwargs.pop("size_min_n_ticks", 3),
             include_min_max=kwargs.pop("size_include_min_max", False),
         )
-        builder.add_legend(
-            handles=create_legend_handles(
-                labels=tick_labels,
-                sizes=tick_sizes,
-                **handle_kwargs
-            ),
-            title=kwargs.pop("size_label", size),
-            labelspacing=kwargs.pop("labelspacing", 1/3 * max(1, sizes[1] / 200)),
+        size_handles = create_legend_handles(
+            labels=tick_labels,
+            sizes=tick_sizes,
+            **size_handle_kwargs
+        )
+        legend_data['size'] = {
+            'handles': size_handles,
+            'title': kwargs.pop("size_label", size),
+            'labelspacing': kwargs.pop("labelspacing", 1/3 * max(1, sizes[1] / 200)),
+        }
+
+    # Store metadata on collection
+    if len(ax.collections) > 0:
+        ax.collections[0]._legend_data = legend_data
+
+    # Create legends using new legend() API
+    builder = legend(ax=ax)
+
+    # Add continuous colorbar if hue is continuous
+    if hue is not None and not isinstance(palette, dict):
+        hue_label = kwargs.pop("hue_label", hue) if 'hue_label' not in locals() else hue_label
+        mappable = ScalarMappable(norm=hue_norm, cmap=palette)
+        builder.add_colorbar(
+            mappable=mappable,
+            label=hue_label,
+            height=kwargs.pop("hue_height", 0.2),
+            width=kwargs.pop("hue_width", 0.05),
         )
