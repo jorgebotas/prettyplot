@@ -463,7 +463,7 @@ class LegendBuilder:
         handles : list
             Legend handles (from create_legend_handles or plot objects).
         label : str
-            Legend label (title).
+            Legend label.
         frameon : bool
             Whether to show frame.
         **kwargs
@@ -474,11 +474,14 @@ class LegendBuilder:
         Legend
             The created legend object.
         """
+        # Pass label to matplotlib's title parameter if provided
+        if label:
+            kwargs['title'] = label
+
         default_kwargs = {
             "loc": "upper left",
             "bbox_to_anchor": (self.x_offset, self.current_y),
             "bbox_transform": self.ax.transAxes,
-            "title": label,
             "frameon": frameon,
             "borderaxespad": 0,
             "borderpad": 0,
