@@ -13,7 +13,7 @@ import numpy as np
 from typing import Union, List, Sequence
 
 
-def apply_edge_transparency(
+def apply_transparency(
     artists: Union[PathCollection, Sequence[Patch]],
     face_alpha: float,
     edge_alpha: float = 1.0,
@@ -91,27 +91,23 @@ def _apply_to_collection(
     edge_alpha : float
         Alpha for edge colors.
     """
-    # Get current face colors as RGBA arrays
-    face_colors = collection.get_facecolors()
+    # Get current edge colors as RGBA arrays
+    edge_colors = collection.get_edgecolors()
 
-    if len(face_colors) == 0:
-        return
+    if len(edge_colors) == 0:
+        edge_colors = collection.get_facecolors()
 
-    # CRITICAL: First ensure edge colors match face colors
-    # (seaborn may set edge colors to black/white by default)
-    # We want edges to be the same color as fill, just different alpha
-    collection.set_edgecolors(face_colors)
-
-    # Now apply different alpha to face vs edge
+    # Now apply different alpha to face
     new_face_colors = np.array([
-        to_rgba(face_colors[i], alpha=face_alpha)
-        for i in range(len(face_colors))
+        to_rgba(edge_colors[i], alpha=face_alpha)
+        for i in range(len(edge_colors))
     ])
     collection.set_facecolors(new_face_colors)
 
+    # Now apply different alpha to edge
     new_edge_colors = np.array([
-        to_rgba(face_colors[i], alpha=edge_alpha)
-        for i in range(len(face_colors))
+        to_rgba(edge_colors[i], alpha=edge_alpha)
+        for i in range(len(edge_colors))
     ])
     collection.set_edgecolors(new_edge_colors)
 
@@ -134,23 +130,19 @@ def _apply_to_patches(
         Alpha for edge colors.
     """
     for patch in patches:
-        if not hasattr(patch, 'get_facecolor'):
+        if not hasattr(patch, 'get_edgecolor'):
             # Skip non-patch artists
             continue
 
-        # Get current face color
-        face_color = patch.get_facecolor()
+        # Get current edge color
+        edge_color = patch.get_edgecolor()
 
-        # CRITICAL: Set edge color to match face color first
-        # (seaborn may set edge color to black/white by default)
-        # We want edges to be the same color as fill, just different alpha
-        patch.set_edgecolor(face_color)
 
-        # Now apply different alpha to face vs edge
-        patch.set_facecolor(to_rgba(face_color, alpha=face_alpha))
-        patch.set_edgecolor(to_rgba(face_color, alpha=edge_alpha))
+        # Now apply different alpha to face and edge
+        patch.set_facecolor(to_rgba(edge_color, alpha=face_alpha))
+        patch.set_edgecolor(to_rgba(edge_color, alpha=edge_alpha))
 
 
 __all__ = [
-    "apply_edge_transparency",
+    "apply_transparency",
 ]

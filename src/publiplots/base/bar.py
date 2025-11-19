@@ -225,10 +225,7 @@ def barplot(
     barplot_kwargs.update(kwargs)
 
     # Create bars with fill and edges
-    barplot_kwargs.update({
-        "fill": True,
-        "linewidth": linewidth,
-    })
+    barplot_kwargs["fill"] = False
     sns.barplot(**barplot_kwargs)
 
     # Apply hatch patterns and override colors if needed
@@ -247,8 +244,8 @@ def barplot(
         )
 
     # Apply differential transparency to face vs edge
-    from publiplots.utils.transparency import apply_edge_transparency
-    apply_edge_transparency(ax.patches, face_alpha=alpha, edge_alpha=1.0)
+    from publiplots.utils.transparency import apply_transparency
+    apply_transparency(ax.patches, face_alpha=alpha, edge_alpha=1.0)
 
     # Add legend if hue or hatch is used
     if legend:

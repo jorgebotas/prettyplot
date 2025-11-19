@@ -236,16 +236,16 @@ def scatterplot(
     })
     sns.scatterplot(**scatter_kwargs)
 
-    # Apply differential transparency to face vs edge
-    from publiplots.utils.transparency import apply_edge_transparency
     collection = ax.collections[0]
-    apply_edge_transparency(collection, face_alpha=alpha, edge_alpha=1.0)
+    
+    collection.set_edgecolors(
+        edgecolor if edgecolor else collection.get_facecolors()
+    )
+    collection.set_linewidths(linewidth)
 
-    # Override edge colors if specified
-    if edgecolor is not None:
-        from matplotlib.colors import to_rgba
-        n_points = len(collection.get_edgecolors())
-        collection.set_edgecolors([to_rgba(edgecolor, alpha=1.0)] * n_points)
+    # Apply differential transparency to face vs edge
+    from publiplots.utils.transparency import apply_transparency
+    apply_transparency(collection, face_alpha=alpha, edge_alpha=1.0)
 
     # Set colormap and normalization for collection
     # Used by legend builder to create colorbar
