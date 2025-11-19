@@ -40,5 +40,15 @@ Marker Functions
    :toctree: generated/
    :nosignatures:
 
-   publiplots.get_marker_cycle
-   publiplots.get_hatch_cycle
+   publiplots.resolve_markers
+   publiplots.resolve_marker_map
+
+Hatch Resolution Functions
+---------------------------
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   publiplots.resolve_hatches
+   publiplots.resolve_hatch_map

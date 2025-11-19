@@ -119,7 +119,7 @@ Add hatch patterns for black-and-white publications:
        x='treatment',
        y='response',
        hatch='treatment',
-       hatch_mapping={'Control': '', 'Drug A': '//', 'Drug B': 'xx'},
+       hatch_map={'Control': '', 'Drug A': '//', 'Drug B': 'xx'},
        alpha=0.0,
        color='#5D83C3'
    )

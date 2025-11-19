@@ -124,7 +124,7 @@ fig, ax = pp.barplot(
     x='method',
     y='performance',
     hatch='method',
-    hatch_mapping={
+    hatch_map={
         'Method A': '',      # No hatch
         'Method B': '//',    # Diagonal lines
         'Method C': 'xx',    # Cross hatch
@@ -181,7 +181,7 @@ fig, ax = pp.barplot(
     xlabel='Time Point',
     ylabel='Measurement',
     errorbar='se',
-    hatch_mapping={'Group A': '', 'Group B': '..'},
+    hatch_map={'Group A': '', 'Group B': '..'},
     color='#5D83C3',
 )
 plt.show()
@@ -228,7 +228,7 @@ fig, ax = pp.barplot(
     ylabel='Response Level',
     errorbar='se',
     palette={'Control': '#8E8EC1', 'Treatment': '#75B375'},
-    hatch_mapping={'Control': '', 'Treatment': '//'},
+    hatch_map={'Control': '', 'Treatment': '//'},
     alpha=0.3,
 )
 plt.show()
