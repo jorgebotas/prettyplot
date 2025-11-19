@@ -134,3 +134,18 @@ sphinx_gallery_conf = {
 numpydoc_show_class_members = False
 numpydoc_show_inherited_class_members = False
 numpydoc_class_members_toctree = False
+
+# Suppress duplicate object warnings for autosummary-generated pages
+suppress_warnings = ['autodoc.duplicate_object']
+
+# Add stub role for matplotlib's :mpltype: to avoid errors from inherited docstrings
+def setup(app):
+    from docutils.parsers.rst import roles
+    from docutils import nodes
+
+    def mpltype_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
+        """Stub role for matplotlib's :mpltype: directive."""
+        node = nodes.literal(rawtext, text, **options)
+        return [node], []
+
+    roles.register_local_role('mpltype', mpltype_role)
