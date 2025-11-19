@@ -10,7 +10,6 @@ from typing import Optional, List, Dict, Tuple, Union
 from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
-import matplotlib
 import seaborn as sns
 import pandas as pd
 
