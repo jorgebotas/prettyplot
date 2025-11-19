@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:03.034** total execution time for 6 files **from all galleries**:
+**00:05.408** total execution time for 6 files **from all galleries**:
 
 .. container::
 
@@ -32,21 +32,21 @@ Computation times
    * - Example
      - Time
      - Mem (MB)
-   * - :ref:`sphx_glr_auto_examples_03_customization_plot_01_hatch_patterns.py` (``../../examples/03_customization/plot_01_hatch_patterns.py``)
-     - 00:01.571
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_01_basic_plot_01_bar_plots.py` (``../../examples/01_basic/plot_01_bar_plots.py``)
-     - 00:01.463
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_01_basic_plot_02_scatter_plots.py` (``../../examples/01_basic/plot_02_scatter_plots.py``)
-     - 00:00.000
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_02_advanced_plot_01_venn_diagrams.py` (``../../examples/02_advanced/plot_01_venn_diagrams.py``)
-     - 00:00.000
-     - 0.0
    * - :ref:`sphx_glr_auto_examples_02_advanced_plot_02_upset_plots.py` (``../../examples/02_advanced/plot_02_upset_plots.py``)
-     - 00:00.000
+     - 00:02.073
      - 0.0
    * - :ref:`sphx_glr_auto_examples_03_customization_plot_02_configuration.py` (``../../examples/03_customization/plot_02_configuration.py``)
-     - 00:00.000
+     - 00:01.050
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_01_basic_plot_02_scatter_plots.py` (``../../examples/01_basic/plot_02_scatter_plots.py``)
+     - 00:00.799
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_03_customization_plot_01_hatch_patterns.py` (``../../examples/03_customization/plot_01_hatch_patterns.py``)
+     - 00:00.689
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_01_basic_plot_01_bar_plots.py` (``../../examples/01_basic/plot_01_bar_plots.py``)
+     - 00:00.515
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_02_advanced_plot_01_venn_diagrams.py` (``../../examples/02_advanced/plot_01_venn_diagrams.py``)
+     - 00:00.282
      - 0.0
