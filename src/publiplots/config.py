@@ -3,11 +3,11 @@ Global configuration settings for publiplots.
 
 .. deprecated::
     This module is deprecated and will be removed in a future version.
-    publiplots now uses matplotlib's rcParams for all configuration.
+    publiplots now uses matplotlib"s rcParams for all configuration.
 
-    All settings are now managed through matplotlib's rcParams system:
+    All settings are now managed through matplotlib"s rcParams system:
     - Standard matplotlib params: figure.figsize, savefig.dpi, lines.linewidth, etc.
-    - Custom publiplots params: via get_default('color'), get_default('alpha'), etc.
+    - Custom publiplots params: via get_default("color"), get_default("alpha"), etc.
 
     To customize defaults:
     1. Use style functions:
@@ -29,14 +29,14 @@ from typing import Tuple
 
 # Default figure settings
 DEFAULT_DPI: int = 300
-DEFAULT_FORMAT: str = 'pdf'
+DEFAULT_FORMAT: str = "pdf"
 DEFAULT_FIGSIZE: Tuple[float, float] = (3, 2)
 
 # Default styling
-DEFAULT_FONT: str = 'Arial'
+DEFAULT_FONT: str = "Arial"
 DEFAULT_FONT_SCALE: float = 1.6
-DEFAULT_STYLE: str = 'white'
-DEFAULT_COLOR: str = '#5d83c3' # slate blue
+DEFAULT_STYLE: str = "white"
+DEFAULT_COLOR: str = "#5d83c3" # slate blue
 
 # Default plot parameters
 DEFAULT_LINEWIDTH: float = 1.0
@@ -44,7 +44,7 @@ DEFAULT_ALPHA: float = 0.1
 DEFAULT_CAPSIZE: float = 0.0
 
 # Color settings
-DEFAULT_PALETTE: str = 'pastel'
+DEFAULT_PALETTE: str = "pastel"
 
 # Hatch settings
 DEFAULT_HATCH_MODE: int = 1
