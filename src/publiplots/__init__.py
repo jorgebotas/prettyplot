@@ -63,14 +63,19 @@ init_rcparams()
 from publiplots.themes.markers import (
     get_marker_cycle,
     get_hatch_cycle,
+    resolve_markers,
+    resolve_marker_mapping,
     STANDARD_MARKERS,
-    HATCH_PATTERNS,
+    SIMPLE_MARKERS,
 )
 from publiplots.themes.hatches import (
     set_hatch_mode,
     get_hatch_mode,
     get_hatch_patterns,
     list_hatch_patterns,
+    resolve_hatches,
+    resolve_hatch_mapping,
+    HATCH_PATTERNS,
 )
 
 __all__ = [
@@ -111,13 +116,18 @@ __all__ = [
     "reset_style",
     # Marker functions
     "get_marker_cycle",
+    "resolve_markers",
+    "resolve_marker_mapping",
     "get_hatch_cycle",
     # Hatch functions
     "set_hatch_mode",
     "get_hatch_mode",
     "get_hatch_patterns",
     "list_hatch_patterns",
+    "resolve_hatches",
+    "resolve_hatch_mapping",
     # Constants
     "STANDARD_MARKERS",
+    "SIMPLE_MARKERS",
     "HATCH_PATTERNS",
 ]

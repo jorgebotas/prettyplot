@@ -622,26 +622,40 @@ class LegendBuilder:
         type : str
             Type of legend: 'hue', 'size', or 'style'
         title : str, optional
-            Legend title (overrides default from metadata)
+            Legend title (overrides default from metadata).
+            For colorbars, this overrides the 'label' parameter.
         **kwargs : dict
-            Additional customization passed to add_legend()
-            (frameon, labelspacing, handletextpad, etc.)
+            Additional customization passed to add_legend() or add_colorbar()
+            (frameon, labelspacing, handletextpad, height, width, etc.)
 
         Examples
         --------
         >>> builder = pp.legend(ax, auto=False)
         >>> builder.add_legend_for('hue', title='Groups')
         >>> builder.add_legend_for('size', title='Magnitude')
+        >>> builder.add_legend_for('hue', title='Score')  # Works for colorbar too
         """
         legend_data = _get_legend_data(self.ax)
 
         if legend_data and type in legend_data:
             # Use stored metadata
             data = legend_data[type].copy()
-            if title is not None:
-                data['title'] = title
-            data.update(kwargs)
-            self.add_legend(**data)
+
+            # Check if this is a colorbar
+            if data.get('type') == 'colorbar':
+                # Handle colorbar
+                if title is not None:
+                    data['label'] = title
+                data.update(kwargs)
+                # Remove 'type' key as it's not a parameter for add_colorbar
+                data.pop('type', None)
+                self.add_colorbar(**data)
+            else:
+                # Handle regular legend
+                if title is not None:
+                    data['title'] = title
+                data.update(kwargs)
+                self.add_legend(**data)
         else:
             # Fallback: basic auto-detection
             # This is a simple fallback - may not work for complex cases
@@ -757,7 +771,13 @@ def legend(
         legend_data = _get_legend_data(ax)
         if legend_data:
             if 'hue' in legend_data:
-                builder.add_legend(**legend_data['hue'], **kwargs)
+                hue_data = legend_data['hue'].copy()
+                # Check if it's a colorbar
+                if hue_data.get('type') == 'colorbar':
+                    hue_data.pop('type', None)
+                    builder.add_colorbar(**hue_data)
+                else:
+                    builder.add_legend(**hue_data, **kwargs)
             if 'size' in legend_data:
                 builder.add_legend(**legend_data['size'], **kwargs)
             if 'style' in legend_data:

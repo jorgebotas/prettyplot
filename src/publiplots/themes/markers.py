@@ -5,7 +5,7 @@ This module provides standard marker sets and utilities for consistent
 marker usage across visualizations.
 """
 
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional, Union
 
 
 # =============================================================================
@@ -110,34 +110,6 @@ This range provides good visual distinction without markers becoming too large.
 
 
 # =============================================================================
-# Hatch Patterns
-# =============================================================================
-
-HATCH_PATTERNS: List[str] = [
-    '',        # No hatch
-    '///',     # Diagonal lines (forward)
-    '\\\\\\',  # Diagonal lines (backward)
-    '|||',     # Vertical lines
-    '---',     # Horizontal lines
-    '+++',     # Plus signs
-    'xxx',     # Crosses
-    '...',     # Dots
-]
-"""
-Standard hatch patterns for bar plots and patches.
-
-Use case: When color alone is insufficient (e.g., for colorblind accessibility
-or black-and-white printing), hatch patterns provide an additional visual
-encoding dimension.
-
-Example:
-    >>> import publiplots as pp
-    >>> hatches = pp.HATCH_PATTERNS
-    >>> pp.barplot(data, x='group', y='value', hatch=hatches[1])
-"""
-
-
-# =============================================================================
 # Functions
 # =============================================================================
 
@@ -179,6 +151,11 @@ def get_hatch_cycle(n: int) -> List[str]:
     """
     Get a cycle of n hatch patterns.
 
+    .. deprecated:: 0.3.0
+        Use `publiplots.themes.hatches.get_hatch_patterns()` and
+        `publiplots.themes.hatches.resolve_hatches()` instead.
+        This function is kept for backward compatibility only.
+
     Parameters
     ----------
     n : int
@@ -195,7 +172,174 @@ def get_hatch_cycle(n: int) -> List[str]:
     >>> len(hatches)
     5
     """
-    return [HATCH_PATTERNS[i % len(HATCH_PATTERNS)] for i in range(n)]
+    # Import here to avoid circular dependency
+    from publiplots.themes.hatches import get_hatch_patterns
+    patterns = get_hatch_patterns()
+    return [patterns[i % len(patterns)] for i in range(n)]
+
+
+def resolve_markers(
+    markers: Optional[List[str]] = None,
+    n_markers: Optional[int] = None,
+    reverse: bool = False,
+    style: str = "standard"
+) -> List[str]:
+    """
+    Resolve marker patterns for plotting.
+
+    This is a helper function that standardizes marker specifications
+    into a concrete list of markers. It handles marker cycling for arbitrary
+    numbers of categories and supports marker reversal.
+
+    Parameters
+    ----------
+    markers : list of str, optional
+        List of marker symbols to use. If None, uses default markers from
+        STANDARD_MARKERS or SIMPLE_MARKERS based on the style parameter.
+    n_markers : int, optional
+        Number of markers to return. If provided, markers will be
+        cycled to reach this count. If None, returns all markers.
+    reverse : bool, default=False
+        Whether to reverse the marker order. Useful for changing visual
+        hierarchy.
+    style : str, default='standard'
+        Marker style: 'standard' or 'simple'. Only applicable when markers is None.
+
+    Returns
+    -------
+    List[str]
+        List of resolved marker symbols.
+
+    Examples
+    --------
+    Get default markers:
+    >>> markers = resolve_markers()
+    >>> len(markers)
+    10
+
+    Get exactly 5 markers with cycling:
+    >>> markers = resolve_markers(n_markers=5)
+    >>> len(markers)
+    5
+
+    Use custom markers:
+    >>> markers = resolve_markers(markers=['o', '^', 's'], n_markers=7)
+
+    Get reversed markers:
+    >>> markers = resolve_markers(n_markers=4, reverse=True)
+
+    Use simple style:
+    >>> markers = resolve_markers(n_markers=5, style='simple')
+
+    See Also
+    --------
+    resolve_marker_mapping : Create a mapping from values to markers
+    get_marker_cycle : Get a cycle of n markers
+    """
+    # Get default markers if not provided
+    if markers is None:
+        if style == "standard":
+            markers = STANDARD_MARKERS
+        elif style == "simple":
+            markers = SIMPLE_MARKERS
+        else:
+            raise ValueError(f"Unknown marker style '{style}'. Use 'standard' or 'simple'.")
+
+    # Cycle markers if n_markers specified
+    if n_markers is not None:
+        markers = [markers[i % len(markers)] for i in range(n_markers)]
+
+    # Reverse if requested
+    if reverse:
+        markers = markers[::-1]
+
+    return markers
+
+
+def resolve_marker_mapping(
+    values: Optional[List[str]] = None,
+    marker_mapping: Optional[Union[Dict[str, str], List[str]]] = None,
+    reverse: bool = False,
+    style: str = "standard"
+) -> Dict[str, str]:
+    """
+    Create a mapping from category values to marker symbols.
+
+    This function creates a dictionary that maps category names to specific
+    marker symbols, which is useful for categorical plots like scatterplots
+    with style parameter. It ensures consistent marker assignment across
+    multiple plots.
+
+    Parameters
+    ----------
+    values : list of str, optional
+        List of category values to map to markers. If None, returns empty dict.
+    marker_mapping : dict or list, optional
+        Marker specification:
+        - dict: Explicit mapping from values to markers (returned as-is)
+        - list: List of markers to cycle through for values
+        - None: Uses default markers from STANDARD_MARKERS
+    reverse : bool, default=False
+        Whether to reverse the marker assignment order. Only applicable
+        when marker_mapping is a list or None.
+    style : str, default='standard'
+        Marker style: 'standard' or 'simple'. Only applicable when
+        marker_mapping is None.
+
+    Returns
+    -------
+    Dict[str, str]
+        Mapping from category values to marker symbols.
+
+    Examples
+    --------
+    Create mapping for categories:
+    >>> categories = ['A', 'B', 'C', 'D']
+    >>> mapping = resolve_marker_mapping(values=categories)
+    >>> mapping['A']
+    'o'
+    >>> mapping['B']
+    's'
+
+    Use custom markers:
+    >>> mapping = resolve_marker_mapping(
+    ...     values=['cat', 'dog', 'bird'],
+    ...     marker_mapping=['o', '^', 's']
+    ... )
+
+    Use explicit mapping:
+    >>> mapping = resolve_marker_mapping(
+    ...     values=['A', 'B'],
+    ...     marker_mapping={'A': 'o', 'B': '^'}
+    ... )
+    >>> mapping
+    {'A': 'o', 'B': '^'}
+
+    Use simple style:
+    >>> mapping = resolve_marker_mapping(values=['A', 'B', 'C'], style='simple')
+
+    See Also
+    --------
+    resolve_markers : Resolve markers without creating a mapping
+    get_marker_cycle : Get a cycle of n markers
+    """
+    # Return empty dict if no values provided
+    if values is None:
+        return {}
+
+    # If already a dict, return as-is
+    if isinstance(marker_mapping, dict):
+        return marker_mapping
+
+    # Resolve markers and create mapping
+    markers = resolve_markers(
+        markers=marker_mapping,
+        n_markers=len(values),
+        reverse=reverse,
+        style=style
+    )
+
+    return {value: marker for value, marker in zip(values, markers)}
 
 
 def get_size_mapping(

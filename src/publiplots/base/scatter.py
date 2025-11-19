@@ -18,6 +18,7 @@ from typing import Optional, Tuple, Union, Dict, List
 from publiplots.themes.rcparams import resolve_param
 
 from publiplots.themes.colors import resolve_palette_mapping
+from publiplots.themes.markers import resolve_marker_mapping
 from publiplots.utils import is_categorical, is_numeric, create_legend_handles, legend
 
 
@@ -526,18 +527,13 @@ def _legend(
         style_values = data[style].unique()
         style_label = kwargs.pop("style_label", style)
 
-        # Determine marker mapping
-        if isinstance(markers, dict):
-            marker_mapping = markers
-        elif isinstance(markers, list):
-            # Create mapping from style values to markers
-            marker_mapping = {val: markers[i % len(markers)]
-                            for i, val in enumerate(style_values)}
-        else:
-            # Use default markers
-            default_markers = ['o', '^', 's', 'D', 'v', '<', '>', 'p', '*', 'h']
-            marker_mapping = {val: default_markers[i % len(default_markers)]
-                            for i, val in enumerate(style_values)}
+        # Use resolve_marker_mapping to get marker mapping
+        # If markers is True (from seaborn default), treat as None for our mapping
+        marker_param = markers if isinstance(markers, (list, dict)) else None
+        marker_mapping = resolve_marker_mapping(
+            values=list(style_values),
+            marker_mapping=marker_param
+        )
 
         # Determine color for style legend
         style_color = color if hue is None else "gray"
@@ -556,20 +552,21 @@ def _legend(
             'title': style_label,
         }
 
+    # Prepare colorbar data for continuous hue
+    if hue is not None and not isinstance(palette, dict):
+        hue_label = kwargs.pop("hue_label", hue) if 'hue_label' not in locals() else hue_label
+        mappable = ScalarMappable(norm=hue_norm, cmap=palette)
+        legend_data['hue'] = {
+            'mappable': mappable,
+            'label': hue_label,
+            'height': kwargs.pop("hue_height", 0.2),
+            'width': kwargs.pop("hue_width", 0.05),
+            'type': 'colorbar',  # Mark as colorbar for add_legend_for()
+        }
+
     # Store metadata on collection
     if len(ax.collections) > 0:
         ax.collections[0]._legend_data = legend_data
 
     # Create legends using new legend() API
     builder = legend(ax=ax)
-
-    # Add continuous colorbar if hue is continuous
-    if hue is not None and not isinstance(palette, dict):
-        hue_label = kwargs.pop("hue_label", hue) if 'hue_label' not in locals() else hue_label
-        mappable = ScalarMappable(norm=hue_norm, cmap=palette)
-        builder.add_colorbar(
-            mappable=mappable,
-            label=hue_label,
-            height=kwargs.pop("hue_height", 0.2),
-            width=kwargs.pop("hue_width", 0.05),
-        )
