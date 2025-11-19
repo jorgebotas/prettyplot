@@ -24,14 +24,12 @@ from publiplots.themes.styles import (
 )
 
 from publiplots.themes.markers import (
-    get_size_mapping,
+    resolve_size_map,
     resolve_markers,
     resolve_marker_map,
     STANDARD_MARKERS,
     FILLED_UNFILLED_MARKERS,
     MARKER_SIZES,
-    SIZE_RANGE_CATEGORICAL,
-    SIZE_RANGE_CONTINUOUS,
 )
 
 from publiplots.themes.hatches import (
@@ -59,15 +57,13 @@ __all__ = [
     "get_current_style",
     "apply_custom_style",
     # Marker functions
-    "get_size_mapping",
+    "resolve_size_map",
     "resolve_markers",
     "resolve_marker_map",
     # Marker constants
     "STANDARD_MARKERS",
     "FILLED_UNFILLED_MARKERS",
     "MARKER_SIZES",
-    "SIZE_RANGE_CATEGORICAL",
-    "SIZE_RANGE_CONTINUOUS",
     # Hatch functions
     "get_hatch_patterns",
     "set_hatch_mode",

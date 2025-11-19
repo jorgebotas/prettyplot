@@ -6,6 +6,7 @@ marker usage across visualizations.
 """
 
 from typing import List, Dict, Tuple, Optional, Union
+from publiplots.themes.rcparams import resolve_param
 
 
 # =============================================================================
@@ -80,21 +81,6 @@ Example:
     >>> pp.scatterplot(data, x='x', y='y', s=pp.MARKER_SIZES['medium'])
 """
 
-SIZE_RANGE_CATEGORICAL: Tuple[float, float] = (50, 200)
-"""
-Recommended size range for categorical data with size encoding.
-
-Use case: When size represents discrete categories (e.g., small/medium/large).
-"""
-
-SIZE_RANGE_CONTINUOUS: Tuple[float, float] = (50, 1000)
-"""
-Recommended size range for continuous data with size encoding.
-
-Use case: When size represents a continuous variable (e.g., p-value, effect size).
-This range provides good visual distinction without markers becoming too large.
-"""
-
 
 # =============================================================================
 # Functions
@@ -103,8 +89,7 @@ This range provides good visual distinction without markers becoming too large.
 def resolve_markers(
     markers: Optional[List[str]] = None,
     n_markers: Optional[int] = None,
-    reverse: bool = False,
-    style: str = "standard"
+    reverse: bool = False
 ) -> List[str]:
     """
     Resolve marker patterns for plotting.
@@ -116,16 +101,13 @@ def resolve_markers(
     Parameters
     ----------
     markers : list of str, optional
-        List of marker symbols to use. If None, uses default markers from
-        STANDARD_MARKERS or SIMPLE_MARKERS based on the style parameter.
+        List of marker symbols to use. If None, uses default STANDARD_MARKERS.
     n_markers : int, optional
         Number of markers to return. If provided, markers will be
         cycled to reach this count. If None, returns all markers.
     reverse : bool, default=False
         Whether to reverse the marker order. Useful for changing visual
         hierarchy.
-    style : str, default='standard'
-        Marker style: 'standard' or 'simple'. Only applicable when markers is None.
 
     Returns
     -------
@@ -150,22 +132,13 @@ def resolve_markers(
     Get reversed markers:
     >>> markers = resolve_markers(n_markers=4, reverse=True)
 
-    Use simple style:
-    >>> markers = resolve_markers(n_markers=5, style='simple')
-
     See Also
     --------
     resolve_marker_map : Create a mapping from values to markers
-    get_marker_cycle : Get a cycle of n markers
     """
     # Get default markers if not provided
     if markers is None:
-        if style == "standard":
-            markers = STANDARD_MARKERS
-        elif style == "simple":
-            markers = STANDARD_MARKERS[:4]  # First 4 markers for simple style
-        else:
-            raise ValueError(f"Unknown marker style '{style}'. Use 'standard' or 'simple'.")
+        markers = STANDARD_MARKERS
 
     # Cycle markers if n_markers specified
     if n_markers is not None:
@@ -181,8 +154,7 @@ def resolve_markers(
 def resolve_marker_map(
     values: Optional[List[str]] = None,
     marker_map: Optional[Union[Dict[str, str], List[str]]] = None,
-    reverse: bool = False,
-    style: str = "standard"
+    reverse: bool = False
 ) -> Dict[str, str]:
     """
     Create a mapping from category values to marker symbols.
@@ -204,9 +176,6 @@ def resolve_marker_map(
     reverse : bool, default=False
         Whether to reverse the marker assignment order. Only applicable
         when marker_map is a list or None.
-    style : str, default='standard'
-        Marker style: 'standard' or 'simple'. Only applicable when
-        marker_map is None.
 
     Returns
     -------
@@ -237,13 +206,9 @@ def resolve_marker_map(
     >>> mapping
     {'A': 'o', 'B': '^'}
 
-    Use simple style:
-    >>> mapping = resolve_marker_map(values=['A', 'B', 'C'], style='simple')
-
     See Also
     --------
     resolve_markers : Resolve markers without creating a mapping
-    get_marker_cycle : Get a cycle of n markers
     """
     # Return empty dict if no values provided
     if values is None:
@@ -257,16 +222,15 @@ def resolve_marker_map(
     markers = resolve_markers(
         markers=marker_map,
         n_markers=len(values),
-        reverse=reverse,
-        style=style
+        reverse=reverse
     )
 
     return {value: marker for value, marker in zip(values, markers)}
 
 
-def get_size_mapping(
+def resolve_size_map(
     values: List[float],
-    size_range: Tuple[float, float] = SIZE_RANGE_CONTINUOUS,
+    size_range: Optional[Tuple[float, float]] = None,
     method: str = "linear"
 ) -> List[float]:
     """
@@ -276,8 +240,9 @@ def get_size_mapping(
     ----------
     values : List[float]
         Data values to map.
-    size_range : Tuple[float, float], default=SIZE_RANGE_CONTINUOUS
-        (min_size, max_size) in points^2.
+    size_range : Tuple[float, float], optional
+        (min_size, max_size) in points^2. If None, reads from rcParams
+        ('scatter.size_min', 'scatter.size_max').
     method : str, default='linear'
         Mapping method: 'linear' or 'log'.
 
@@ -291,11 +256,21 @@ def get_size_mapping(
     Map p-values to sizes:
     >>> pvalues = [0.001, 0.01, 0.05, 0.1]
     >>> neg_log_p = [-np.log10(p) for p in pvalues]
-    >>> sizes = get_size_mapping(neg_log_p, size_range=(50, 500))
+    >>> sizes = resolve_size_map(neg_log_p, size_range=(50, 500))
+
+    Use default size range from rcParams:
+    >>> sizes = resolve_size_map(neg_log_p)
     """
     import numpy as np
 
     values = np.array(values)
+
+    # Get size range from rcParams if not provided
+    if size_range is None:
+        min_size = resolve_param('scatter.size_min', None)
+        max_size = resolve_param('scatter.size_max', None)
+        size_range = (min_size, max_size)
+
     min_size, max_size = size_range
 
     if method == "linear":

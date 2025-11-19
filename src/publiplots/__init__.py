@@ -61,8 +61,6 @@ from publiplots.themes.styles import (
 # Initialize publiplots rcParams defaults
 init_rcparams()
 from publiplots.themes.markers import (
-    get_marker_cycle,
-    get_hatch_cycle,
     resolve_markers,
     resolve_marker_map,
     STANDARD_MARKERS,
@@ -114,10 +112,8 @@ __all__ = [
     "set_publication_style",
     "reset_style",
     # Marker functions
-    "get_marker_cycle",
     "resolve_markers",
     "resolve_marker_map",
-    "get_hatch_cycle",
     # Hatch functions
     "set_hatch_mode",
     "get_hatch_mode",
