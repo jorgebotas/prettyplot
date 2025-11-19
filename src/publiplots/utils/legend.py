@@ -36,25 +36,6 @@ class RectanglePatch(Patch):
         if "markersize" in kwargs:
             del kwargs["markersize"]
         super().__init__(**kwargs)
-class CirclePatch(Patch):
-    """
-    Custom circle patch object for legend handles.
-    Embeds markersize property.
-    """
-    def __init__(self, **kwargs):
-        markersize = kwargs.pop("markersize", plt.rcParams["lines.markersize"])
-        self.markersize = markersize
-        super().__init__(**kwargs)
-
-    def get_markersize(self) -> float:
-        return self.markersize
-
-    def set_markersize(self, markersize: float):
-        if markersize is None or markersize == 0:
-            markersize = plt.rcParams["lines.markersize"]
-        self.markersize = markersize
-
-
 class MarkerPatch(Patch):
     """
     Custom marker patch object for legend handles.
@@ -80,96 +61,6 @@ class MarkerPatch(Patch):
             markersize = plt.rcParams["lines.markersize"]
         self.markersize = markersize
 
-
-class HandlerCircle(HandlerBase):
-    """
-    Custom legend handler for double-layer circle markers.
-    
-    Automatically extracts alpha, linewidth, and colors from handles.
-    """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def create_artists(
-        self,
-        legend: Legend,
-        orig_handle: Any,
-        xdescent: float,
-        ydescent: float,
-        width: float,
-        height: float,
-        fontsize: float,
-        trans: Any
-    ) -> List[Circle]:
-        """Create the legend marker artists."""
-        # Center point for the marker
-        cx = 0.5 * width - 0.5 * xdescent
-        cy = 0.5 * height - 0.5 * ydescent
-
-        # Extract all properties from the handle
-        color, size, alpha, linewidth, edgecolor = self._extract_properties(
-            orig_handle, fontsize
-        )
-
-        # Create filled circle with transparency
-        circle_fill = Circle(
-            (cx, cy),
-            size / 2,
-            color=color,
-            alpha=alpha,
-            transform=trans,
-            linewidth=0,
-            zorder=2
-        )
-
-        # Create edge circle
-        circle_edge = Circle(
-            (cx, cy),
-            size / 2,
-            facecolor="none",
-            edgecolor=edgecolor,
-            linewidth=linewidth,
-            transform=trans,
-            alpha=1,
-            zorder=3
-        )
-
-        return [circle_fill, circle_edge]
-
-    def _extract_properties(
-        self,
-        orig_handle: Any,
-        fontsize: float
-    ) -> Tuple[str, float, float, float, str]:
-        """
-        Extract all properties from the handle.
-        
-        Returns
-        -------
-        Tuple[str, float, float, float, str]
-            (color, size, alpha, linewidth, edgecolor)
-        """
-        # Defaults
-        color = "gray"
-        size = fontsize * 0.8
-        alpha = resolve_param("alpha", None)
-        linewidth = resolve_param("lines.linewidth", None)
-        edgecolor = None
-
-        # Extract from Patch (created by create_legend_handles)
-        if isinstance(orig_handle, CirclePatch):
-            color = orig_handle.get_facecolor()
-            edgecolor = orig_handle.get_edgecolor()
-            alpha = orig_handle.get_alpha() if orig_handle.get_alpha() is not None else alpha
-            linewidth = orig_handle.get_linewidth() if orig_handle.get_linewidth() else linewidth
-            size = orig_handle.get_markersize() if orig_handle.get_markersize() is not None else size
-        
-        # Use face color as edge color if not specified
-        if edgecolor is None:
-            edgecolor = color
-
-        return color, size, alpha, linewidth, edgecolor
 
 class HandlerRectangle(HandlerPatch):
     """
@@ -356,6 +247,8 @@ class HandlerMarker(HandlerBase):
         Tuple[str, str, float, float, float, str]
             (marker, color, size, alpha, linewidth, edgecolor)
         """
+        from matplotlib.lines import Line2D
+
         # Defaults
         marker = 'o'
         color = "gray"
@@ -372,6 +265,15 @@ class HandlerMarker(HandlerBase):
             alpha = orig_handle.get_alpha() if orig_handle.get_alpha() is not None else alpha
             linewidth = orig_handle.get_linewidth() if orig_handle.get_linewidth() else linewidth
             size = orig_handle.get_markersize() if orig_handle.get_markersize() is not None else size
+
+        # Extract from Line2D (standard matplotlib)
+        elif isinstance(orig_handle, Line2D):
+            marker = orig_handle.get_marker() or 'o'
+            color = orig_handle.get_color() or orig_handle.get_markerfacecolor()
+            size = orig_handle.get_markersize() or size
+            linewidth = orig_handle.get_markeredgewidth() or linewidth
+            # Line2D doesn't store alpha separately - use default
+            # edgecolor will default to face color below
 
         # Use face color as edge color if not specified
         if edgecolor is None:
@@ -394,13 +296,11 @@ def get_legend_handler_map() -> Dict[type, HandlerBase]:
     Dict[type, HandlerBase]
         Dictionary mapping matplotlib types to handler instances.
     """
-    handler_circle = HandlerCircle()
     handler_rectangle = HandlerRectangle()
     handler_marker = HandlerMarker()
 
     return {
         Rectangle: handler_rectangle,
-        CirclePatch: handler_circle,
         MarkerPatch: handler_marker,
         Patch: handler_rectangle,
     }
@@ -482,19 +382,33 @@ def create_legend_handles(
             )
             handles.append(handle)
     else:
-        # Use CirclePatch or RectanglePatch
-        patch = CirclePatch if style == "circle" else RectanglePatch
-        for label, col, hatch, size in zip(labels, colors, hatches, sizes):
-            handle = patch(
-                facecolor=col,
-                edgecolor=col,
-                alpha=alpha,
-                linewidth=linewidth,
-                label=label,
-                hatch=hatch,
-                markersize=size
-            )
-            handles.append(handle)
+        # Use MarkerPatch for circles, RectanglePatch for rectangles
+        if style == "circle":
+            # Circle is just a marker with 'o' symbol
+            for label, col, hatch, size in zip(labels, colors, hatches, sizes):
+                handle = MarkerPatch(
+                    marker='o',
+                    facecolor=col,
+                    edgecolor=col,
+                    alpha=alpha,
+                    linewidth=linewidth,
+                    label=label,
+                    markersize=size
+                )
+                handles.append(handle)
+        else:
+            # Rectangle patches (for bar plots with hatches)
+            for label, col, hatch, size in zip(labels, colors, hatches, sizes):
+                handle = RectanglePatch(
+                    facecolor=col,
+                    edgecolor=col,
+                    alpha=alpha,
+                    linewidth=linewidth,
+                    label=label,
+                    hatch=hatch,
+                    markersize=size
+                )
+                handles.append(handle)
 
     return handles
 
@@ -853,10 +767,8 @@ def legend(
     return builder
 
 __all__ = [
-    "HandlerCircle",
     "HandlerRectangle",
     "HandlerMarker",
-    "CirclePatch",
     "RectanglePatch",
     "MarkerPatch",
     "get_legend_handler_map",

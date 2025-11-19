@@ -46,10 +46,8 @@ from publiplots.utils.fonts import (
 )
 
 from publiplots.utils.legend import (
-    HandlerCircle,
     HandlerRectangle,
     HandlerMarker,
-    CirclePatch,
     RectanglePatch,
     MarkerPatch,
     get_legend_handler_map,
@@ -98,10 +96,8 @@ __all__ = [
     # Fonts functions
     "list_registered_fonts",
     # Legend functions
-    "HandlerCircle",
     "HandlerRectangle",
     "HandlerMarker",
-    "CirclePatch",
     "RectanglePatch",
     "MarkerPatch",
     "get_legend_handler_map",
