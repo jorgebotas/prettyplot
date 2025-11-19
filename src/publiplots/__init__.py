@@ -37,12 +37,14 @@ from publiplots.utils.axes import (
     add_reference_line,
 )
 from publiplots.utils.legend import (
-    HandlerCircle,
     HandlerRectangle,
+    HandlerMarker,
+    RectanglePatch,
+    MarkerPatch,
     get_legend_handler_map,
     create_legend_handles,
     LegendBuilder,
-    create_legend_builder,
+    legend,
 )
 # Register custom fonts
 from publiplots.utils.fonts import _register_fonts
@@ -90,12 +92,14 @@ __all__ = [
     "set_axis_labels",
     "add_reference_line",
     # Legend utilities
-    "HandlerCircle",
     "HandlerRectangle",
+    "HandlerMarker",
+    "RectanglePatch",
+    "MarkerPatch",
     "get_legend_handler_map",
     "create_legend_handles",
     "LegendBuilder",
-    "create_legend_builder",
+    "legend",
     # Color/palette functions
     "color_palette",
     # Parameter system

@@ -27,9 +27,11 @@ def scatterplot(
     y: str,
     size: Optional[str] = None,
     hue: Optional[str] = None,
+    style: Optional[str] = None,
     color: Optional[str] = None,
     palette: Optional[Union[str, Dict, List]] = None,
     sizes: Optional[Tuple[float, float]] = None,
+    markers: Optional[Union[bool, List[str], Dict[str, str]]] = None,
     size_norm: Optional[Union[Tuple[float, float], Normalize]] = None,
     hue_norm: Optional[Union[Tuple[float, float], Normalize]] = None,
     alpha: Optional[float] = None,
@@ -65,6 +67,9 @@ def scatterplot(
     hue : str, optional
         Column name for marker colors. Can be categorical or continuous.
         If None, uses default color or the value from `color` parameter.
+    style : str, optional
+        Column name for marker styles. Produces points with different markers.
+        Only categorical data is supported. If None, all markers use the same style.
     color : str, optional
         Fixed color for all markers (only used when hue is None).
         Overrides default color. Example: "#ff0000" or "red".
@@ -77,6 +82,12 @@ def scatterplot(
     sizes : tuple of float, optional
         (min_size, max_size) in points^2 for marker sizes.
         Default: (50, 500) for continuous data, (100, 100) for no size encoding.
+    markers : bool, list, dict, optional
+        Markers to use for different levels of the style variable:
+        - True: use default marker set
+        - list: list of marker symbols (e.g., ['o', '^', 's'])
+        - dict: mapping of style values to markers (e.g., {'A': 'o', 'B': '^'})
+        - None: uses default marker 'o' for all points
     size_norm : tuple of float, optional
         (vmin, vmax) for size normalization. If None, computed from data.
     hue_norm : tuple of float, optional
@@ -103,6 +114,7 @@ def scatterplot(
 
         - hue_title : str, optional - Title for the hue legend. If None, uses hue column name.
         - size_title : str, optional - Title for the size legend. If None, uses size column name.
+        - style_title : str, optional - Title for the style legend. If None, uses style column name.
         - size_reverse : bool, default=True - Whether to reverse the size legend (descending order).
     legend : bool, default=True
         Whether to show legend.
@@ -142,6 +154,11 @@ def scatterplot(
     >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
     ...                           color="#e67e7e")
 
+    Scatterplot with different marker styles:
+    >>> fig, ax = pp.scatterplot(data=df, x="time", y="value",
+    ...                           hue="group", style="condition",
+    ...                           markers=['o', '^', 's'])
+
     Categorical scatterplot (positions on grid):
     >>> fig, ax = pp.scatterplot(data=df, x="category", y="condition",
     ...                           size="pvalue", hue="log2fc")
@@ -158,6 +175,8 @@ def scatterplot(
         required_cols.append(size)
     if hue is not None:
         required_cols.append(hue)
+    if style is not None:
+        required_cols.append(style)
 
     missing_cols = [col for col in required_cols if col not in data.columns]
     if missing_cols:
@@ -210,6 +229,10 @@ def scatterplot(
         if isinstance(hue_norm, tuple):
             hue_norm = Normalize(vmin=hue_norm[0], vmax=hue_norm[1])
 
+    # If style is provided without markers, use default markers
+    if style is not None and markers is None:
+        markers = True
+
     # Prepare kwargs for seaborn scatterplot
     scatter_kwargs = {
         "data": data,
@@ -220,6 +243,8 @@ def scatterplot(
         "size": size,
         "sizes": sizes if size is not None else None,
         "size_norm": size_norm if size is not None else None,
+        "style": style,
+        "markers": markers if style is not None else None,
         "ax": ax,
         "color": color,
         "palette": palette,
@@ -274,6 +299,8 @@ def scatterplot(
             data=data,
             hue=hue,
             size=size,
+            style=style,
+            markers=markers,
             color=color,
             palette=palette,
             alpha=alpha,
@@ -432,6 +459,8 @@ def _legend(
         data: pd.DataFrame, # for size legend
         hue: Optional[str],
         size: Optional[str],
+        style: Optional[str],
+        markers: Optional[Union[bool, List[str], Dict[str, str]]],
         color: Optional[str],
         palette: Optional[Union[str, Dict, List]],
         hue_norm: Optional[Normalize],
@@ -490,6 +519,41 @@ def _legend(
             'handles': size_handles,
             'title': kwargs.pop("size_label", size),
             'labelspacing': kwargs.pop("labelspacing", 1/3 * max(1, sizes[1] / 200)),
+        }
+
+    # Prepare style legend data
+    if style is not None:
+        style_values = data[style].unique()
+        style_label = kwargs.pop("style_label", style)
+
+        # Determine marker mapping
+        if isinstance(markers, dict):
+            marker_mapping = markers
+        elif isinstance(markers, list):
+            # Create mapping from style values to markers
+            marker_mapping = {val: markers[i % len(markers)]
+                            for i, val in enumerate(style_values)}
+        else:
+            # Use default markers
+            default_markers = ['o', '^', 's', 'D', 'v', '<', '>', 'p', '*', 'h']
+            marker_mapping = {val: default_markers[i % len(default_markers)]
+                            for i, val in enumerate(style_values)}
+
+        # Determine color for style legend
+        style_color = color if hue is None else "gray"
+        style_handle_kwargs = handle_kwargs.copy()
+        style_handle_kwargs["color"] = style_color
+        style_handle_kwargs.pop("style")  # Remove style key from handle_kwargs
+
+        # Create legend handles with different markers
+        style_handles = create_legend_handles(
+            labels=[str(val) for val in style_values],
+            markers=[marker_mapping[val] for val in style_values],
+            **style_handle_kwargs
+        )
+        legend_data['style'] = {
+            'handles': style_handles,
+            'title': style_label,
         }
 
     # Store metadata on collection
