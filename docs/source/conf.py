@@ -126,7 +126,7 @@ sphinx_gallery_conf = {
     'default_thumb_file': None,
     'line_numbers': False,
     'nested_sections': True,
-    # Sorting by filename (default) respects numeric prefixes: plot_01_*, plot_02_*, etc.
+    'within_subsection_order': 'FileNameSortKey',
 }
 
 # NumPyDoc settings
