@@ -245,11 +245,11 @@ def boxplot(
         pp_legend(ax, handles=handles, **legend_kwargs)
 
     # Set labels
-    if xlabel:
+    if xlabel is not None:
         ax.set_xlabel(xlabel)
-    if ylabel:
+    if ylabel is not None:
         ax.set_ylabel(ylabel)
-    if title:
+    if title is not None:
         ax.set_title(title)
 
     return fig, ax
