@@ -7,6 +7,7 @@ distinctive publiplots style of transparent fill with opaque edges.
 """
 
 from matplotlib.collections import PathCollection
+from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.colors import to_rgba
 import numpy as np
@@ -69,9 +70,13 @@ def apply_transparency(
     """
     if isinstance(artists, PathCollection):
         _apply_to_collection(artists, face_alpha, edge_alpha)
-    else:
-        # Assume it's a list/sequence of patches
+    elif isinstance(artists, Sequence[Line2D]):
+        # Assume it's a list/sequence of lines
+        _apply_to_lines(artists, face_alpha, edge_alpha)
+    elif isinstance(artists, Sequence[Patch]):
         _apply_to_patches(artists, face_alpha, edge_alpha)
+    else:
+        raise ValueError(f"Unsupported artist type: {type(artists)}")
 
 
 def _apply_to_collection(
@@ -111,6 +116,31 @@ def _apply_to_collection(
     ])
     collection.set_edgecolors(new_edge_colors)
 
+
+def _apply_to_lines(
+    lines: Sequence[Line2D],
+    face_alpha: float,
+    edge_alpha: float,
+) -> None:
+    """
+    Apply transparency to a sequence of Lines (boxplot, swarmplot, etc.).
+
+    Parameters
+    ----------
+    lines : Sequence[Line2D]
+        List of matplotlib lines.
+    face_alpha : float
+        Alpha for marker face colors.
+    edge_alpha : float
+        Alpha for marker edge colors.
+    """
+    for line in lines:
+        color = line.get_color()
+        if line.get_marker() and line.get_marker() != 'None':
+            line.set_markerfacecolor(to_rgba(color, alpha=face_alpha))
+            line.set_markeredgecolor(to_rgba(color, alpha=edge_alpha))
+        else:
+            line.set_color(to_rgba(color, alpha=edge_alpha))
 
 def _apply_to_patches(
     patches: Sequence[Patch],

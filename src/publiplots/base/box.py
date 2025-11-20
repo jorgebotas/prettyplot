@@ -194,11 +194,10 @@ def boxplot(
         closest_pos = min(patch_colors.keys(), key=lambda p: abs(p - pos))
         base_color = patch_colors[closest_pos]
         line.set_color(base_color)
+        line.set_linewidth(linewidth)
 
-        # Also set marker colors for outliers (transparent face, opaque edge)
-        if line.get_marker() and line.get_marker() != 'None':
-            line.set_markerfacecolor(to_rgba(base_color, alpha=alpha))
-            line.set_markeredgecolor(to_rgba(base_color, alpha=1.0))
+    # Apply transparency to lines (outlier markers)
+    apply_transparency(ax.lines, face_alpha=alpha, edge_alpha=1.0)
 
     # Set edge colors to match face colors
     for patch in ax.patches:
