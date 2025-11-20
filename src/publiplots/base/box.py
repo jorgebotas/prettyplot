@@ -207,28 +207,20 @@ def boxplot(
         if len(offsets) == 0:
             continue
 
-        # Get colors for each outlier based on its position
-        new_facecolors = []
+        # Get edge colors for each outlier based on its position
         new_edgecolors = []
         for offset in offsets:
             if categorical_axis == "x":
-                pos = round(offset[0], 2)
+                pos = offset[0]
             else:
-                pos = round(offset[1], 2)
+                pos = offset[1]
 
-            # Find the closest patch position
-            if pos in patch_colors:
-                base_color = patch_colors[pos]
-            else:
-                # Find nearest position
-                closest_pos = min(patch_colors.keys(), key=lambda p: abs(p - pos))
-                base_color = patch_colors[closest_pos]
+            # Find closest patch position
+            closest_pos = min(patch_colors.keys(), key=lambda p: abs(p - pos))
+            new_edgecolors.append(patch_colors[closest_pos])
 
-            new_facecolors.append(to_rgba(base_color, alpha=alpha))
-            new_edgecolors.append(to_rgba(base_color, alpha=1.0))
-
-        collection.set_facecolors(new_facecolors)
         collection.set_edgecolors(new_edgecolors)
+        apply_transparency(collection, face_alpha=alpha, edge_alpha=1.0)
 
     # Add legend if hue is used
     if legend and hue is not None:
