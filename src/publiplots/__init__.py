@@ -24,6 +24,7 @@ __description__ = "Publication-ready plotting with a clean, modular API"
 from publiplots.base.bar import barplot
 from publiplots.base.scatter import scatterplot
 from publiplots.base.box import boxplot
+from publiplots.base.swarm import swarmplot
 
 # Advanced plotting functions
 from publiplots.advanced.venn import venn
@@ -83,6 +84,7 @@ __all__ = [
     "barplot",
     "scatterplot",
     "boxplot",
+    "swarmplot",
     # Advanced plots
     "venn",
     "upsetplot",
