@@ -17,6 +17,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.4.1]: https://github.com/jorgebotas/publiplots/releases/tag/v0.4.1
 
 
+
+## [0.4.0] - 2025-11-20
+
+### Added
+- Changed approach to transparency application
+- Avoid duplicating artists
+- Included comprehensive documentation through Sphinx and Github Pages
+
+[0.4.0]: https://github.com/jorgebotas/publiplots/releases/tag/v0.4.0
+
+
+
+## [0.3.0] - 2025-11-17
+
+### Added
+
+- Dynamic Venn diagrams (not precomputed) based on **[ggvenn](https://github.com/yanlinlin82/ggvenn)** geometry
+
+- UpSet plots based on **[UpSetPlot](https://github.com/jnothman/UpSetPlot)**
+ 
+
+[0.3.0]: https://github.com/jorgebotas/publiplots/releases/tag/v0.3.0
+
+
+
+
+## [0.2.0] - 2025-11-06
+
+### Added
+- Venn diagram support for 2 to upto 5 sets!
+- Thanks to yanlinlin82/ggvenn for their amazing work on Venn diagram geometry
+- Removed matplolib-venn dependencies
+
+[0.2.0]: https://github.com/jorgebotas/publiplots/releases/tag/v0.2.0
+
+
+
 ## [0.1.0] - 2025-11-05
 
 ### Added
@@ -37,26 +74,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive documentation and examples
 
 [0.1.0]: https://github.com/jorgebotas/publiplots/releases/tag/v0.1.0
-
-
-## [0.2.0] - 2025-11-06
-
-### Added
-- Venn diagram support for 2 to upto 5 sets!
-- Thanks to yanlinlin82/ggvenn for their amazing work on Venn diagram geometry
-- Removed matplolib-venn dependencies
-
-[0.2.0]: https://github.com/jorgebotas/publiplots/releases/tag/v0.2.0
-
-
-
-## [0.3.0] - 2025-11-17
-
-### Added
-
-- Dynamic Venn diagrams (not precomputed) based on **[ggvenn](https://github.com/yanlinlin82/ggvenn)** geometry
-
-- UpSet plots based on **[UpSetPlot](https://github.com/jnothman/UpSetPlot)**
- 
-
-[0.3.0]: https://github.com/jorgebotas/publiplots/releases/tag/v0.3.0
