@@ -184,6 +184,11 @@ def boxplot(
             pos = round(np.mean(verts[:, 1]), 2)
         patch_colors[pos] = patch.get_facecolor()
 
+    # Resolve markeredgewidth for outliers
+    flierprops = kwargs.get("flierprops", {})
+    markeredgewidth = flierprops.get("markeredgewidth", None)
+    markeredgewidth = resolve_param("lines.markeredgewidth", markeredgewidth)
+
     # Recolor all lines (whiskers, caps, medians, outliers) based on position
     for line in ax.lines:
         line_data = line.get_xdata() if categorical_axis == "x" else line.get_ydata()
@@ -195,6 +200,7 @@ def boxplot(
         base_color = patch_colors[closest_pos]
         line.set_color(base_color)
         line.set_linewidth(linewidth)
+        line.set_markeredgewidth(markeredgewidth)
 
     # Apply transparency to lines (outlier markers)
     apply_transparency(ax.lines, face_alpha=alpha, edge_alpha=1.0)
@@ -205,27 +211,6 @@ def boxplot(
 
     # Apply differential transparency to patches
     apply_transparency(ax.patches, face_alpha=alpha, edge_alpha=1.0)
-
-    # Recolor and apply transparency to outliers (fliers) in collections
-    for collection in ax.collections:
-        offsets = collection.get_offsets()
-        if len(offsets) == 0:
-            continue
-
-        # Get edge colors for each outlier based on its position
-        new_edgecolors = []
-        for offset in offsets:
-            if categorical_axis == "x":
-                pos = offset[0]
-            else:
-                pos = offset[1]
-
-            # Find closest patch position
-            closest_pos = min(patch_colors.keys(), key=lambda p: abs(p - pos))
-            new_edgecolors.append(patch_colors[closest_pos])
-
-        collection.set_edgecolors(new_edgecolors)
-        apply_transparency(collection, face_alpha=alpha, edge_alpha=1.0)
 
     # Add legend if hue is used
     if legend and hue is not None:
