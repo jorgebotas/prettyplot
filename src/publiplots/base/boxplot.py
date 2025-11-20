@@ -10,11 +10,14 @@ from typing import Optional, List, Dict, Tuple, Union
 from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.colors import to_rgba
 import seaborn as sns
 import pandas as pd
+import numpy as np
 
 from publiplots.themes.colors import resolve_palette_map
 from publiplots.utils.transparency import apply_transparency
+from publiplots.utils import is_categorical
 
 
 def boxplot(
@@ -136,6 +139,13 @@ def boxplot(
             palette=palette,
         )
 
+    # Determine categorical axis
+    categorical_axis = "x"  # default
+    if x is not None and y is not None:
+        categorical_axis = "x" if is_categorical(data[x]) else "y"
+    elif orient == "h":
+        categorical_axis = "y"
+
     # Prepare kwargs for seaborn boxplot
     boxplot_kwargs = {
         "data": data,
@@ -163,20 +173,61 @@ def boxplot(
     # Create boxplot
     sns.boxplot(**boxplot_kwargs)
 
-    # Set edge colors to match face colors (seaborn defaults to gray edges)
+    # Build a map of position -> color from patches
+    # Position is on the categorical axis (x or y)
+    patch_colors = {}
+    for patch in ax.patches:
+        verts = patch.get_path().vertices
+        if categorical_axis == "x":
+            pos = round(np.mean(verts[:, 0]), 2)
+        else:
+            pos = round(np.mean(verts[:, 1]), 2)
+        patch_colors[pos] = patch.get_facecolor()
+
+    # Recolor all lines (whiskers, caps, medians) based on position
+    for line in ax.lines:
+        line_data = line.get_xdata() if categorical_axis == "x" else line.get_ydata()
+        if len(line_data) == 0:
+            continue
+        pos = round(np.mean(line_data), 2)
+        if pos in patch_colors:
+            line.set_color(patch_colors[pos])
+
+    # Set edge colors to match face colors
     for patch in ax.patches:
         patch.set_edgecolor(patch.get_facecolor())
 
-    # Apply differential transparency to face vs edge
+    # Apply differential transparency to patches
     apply_transparency(ax.patches, face_alpha=alpha, edge_alpha=1.0)
 
-    # Apply transparency to outliers (fliers) in collections
+    # Recolor and apply transparency to outliers (fliers) in collections
     for collection in ax.collections:
-        # Set edge colors to match face colors
-        facecolors = collection.get_facecolors()
-        if len(facecolors) > 0:
-            collection.set_edgecolors(facecolors)
-        apply_transparency(collection, face_alpha=alpha, edge_alpha=1.0)
+        offsets = collection.get_offsets()
+        if len(offsets) == 0:
+            continue
+
+        # Get colors for each outlier based on its position
+        new_facecolors = []
+        new_edgecolors = []
+        for offset in offsets:
+            if categorical_axis == "x":
+                pos = round(offset[0], 2)
+            else:
+                pos = round(offset[1], 2)
+
+            # Find the closest patch position
+            if pos in patch_colors:
+                base_color = patch_colors[pos]
+            else:
+                # Find nearest position
+                closest_pos = min(patch_colors.keys(), key=lambda p: abs(p - pos))
+                base_color = patch_colors[closest_pos]
+
+            new_facecolors.append(to_rgba(base_color, alpha=alpha))
+            new_edgecolors.append(to_rgba(base_color, alpha=1.0))
+
+        collection.set_facecolors(new_facecolors)
+        collection.set_edgecolors(new_edgecolors)
 
     # Add legend if hue is used
     if legend and hue is not None:
