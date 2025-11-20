@@ -70,11 +70,17 @@ def apply_transparency(
     """
     if isinstance(artists, PathCollection):
         _apply_to_collection(artists, face_alpha, edge_alpha)
-    elif isinstance(artists, Sequence[Line2D]):
-        # Assume it's a list/sequence of lines
-        _apply_to_lines(artists, face_alpha, edge_alpha)
-    elif isinstance(artists, Sequence[Patch]):
-        _apply_to_patches(artists, face_alpha, edge_alpha)
+    elif hasattr(artists, '__iter__') and not isinstance(artists, (str, PathCollection)):
+        # It's a sequence - check first element type
+        artists_list = list(artists)
+        if len(artists_list) == 0:
+            return
+        if isinstance(artists_list[0], Line2D):
+            _apply_to_lines(artists_list, face_alpha, edge_alpha)
+        elif isinstance(artists_list[0], Patch):
+            _apply_to_patches(artists_list, face_alpha, edge_alpha)
+        else:
+            raise ValueError(f"Unsupported artist type in sequence: {type(artists_list[0])}")
     else:
         raise ValueError(f"Unsupported artist type: {type(artists)}")
 
