@@ -184,7 +184,7 @@ def boxplot(
             pos = round(np.mean(verts[:, 1]), 2)
         patch_colors[pos] = patch.get_facecolor()
 
-    # Recolor all lines (whiskers, caps, medians) based on position
+    # Recolor all lines (whiskers, caps, medians, outliers) based on position
     for line in ax.lines:
         line_data = line.get_xdata() if categorical_axis == "x" else line.get_ydata()
         if len(line_data) == 0:
@@ -192,7 +192,13 @@ def boxplot(
         pos = np.mean(line_data)
         # Find closest patch position
         closest_pos = min(patch_colors.keys(), key=lambda p: abs(p - pos))
-        line.set_color(patch_colors[closest_pos])
+        base_color = patch_colors[closest_pos]
+        line.set_color(base_color)
+
+        # Also set marker colors for outliers (transparent face, opaque edge)
+        if line.get_marker() and line.get_marker() != 'None':
+            line.set_markerfacecolor(to_rgba(base_color, alpha=alpha))
+            line.set_markeredgecolor(to_rgba(base_color, alpha=1.0))
 
     # Set edge colors to match face colors
     for patch in ax.patches:
