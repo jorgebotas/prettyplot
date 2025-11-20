@@ -23,6 +23,7 @@ __description__ = "Publication-ready plotting with a clean, modular API"
 # Core plotting functions (base)
 from publiplots.base.bar import barplot
 from publiplots.base.scatter import scatterplot
+from publiplots.base.boxplot import boxplot
 
 # Advanced plotting functions
 from publiplots.advanced.venn import venn
@@ -81,6 +82,7 @@ __all__ = [
     # Base plots
     "barplot",
     "scatterplot",
+    "boxplot",
     # Advanced plots
     "venn",
     "upsetplot",
