@@ -9,7 +9,9 @@ Base Plots
    :nosignatures:
 
    publiplots.barplot
+   publiplots.boxplot
    publiplots.scatterplot
+   publiplots.swarmplot
 
 Advanced Plots
 --------------
