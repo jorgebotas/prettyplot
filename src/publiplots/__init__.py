@@ -12,7 +12,7 @@ Basic usage:
     >>> pp.savefig(fig, 'output.png')
 """
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 __author__ = "Jorge Botas"
 __license__ = "MIT"
 __copyright__ = "Copyright 2025, Jorge Botas"
@@ -23,6 +23,8 @@ __description__ = "Publication-ready plotting with a clean, modular API"
 # Core plotting functions (base)
 from publiplots.base.bar import barplot
 from publiplots.base.scatter import scatterplot
+from publiplots.base.box import boxplot
+from publiplots.base.swarm import swarmplot
 
 # Advanced plotting functions
 from publiplots.advanced.venn import venn
@@ -81,6 +83,8 @@ __all__ = [
     # Base plots
     "barplot",
     "scatterplot",
+    "boxplot",
+    "swarmplot",
     # Advanced plots
     "venn",
     "upsetplot",

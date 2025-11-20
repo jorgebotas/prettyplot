@@ -41,7 +41,8 @@ NOTEBOOK_STYLE = {
     "ytick.labelsize": 12,
     "legend.fontsize": 12,
     "lines.linewidth": 2.0,
-    "lines.markersize": 8,
+    "lines.markersize": 6,
+    "lines.markeredgewidth": 2.0,
     "patch.linewidth": 2.0,
 }
 """

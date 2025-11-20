@@ -6,7 +6,9 @@ face (fill) and edge (outline) of matplotlib artists. This enables the
 distinctive publiplots style of transparent fill with opaque edges.
 """
 
+from PIL.Image import linear_gradient
 from matplotlib.collections import PathCollection
+from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.colors import to_rgba
 import numpy as np
@@ -69,9 +71,19 @@ def apply_transparency(
     """
     if isinstance(artists, PathCollection):
         _apply_to_collection(artists, face_alpha, edge_alpha)
+    elif hasattr(artists, '__iter__') and not isinstance(artists, (str, PathCollection)):
+        # It's a sequence - check first element type
+        artists_list = list(artists)
+        if len(artists_list) == 0:
+            return
+        if isinstance(artists_list[0], Line2D):
+            _apply_to_lines(artists_list, face_alpha, edge_alpha)
+        elif isinstance(artists_list[0], Patch):
+            _apply_to_patches(artists_list, face_alpha, edge_alpha)
+        else:
+            raise ValueError(f"Unsupported artist type in sequence: {type(artists_list[0])}")
     else:
-        # Assume it's a list/sequence of patches
-        _apply_to_patches(artists, face_alpha, edge_alpha)
+        raise ValueError(f"Unsupported artist type: {type(artists)}")
 
 
 def _apply_to_collection(
@@ -93,24 +105,48 @@ def _apply_to_collection(
     """
     # Get current edge colors as RGBA arrays
     edge_colors = collection.get_edgecolors()
+    face_colors = collection.get_facecolors()
 
     if len(edge_colors) == 0:
-        edge_colors = collection.get_facecolors()
+        edge_colors = face_colors
 
     # Now apply different alpha to face
     new_face_colors = np.array([
-        to_rgba(edge_colors[i], alpha=face_alpha)
-        for i in range(len(edge_colors))
+        to_rgba(c, alpha=face_alpha) for c in face_colors
     ])
     collection.set_facecolors(new_face_colors)
 
     # Now apply different alpha to edge
     new_edge_colors = np.array([
-        to_rgba(edge_colors[i], alpha=edge_alpha)
-        for i in range(len(edge_colors))
+        to_rgba(c, alpha=edge_alpha) for c in edge_colors
     ])
     collection.set_edgecolors(new_edge_colors)
 
+
+def _apply_to_lines(
+    lines: Sequence[Line2D],
+    face_alpha: float,
+    edge_alpha: float,
+) -> None:
+    """
+    Apply transparency to a sequence of Lines (boxplot, swarmplot, etc.).
+
+    Parameters
+    ----------
+    lines : Sequence[Line2D]
+        List of matplotlib lines.
+    face_alpha : float
+        Alpha for marker face colors.
+    edge_alpha : float
+        Alpha for marker edge colors.
+    """
+    for line in lines:
+        color = line.get_color()
+        if line.get_marker() and line.get_marker() != 'None':
+            line.set_markerfacecolor(to_rgba(color, alpha=face_alpha))
+            line.set_markeredgecolor(to_rgba(color, alpha=edge_alpha))
+        else:
+            line.set_color(to_rgba(color, alpha=edge_alpha))
 
 def _apply_to_patches(
     patches: Sequence[Patch],

@@ -56,7 +56,8 @@ MATPLOTLIB_RCPARAMS: Dict[str, Any] = {
     "axes.spines.left": True,
 
     # Line settings
-    "lines.linewidth": 1.5,
+    "lines.linewidth": 1.0,
+    "lines.markeredgewidth": 1.0,
     "lines.markersize": 6,
 
     # Patch settings (for bars, etc.)
