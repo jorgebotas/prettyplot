@@ -10,11 +10,14 @@ from typing import Optional, List, Dict, Tuple, Union
 from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Normalize
 import seaborn as sns
 import pandas as pd
 
 from publiplots.themes.colors import resolve_palette_map
 from publiplots.utils.transparency import apply_transparency
+from publiplots.utils.legend import create_legend_handles, legend
 
 
 def swarmplot(
@@ -31,6 +34,7 @@ def swarmplot(
     size: float = 5,
     edgecolor: Optional[str] = None,
     linewidth: Optional[float] = None,
+    hue_norm: Optional[Union[Tuple[float, float], Normalize]] = None,
     alpha: Optional[float] = None,
     figsize: Optional[Tuple[float, float]] = None,
     ax: Optional[Axes] = None,
@@ -75,6 +79,8 @@ def swarmplot(
         Color for marker edges. If None, uses face color.
     linewidth : float, optional
         Width of marker edges.
+    hue_norm : tuple or Normalize, optional
+        Normalization for continuous hue variable.
     alpha : float, optional
         Transparency of marker fill (0-1).
     figsize : tuple, optional
@@ -148,6 +154,7 @@ def swarmplot(
         "size": size,
         "edgecolor": edgecolor,
         "linewidth": linewidth,
+        "hue_norm": hue_norm,
         "ax": ax,
         "legend": False,  # Handle legend ourselves
     }
@@ -167,18 +174,16 @@ def swarmplot(
 
     # Add legend if hue is used
     if legend and hue is not None:
-        from publiplots.utils.legend import legend as pp_legend
-        from publiplots.utils.legend import create_legend_handles
-
-        handles = create_legend_handles(
-            labels=list(palette.keys()) if isinstance(palette, dict) else None,
-            colors=list(palette.values()) if isinstance(palette, dict) else None,
+        _legend(
+            ax=ax,
+            hue=hue,
+            color=color,
+            palette=palette,
+            hue_norm=hue_norm,
             alpha=alpha,
             linewidth=linewidth,
+            kwargs=legend_kws,
         )
-
-        legend_kwargs = legend_kws or {}
-        pp_legend(ax, handles=handles, **legend_kwargs)
 
     # Set labels
     if xlabel:
@@ -189,3 +194,59 @@ def swarmplot(
         ax.set_title(title)
 
     return fig, ax
+
+
+def _legend(
+    ax: Axes,
+    hue: Optional[str],
+    color: Optional[str],
+    palette: Optional[Union[str, Dict, List]],
+    hue_norm: Optional[Normalize],
+    alpha: Optional[float] = None,
+    linewidth: Optional[float] = None,
+    kwargs: Optional[Dict] = None,
+) -> None:
+    """
+    Create legend handles for swarm plot.
+    """
+    # Read defaults from rcParams if not provided
+    alpha = resolve_param("alpha", alpha)
+    linewidth = resolve_param("lines.linewidth", linewidth)
+
+    kwargs = kwargs or {}
+    handle_kwargs = dict(alpha=alpha, linewidth=linewidth, color=color, style="circle")
+
+    # Store legend data in collection for later retrieval
+    legend_data = {}
+
+    # Prepare hue legend data
+    if hue is not None:
+        hue_label = kwargs.pop("hue_label", hue)
+        if isinstance(palette, dict):  # categorical legend
+            hue_handles = create_legend_handles(
+                labels=list(palette.keys()),
+                colors=list(palette.values()),
+                **handle_kwargs
+            )
+            legend_data["hue"] = {
+                "handles": hue_handles,
+                "label": hue_label,
+            }
+        else:
+            # Continuous colorbar
+            mappable = ScalarMappable(norm=hue_norm, cmap=palette)
+            legend_data["hue"] = {
+                "mappable": mappable,
+                "label": hue_label,
+                "height": kwargs.pop("hue_height", 0.2),
+                "width": kwargs.pop("hue_width", 0.05),
+                "type": "colorbar",
+            }
+
+    # Store metadata on collection
+    if len(ax.collections) > 0:
+        ax.collections[0]._legend_data = legend_data
+
+    # Create legends using legend() API
+    from publiplots.utils.legend import legend as pp_legend
+    builder = pp_legend(ax=ax)
