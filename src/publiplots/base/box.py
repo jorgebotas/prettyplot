@@ -189,9 +189,10 @@ def boxplot(
         line_data = line.get_xdata() if categorical_axis == "x" else line.get_ydata()
         if len(line_data) == 0:
             continue
-        pos = round(np.mean(line_data), 2)
-        if pos in patch_colors:
-            line.set_color(patch_colors[pos])
+        pos = np.mean(line_data)
+        # Find closest patch position
+        closest_pos = min(patch_colors.keys(), key=lambda p: abs(p - pos))
+        line.set_color(patch_colors[closest_pos])
 
     # Set edge colors to match face colors
     for patch in ax.patches:
