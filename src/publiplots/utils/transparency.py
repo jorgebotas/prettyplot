@@ -173,10 +173,6 @@ def apply_transparency(
             _apply_to_lines(artists_list, face_alpha, edge_alpha)
         elif isinstance(artists_list[0], Patch):
             _apply_to_patches(artists_list, face_alpha, edge_alpha)
-        else:
-            raise ValueError(f"Unsupported artist type in sequence: {type(artists_list[0])}")
-    else:
-        raise ValueError(f"Unsupported artist type: {type(artists)}")
 
 
 def _apply_to_collection(

@@ -28,7 +28,7 @@ def violinplot(
     color: Optional[str] = None,
     palette: Optional[Union[str, Dict, List]] = None,
     saturation: float = 1.0,
-    fill: bool = True,
+    fill: bool = False,
     inner: Optional[str] = "box",
     split: bool = False,
     width: float = 0.8,
@@ -80,7 +80,7 @@ def violinplot(
         Color palette for hue grouping.
     saturation : float, default=1.0
         Proportion of the original saturation to draw colors at.
-    fill : bool, default=True
+    fill : bool, default=False
         Whether to fill the violin interior.
     inner : str, optional, default="box"
         Representation of the data in the violin interior.
