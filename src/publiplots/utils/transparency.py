@@ -6,13 +6,12 @@ face (fill) and edge (outline) of matplotlib artists. This enables the
 distinctive publiplots style of transparent fill with opaque edges.
 """
 
-from PIL.Image import linear_gradient
-from matplotlib.collections import PathCollection
+from matplotlib.collections import PathCollection, FillBetweenPolyCollection
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.colors import to_rgba
 import numpy as np
-from typing import Union, List, Sequence
+from typing import Union, Sequence
 
 
 def apply_transparency(
@@ -69,7 +68,7 @@ def apply_transparency(
     - Edge colors default to face colors if not explicitly set
     - Original color values are preserved, only alpha is modified
     """
-    if isinstance(artists, PathCollection):
+    if isinstance(artists, PathCollection) or isinstance(artists, FillBetweenPolyCollection):
         _apply_to_collection(artists, face_alpha, edge_alpha)
     elif hasattr(artists, '__iter__') and not isinstance(artists, (str, PathCollection)):
         # It's a sequence - check first element type
@@ -109,6 +108,9 @@ def _apply_to_collection(
 
     if len(edge_colors) == 0:
         edge_colors = face_colors
+
+    if len(face_colors) == 0:
+        face_colors = edge_colors
 
     # Now apply different alpha to face
     new_face_colors = np.array([
