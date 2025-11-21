@@ -58,7 +58,7 @@ html_theme_options = {
         },
         {
             'title': 'Examples',
-            'url': 'auto_examples_index',
+            'url': 'auto_examples/index',
         },
     ],
 }
