@@ -221,7 +221,7 @@ def violinplot(
             linewidth=linewidth,
         )
 
-        legend_kwargs = legend_kws or {}
+        legend_kwargs = legend_kws or dict(label=hue)
         pp_legend(ax, handles=handles, **legend_kwargs)
 
     # Set labels
