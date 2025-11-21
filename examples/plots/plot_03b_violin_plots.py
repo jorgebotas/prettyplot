@@ -1,0 +1,165 @@
+"""
+Violin Plot Examples
+====================
+
+This example demonstrates violin plot functionality in PubliPlots,
+including simple violin plots, grouped violin plots, split violins, and various inner representations.
+"""
+
+import publiplots as pp
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Set style
+pp.set_notebook_style()
+
+# %%
+# Simple Violin Plot
+# ------------------
+# Basic violin plot showing distribution by category.
+
+# Create sample data
+np.random.seed(42)
+n = 200
+violin_data = pd.DataFrame({
+    'category': np.repeat(['A', 'B', 'C', 'D'], n // 4),
+    'value': np.concatenate([
+        np.random.normal(10, 2, n // 4),
+        np.random.normal(15, 3, n // 4),
+        np.random.normal(12, 2.5, n // 4),
+        np.random.normal(18, 4, n // 4)
+    ])
+})
+
+# Create simple violin plot
+fig, ax = pp.violinplot(
+    data=violin_data,
+    x='category',
+    y='value',
+    title='Simple Violin Plot',
+    xlabel='Category',
+    ylabel='Value',
+)
+plt.show()
+
+# %%
+# Violin Plot with Hue Grouping
+# -----------------------------
+# Use the hue parameter to create grouped violin plots.
+
+# Add group variable
+violin_data['group'] = np.tile(['Group 1', 'Group 2'], n // 2)
+
+# Create grouped violin plot
+fig, ax = pp.violinplot(
+    data=violin_data,
+    x='category',
+    y='value',
+    hue='group',
+    gap=0.1,
+    title='Grouped Violin Plot',
+    xlabel='Category',
+    ylabel='Value',
+    palette={'Group 1': '#8E8EC1', 'Group 2': '#75B375'},
+)
+plt.show()
+
+# %%
+# Violin Plot with Custom Alpha
+# -----------------------------
+# Adjust transparency of violin fill.
+
+# Create violin plot with custom alpha
+fig, ax = pp.violinplot(
+    data=violin_data,
+    x='category',
+    y='value',
+    hue='group',
+    gap=0.1,
+    title='Violin Plot with Custom Alpha',
+    xlabel='Category',
+    ylabel='Value',
+    alpha=0.3,
+)
+plt.show()
+
+# %%
+# Split Violin Plot
+# -----------------
+# Split violins to compare two groups side by side.
+
+# Create split violin plot
+fig, ax = pp.violinplot(
+    data=violin_data,
+    x='category',
+    y='value',
+    hue='group',
+    split=True,
+    inner='quart',
+    gap=0.1,
+    title='Split Violin Plot',
+    xlabel='Category',
+    ylabel='Value',
+)
+plt.show()
+
+# %%
+# Violin Plot Without Fill
+# ------------------------
+# Show only violin outlines for a cleaner look.
+
+# Create violin plot without fill
+fig, ax = pp.violinplot(
+    data=violin_data,
+    x='category',
+    y='value',
+    hue='group',
+    fill=False,
+    split=True,
+    inner='quart',
+    gap=0.1,
+    title='Violin Plot Without Fill',
+    xlabel='Category',
+    ylabel='Value',
+)
+plt.show()
+
+# %%
+# Horizontal Violin Plot
+# ----------------------
+# Create horizontal violin plots by swapping x and y.
+
+# Create horizontal violin plot
+fig, ax = pp.violinplot(
+    data=violin_data[violin_data['group'] == 'Group 1'],
+    x='value',
+    y='category',
+    title='Horizontal Violin Plot',
+    xlabel='Value',
+    ylabel='Category',
+)
+plt.show()
+
+# %%
+# Violin Plot with Different Inner Representations
+# ------------------------------------------------
+# Compare different inner representations: box, quart, stick, point.
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+inner_types = ['box', 'quart', 'stick', 'point']
+for ax, inner in zip(axes.flat, inner_types):
+    pp.violinplot(
+        data=violin_data[violin_data['group'] == 'Group 1'],
+        x='category',
+        y='value',
+        inner=inner,
+        ax=ax,
+        title=f'Inner: {inner}',
+        xlabel='Category',
+        ylabel='Value',
+    )
+
+plt.tight_layout()
+plt.show()
