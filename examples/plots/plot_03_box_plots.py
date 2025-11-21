@@ -4,6 +4,9 @@ Box Plot Examples
 
 This example demonstrates box plot functionality in PubliPlots,
 including simple box plots, grouped box plots, and combined box+swarm plots.
+
+Examples
+--------
 """
 
 import publiplots as pp
@@ -13,10 +16,6 @@ import matplotlib.pyplot as plt
 
 # Set style
 pp.set_notebook_style()
-
-# %%
-# Examples
-# --------
 
 # %%
 # Simple Box Plot
@@ -70,6 +69,21 @@ fig, ax = pp.boxplot(
 plt.show()
 
 # %%
+# Horizontal Box Plot
+# ~~~~~~~~~~~~~~~~~~~
+# Create horizontal box plots by swapping x and y.
+
+fig, ax = pp.boxplot(
+    data=box_data[box_data['group'] == 'Group 1'],
+    x='value',
+    y='category',
+    title='Horizontal Box Plot',
+    xlabel='Value',
+    ylabel='Category',
+)
+plt.show()
+
+# %%
 # Combined Box and Swarm Plot
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Overlay swarm plot on box plot to show both summary statistics and individual data points.
@@ -102,25 +116,9 @@ plt.tight_layout()
 plt.show()
 
 # %%
-# Horizontal Box Plot
-# ~~~~~~~~~~~~~~~~~~~
-# Create horizontal box plots by swapping x and y.
-
-fig, ax = pp.boxplot(
-    data=box_data[box_data['group'] == 'Group 1'],
-    x='value',
-    y='category',
-    title='Horizontal Box Plot',
-    xlabel='Value',
-    ylabel='Category',
-)
-plt.show()
-
-# %%
 # Customization
 # -------------
-
-# %%
+#
 # Box Plot with Custom Alpha
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Adjust transparency of box fill.

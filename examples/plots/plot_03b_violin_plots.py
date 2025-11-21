@@ -4,6 +4,9 @@ Violin Plot Examples
 
 This example demonstrates violin plot functionality in PubliPlots,
 including simple violin plots, grouped violin plots, split violins, and combined violin+swarm plots.
+
+Examples
+--------
 """
 
 import publiplots as pp
@@ -13,10 +16,6 @@ import matplotlib.pyplot as plt
 
 # Set style
 pp.set_notebook_style()
-
-# %%
-# Examples
-# --------
 
 # %%
 # Simple Violin Plot
@@ -89,6 +88,21 @@ fig, ax = pp.violinplot(
 plt.show()
 
 # %%
+# Horizontal Violin Plot
+# ~~~~~~~~~~~~~~~~~~~~~~
+# Create horizontal violin plots by swapping x and y.
+
+fig, ax = pp.violinplot(
+    data=violin_data[violin_data['group'] == 'Group 1'],
+    x='value',
+    y='category',
+    title='Horizontal Violin Plot',
+    xlabel='Value',
+    ylabel='Category',
+)
+plt.show()
+
+# %%
 # Combined Violin and Swarm Plot
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Overlay swarm plot on violin plot to show distribution shape and individual data points.
@@ -122,25 +136,9 @@ plt.tight_layout()
 plt.show()
 
 # %%
-# Horizontal Violin Plot
-# ~~~~~~~~~~~~~~~~~~~~~~
-# Create horizontal violin plots by swapping x and y.
-
-fig, ax = pp.violinplot(
-    data=violin_data[violin_data['group'] == 'Group 1'],
-    x='value',
-    y='category',
-    title='Horizontal Violin Plot',
-    xlabel='Value',
-    ylabel='Category',
-)
-plt.show()
-
-# %%
 # Customization
 # -------------
-
-# %%
+#
 # Violin Plot with Custom Alpha
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Adjust transparency of violin fill.
