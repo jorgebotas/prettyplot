@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.4.2] - 2025-11-21
+
+### Added
+- `violinplot()` - Violin plots with transparent fill and opaque edges
+- `ArtistTracker` class for selectively applying transparency when overlaying plots
+- Combined violin + swarm plot examples
+
+### Changed
+- Reorganized codebase: moved plotting functions from `base/` and `advanced/` to single `plot/` directory
+- Updated `boxplot()`, `violinplot()`, and `swarmplot()` to use `ArtistTracker` for proper overlay support
+- Default `fill=False` for `violinplot()` to match publication style
+- Reordered examples: swarm plots now appear before box and violin plots
+
+### Fixed
+- Transparency override issue when overlaying multiple plots (e.g., violin + swarm)
+
+[0.4.2]: https://github.com/jorgebotas/publiplots/releases/tag/v0.4.2
+
+
 ## [0.4.1] - 2025-11-20
 
 ### Added
