@@ -10,8 +10,102 @@ from matplotlib.collections import PathCollection, FillBetweenPolyCollection
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.colors import to_rgba
+from matplotlib.axes import Axes
 import numpy as np
-from typing import Union, Sequence
+from typing import Union, Sequence, Optional, List
+
+
+class ArtistTracker:
+    """
+    Track matplotlib artists added to an axes for selective transparency application.
+
+    This class captures a snapshot of the current artists on an axes, then allows
+    applying transparency only to newly added artists. This is useful when overlaying
+    multiple plots (e.g., violin + swarm) to avoid modifying previously drawn elements.
+
+    Parameters
+    ----------
+    ax : Axes
+        The matplotlib axes to track.
+
+    Examples
+    --------
+    >>> tracker = ArtistTracker(ax)
+    >>> sns.violinplot(data=df, ax=ax)
+    >>> tracker.apply_transparency(face_alpha=0.3)
+
+    >>> # Selective application
+    >>> tracker.apply_transparency(on="collections", face_alpha=0.3)
+    >>> tracker.apply_transparency(on=["collections", "lines"], face_alpha=0.3)
+    """
+
+    def __init__(self, ax: Axes):
+        self.ax = ax
+        self._snapshot()
+
+    def _snapshot(self) -> None:
+        """Capture the current state of artists on the axes."""
+        self._collections = set(self.ax.collections)
+        self._lines = set(self.ax.lines)
+        self._patches = set(self.ax.patches)
+
+    def get_new_collections(self) -> List:
+        """Return collections added since snapshot."""
+        return [c for c in self.ax.collections if c not in self._collections]
+
+    def get_new_lines(self) -> List:
+        """Return lines added since snapshot."""
+        return [l for l in self.ax.lines if l not in self._lines]
+
+    def get_new_patches(self) -> List:
+        """Return patches added since snapshot."""
+        return [p for p in self.ax.patches if p not in self._patches]
+
+    def apply_transparency(
+        self,
+        on: Optional[Union[str, List[str]]] = None,
+        face_alpha: Optional[float] = None,
+        edge_alpha: float = 1.0,
+    ) -> None:
+        """
+        Apply transparency to newly added artists.
+
+        Parameters
+        ----------
+        on : str or list of str, optional
+            Which artist types to apply transparency to.
+            Options: "collections", "lines", "patches".
+            If None, applies to all new artists.
+        face_alpha : float, optional
+            Alpha transparency for face/fill color (0.0-1.0).
+        edge_alpha : float, default=1.0
+            Alpha transparency for edge/outline color (0.0-1.0).
+        """
+        if face_alpha is None:
+            return
+
+        # Normalize 'on' parameter to a list
+        if on is None:
+            targets = ["collections", "lines", "patches"]
+        elif isinstance(on, str):
+            targets = [on]
+        else:
+            targets = on
+
+        # Apply to each target type
+        if "collections" in targets:
+            for collection in self.get_new_collections():
+                apply_transparency(collection, face_alpha=face_alpha, edge_alpha=edge_alpha)
+
+        if "lines" in targets:
+            new_lines = self.get_new_lines()
+            if new_lines:
+                apply_transparency(new_lines, face_alpha=face_alpha, edge_alpha=edge_alpha)
+
+        if "patches" in targets:
+            new_patches = self.get_new_patches()
+            if new_patches:
+                apply_transparency(new_patches, face_alpha=face_alpha, edge_alpha=edge_alpha)
 
 
 def apply_transparency(
@@ -182,5 +276,6 @@ def _apply_to_patches(
 
 
 __all__ = [
+    "ArtistTracker",
     "apply_transparency",
 ]

@@ -14,7 +14,7 @@ import seaborn as sns
 import pandas as pd
 
 from publiplots.themes.colors import resolve_palette_map
-from publiplots.utils.transparency import apply_transparency
+from publiplots.utils.transparency import ArtistTracker
 
 
 def violinplot(
@@ -202,12 +202,14 @@ def violinplot(
     # Merge with user-provided kwargs
     violinplot_kwargs.update(kwargs)
 
+    # Track artists before plotting
+    tracker = ArtistTracker(ax)
+
     # Create violinplot
     sns.violinplot(**violinplot_kwargs)
 
-    # Apply transparency to violin collections
-    for collection in ax.collections:
-        apply_transparency(collection, face_alpha=alpha)
+    # Apply transparency only to new violin collections
+    tracker.apply_transparency(on="collections", face_alpha=alpha)
 
     # Add legend if hue is used
     if legend and hue is not None:

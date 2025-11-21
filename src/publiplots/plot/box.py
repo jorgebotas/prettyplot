@@ -16,7 +16,7 @@ import pandas as pd
 import numpy as np
 
 from publiplots.themes.colors import resolve_palette_map
-from publiplots.utils.transparency import apply_transparency
+from publiplots.utils.transparency import ArtistTracker, apply_transparency
 from publiplots.utils import is_categorical
 
 
@@ -170,13 +170,20 @@ def boxplot(
     # Merge with user-provided kwargs
     boxplot_kwargs.update(kwargs)
 
+    # Track artists before plotting
+    tracker = ArtistTracker(ax)
+
     # Create boxplot
     sns.boxplot(**boxplot_kwargs)
+
+    # Get newly created patches and lines
+    new_patches = tracker.get_new_patches()
+    new_lines = tracker.get_new_lines()
 
     # Build a map of position -> color from patches
     # Position is on the categorical axis (x or y)
     patch_colors = {}
-    for patch in ax.patches:
+    for patch in new_patches:
         verts = patch.get_path().vertices
         if categorical_axis == "x":
             pos = round(np.mean(verts[:, 0]), 2)
@@ -189,8 +196,8 @@ def boxplot(
     markeredgewidth = flierprops.get("markeredgewidth", None)
     markeredgewidth = resolve_param("lines.markeredgewidth", markeredgewidth)
 
-    # Recolor all lines (whiskers, caps, medians, outliers) based on position
-    for line in ax.lines:
+    # Recolor all new lines (whiskers, caps, medians, outliers) based on position
+    for line in new_lines:
         line_data = line.get_xdata() if categorical_axis == "x" else line.get_ydata()
         if len(line_data) == 0:
             continue
@@ -202,15 +209,15 @@ def boxplot(
         line.set_linewidth(linewidth)
         line.set_markeredgewidth(markeredgewidth)
 
-    # Apply transparency to lines (outlier markers)
-    apply_transparency(ax.lines, face_alpha=alpha, edge_alpha=1.0)
+    # Apply transparency to new lines (outlier markers)
+    apply_transparency(new_lines, face_alpha=alpha, edge_alpha=1.0)
 
     # Set edge colors to match face colors
-    for patch in ax.patches:
+    for patch in new_patches:
         patch.set_edgecolor(patch.get_facecolor())
 
-    # Apply differential transparency to patches
-    apply_transparency(ax.patches, face_alpha=alpha, edge_alpha=1.0)
+    # Apply differential transparency to new patches
+    apply_transparency(new_patches, face_alpha=alpha, edge_alpha=1.0)
 
     # Add legend if hue is used
     if legend and hue is not None:
