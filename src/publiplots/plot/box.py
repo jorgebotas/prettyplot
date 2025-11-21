@@ -16,7 +16,7 @@ import pandas as pd
 import numpy as np
 
 from publiplots.themes.colors import resolve_palette_map
-from publiplots.utils.transparency import ArtistTracker, apply_transparency
+from publiplots.utils.transparency import ArtistTracker
 from publiplots.utils import is_categorical
 
 
@@ -209,15 +209,12 @@ def boxplot(
         line.set_linewidth(linewidth)
         line.set_markeredgewidth(markeredgewidth)
 
-    # Apply transparency to new lines (outlier markers)
-    apply_transparency(new_lines, face_alpha=alpha, edge_alpha=1.0)
-
     # Set edge colors to match face colors
     for patch in new_patches:
         patch.set_edgecolor(patch.get_facecolor())
 
-    # Apply differential transparency to new patches
-    apply_transparency(new_patches, face_alpha=alpha, edge_alpha=1.0)
+    # Apply transparency to new patches and lines
+    tracker.apply_transparency(on=["patches", "lines"], face_alpha=alpha)
 
     # Add legend if hue is used
     if legend and hue is not None:
