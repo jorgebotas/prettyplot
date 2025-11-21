@@ -20,16 +20,14 @@ __url__ = "https://github.com/jorgebotas/publiplots"
 __email__ = "jorgebotas.github@gmail.com"
 __description__ = "Publication-ready plotting with a clean, modular API"
 
-# Core plotting functions (base)
-from publiplots.base.bar import barplot
-from publiplots.base.scatter import scatterplot
-from publiplots.base.box import boxplot
-from publiplots.base.swarm import swarmplot
-from publiplots.base.violin import violinplot
-
-# Advanced plotting functions
-from publiplots.advanced.venn import venn
-from publiplots.advanced.upset import upsetplot
+# Plotting functions
+from publiplots.plot.bar import barplot
+from publiplots.plot.scatter import scatterplot
+from publiplots.plot.box import boxplot
+from publiplots.plot.swarm import swarmplot
+from publiplots.plot.violin import violinplot
+from publiplots.plot.venn import venn
+from publiplots.plot.upset import upsetplot
 
 # Utilities
 from publiplots.utils.io import savefig, save_multiple, close_all
@@ -81,13 +79,12 @@ from publiplots.themes.hatches import (
 __all__ = [
     "__version__",
     "__author__",
-    # Base plots
+    # Plots
     "barplot",
     "scatterplot",
     "boxplot",
     "swarmplot",
     "violinplot",
-    # Advanced plots
     "venn",
     "upsetplot",
     # I/O utilities
