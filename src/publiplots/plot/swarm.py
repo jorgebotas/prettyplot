@@ -16,7 +16,7 @@ import seaborn as sns
 import pandas as pd
 
 from publiplots.themes.colors import resolve_palette_map
-from publiplots.utils.transparency import apply_transparency
+from publiplots.utils.transparency import ArtistTracker
 from publiplots.utils.legend import create_legend_handles, legend
 
 
@@ -162,15 +162,19 @@ def swarmplot(
     # Merge with user-provided kwargs
     swarmplot_kwargs.update(kwargs)
 
+    # Track artists before plotting
+    tracker = ArtistTracker(ax)
+
     # Create swarmplot
     sns.swarmplot(**swarmplot_kwargs)
 
-    # Apply transparency to all collections
-    for collection in ax.collections:
-        # Set edge colors if not specified
-        if edgecolor is None:
+    # Set edge colors if not specified
+    if edgecolor is None:
+        for collection in tracker.get_new_collections():
             collection.set_edgecolors(collection.get_facecolors())
-        apply_transparency(collection, face_alpha=alpha, edge_alpha=1.0)
+
+    # Apply transparency to new collections only
+    tracker.apply_transparency(on="collections", face_alpha=alpha)
 
     # Add legend if hue is used
     if legend and hue is not None:

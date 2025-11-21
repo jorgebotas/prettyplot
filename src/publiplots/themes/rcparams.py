@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 
 MATPLOTLIB_RCPARAMS: Dict[str, Any] = {
     # Figure settings - compact by default (publication-ready)
-    "figure.figsize": [3.25, 2.5],
+    "figure.figsize": [3, 1.8],
     "figure.dpi": 600,
     "figure.edgecolor": "none",
     "figure.subplot.hspace": 0.05,

@@ -3,7 +3,10 @@ Box Plot Examples
 =================
 
 This example demonstrates box plot functionality in PubliPlots,
-including simple box plots, grouped box plots, and horizontal orientations.
+including simple box plots, grouped box plots, and combined box+swarm plots.
+
+Examples
+--------
 """
 
 import publiplots as pp
@@ -16,7 +19,7 @@ pp.set_notebook_style()
 
 # %%
 # Simple Box Plot
-# ---------------
+# ~~~~~~~~~~~~~~~
 # Basic box plot showing distribution by category.
 
 # Create sample data
@@ -45,7 +48,7 @@ plt.show()
 
 # %%
 # Box Plot with Hue Grouping
-# --------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Use the hue parameter to create grouped box plots.
 
 # Add group variable
@@ -57,6 +60,7 @@ fig, ax = pp.boxplot(
     x='category',
     y='value',
     hue='group',
+    gap=0.1,
     title='Grouped Box Plot',
     xlabel='Category',
     ylabel='Value',
@@ -65,29 +69,10 @@ fig, ax = pp.boxplot(
 plt.show()
 
 # %%
-# Box Plot with Custom Alpha
-# --------------------------
-# Adjust transparency of box fill.
-
-# Create box plot with custom alpha
-fig, ax = pp.boxplot(
-    data=box_data,
-    x='category',
-    y='value',
-    hue='group',
-    title='Box Plot with Custom Alpha',
-    xlabel='Category',
-    ylabel='Value',
-    alpha=0.3,
-)
-plt.show()
-
-# %%
 # Horizontal Box Plot
-# -------------------
+# ~~~~~~~~~~~~~~~~~~~
 # Create horizontal box plots by swapping x and y.
 
-# Create horizontal box plot
 fig, ax = pp.boxplot(
     data=box_data[box_data['group'] == 'Group 1'],
     x='value',
@@ -99,11 +84,63 @@ fig, ax = pp.boxplot(
 plt.show()
 
 # %%
+# Combined Box and Swarm Plot
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Overlay swarm plot on box plot to show both summary statistics and individual data points.
+
+fig, ax = plt.subplots(figsize=(6, 5))
+
+# First, create the box plot
+pp.boxplot(
+    data=box_data[box_data['group'] == 'Group 1'],
+    x='category',
+    y='value',
+    ax=ax,
+    showfliers=False,
+)
+
+# Then overlay the swarm plot
+pp.swarmplot(
+    data=box_data[box_data['group'] == 'Group 1'],
+    x='category',
+    y='value',
+    ax=ax,
+    alpha=1,
+    legend=False,
+)
+
+ax.set_title('Combined Box and Swarm Plot')
+ax.set_xlabel('Category')
+ax.set_ylabel('Value')
+plt.tight_layout()
+plt.show()
+
+# %%
+# Customization
+# -------------
+#
+# Box Plot with Custom Alpha
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Adjust transparency of box fill.
+
+fig, ax = pp.boxplot(
+    data=box_data,
+    x='category',
+    y='value',
+    hue='group',
+    gap=0.1,
+    title='Box Plot with Custom Alpha',
+    xlabel='Category',
+    ylabel='Value',
+    alpha=0.3,
+)
+plt.show()
+
+# %%
 # Box Plot Without Outliers
-# -------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
 # Hide outliers when you plan to overlay with swarm plot.
 
-# Create box plot without outliers
 fig, ax = pp.boxplot(
     data=box_data,
     x='category',

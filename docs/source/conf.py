@@ -58,7 +58,7 @@ html_theme_options = {
         },
         {
             'title': 'Examples',
-            'url': 'auto_examples_index',
+            'url': 'auto_examples/index',
         },
     ],
 }
@@ -109,8 +109,8 @@ intersphinx_mapping = {
 import publiplots  # This will register the custom fonts
 
 sphinx_gallery_conf = {
-    'examples_dirs': ['../../examples/plots', '../../examples/03_customization'],
-    'gallery_dirs': ['auto_examples/plots', 'auto_examples/customization'],
+    'examples_dirs': ['../../examples/plots'],
+    'gallery_dirs': ['auto_examples'],
     'filename_pattern': r'.*\.py$',
     'backreferences_dir': 'gen_modules/backreferences',
     'doc_module': ('publiplots',),
