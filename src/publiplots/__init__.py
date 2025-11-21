@@ -25,6 +25,7 @@ from publiplots.base.bar import barplot
 from publiplots.base.scatter import scatterplot
 from publiplots.base.box import boxplot
 from publiplots.base.swarm import swarmplot
+from publiplots.base.violin import violinplot
 
 # Advanced plotting functions
 from publiplots.advanced.venn import venn
@@ -85,6 +86,7 @@ __all__ = [
     "scatterplot",
     "boxplot",
     "swarmplot",
+    "violinplot",
     # Advanced plots
     "venn",
     "upsetplot",
