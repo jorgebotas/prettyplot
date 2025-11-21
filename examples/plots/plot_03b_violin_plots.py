@@ -3,7 +3,7 @@ Violin Plot Examples
 ====================
 
 This example demonstrates violin plot functionality in PubliPlots,
-including simple violin plots, grouped violin plots, split violins, and various inner representations.
+including simple violin plots, grouped violin plots, split violins, and combined violin+swarm plots.
 """
 
 import publiplots as pp
@@ -15,8 +15,12 @@ import matplotlib.pyplot as plt
 pp.set_notebook_style()
 
 # %%
+# Examples
+# --------
+
+# %%
 # Simple Violin Plot
-# ------------------
+# ~~~~~~~~~~~~~~~~~~
 # Basic violin plot showing distribution by category.
 
 # Create sample data
@@ -45,7 +49,7 @@ plt.show()
 
 # %%
 # Violin Plot with Hue Grouping
-# -----------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Use the hue parameter to create grouped violin plots.
 
 # Add group variable
@@ -66,30 +70,10 @@ fig, ax = pp.violinplot(
 plt.show()
 
 # %%
-# Violin Plot with Custom Alpha
-# -----------------------------
-# Adjust transparency of violin fill.
-
-# Create violin plot with custom alpha
-fig, ax = pp.violinplot(
-    data=violin_data,
-    x='category',
-    y='value',
-    hue='group',
-    gap=0.1,
-    title='Violin Plot with Custom Alpha',
-    xlabel='Category',
-    ylabel='Value',
-    alpha=0.3,
-)
-plt.show()
-
-# %%
 # Split Violin Plot
-# -----------------
+# ~~~~~~~~~~~~~~~~~
 # Split violins to compare two groups side by side.
 
-# Create split violin plot
 fig, ax = pp.violinplot(
     data=violin_data,
     x='category',
@@ -105,32 +89,43 @@ fig, ax = pp.violinplot(
 plt.show()
 
 # %%
-# Violin Plot Without Fill
-# ------------------------
-# Show only violin outlines for a cleaner look.
+# Combined Violin and Swarm Plot
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Overlay swarm plot on violin plot to show distribution shape and individual data points.
 
-# Create violin plot without fill
-fig, ax = pp.violinplot(
-    data=violin_data,
+fig, ax = plt.subplots(figsize=(6, 5))
+
+# First, create the violin plot
+pp.violinplot(
+    data=violin_data[violin_data['group'] == 'Group 1'],
     x='category',
     y='value',
-    hue='group',
-    fill=False,
-    split=True,
-    inner='quart',
-    gap=0.1,
-    title='Violin Plot Without Fill',
-    xlabel='Category',
-    ylabel='Value',
+    ax=ax,
+    inner=None,
 )
+
+# Then overlay the swarm plot
+pp.swarmplot(
+    data=violin_data[violin_data['group'] == 'Group 1'],
+    x='category',
+    y='value',
+    ax=ax,
+    alpha=1,
+    legend=False,
+    size=3,
+)
+
+ax.set_title('Combined Violin and Swarm Plot')
+ax.set_xlabel('Category')
+ax.set_ylabel('Value')
+plt.tight_layout()
 plt.show()
 
 # %%
 # Horizontal Violin Plot
-# ----------------------
+# ~~~~~~~~~~~~~~~~~~~~~~
 # Create horizontal violin plots by swapping x and y.
 
-# Create horizontal violin plot
 fig, ax = pp.violinplot(
     data=violin_data[violin_data['group'] == 'Group 1'],
     x='value',
@@ -142,8 +137,30 @@ fig, ax = pp.violinplot(
 plt.show()
 
 # %%
+# Customization
+# -------------
+
+# %%
+# Violin Plot with Custom Alpha
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Adjust transparency of violin fill.
+
+fig, ax = pp.violinplot(
+    data=violin_data,
+    x='category',
+    y='value',
+    hue='group',
+    gap=0.1,
+    title='Violin Plot with Custom Alpha',
+    xlabel='Category',
+    ylabel='Value',
+    alpha=0.3,
+)
+plt.show()
+
+# %%
 # Violin Plot with Different Inner Representations
-# ------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Compare different inner representations: box, quart, stick, point.
 
 fig, axes = plt.subplots(2, 2, figsize=(10, 8))
