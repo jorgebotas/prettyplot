@@ -33,6 +33,7 @@ def boxplot(
     width: float = 0.8,
     gap: float = 0,
     whis: float = 1.5,
+    showcaps: bool = False,
     fliersize: Optional[float] = None,
     linewidth: Optional[float] = None,
     alpha: Optional[float] = None,
@@ -77,6 +78,8 @@ def boxplot(
         Gap between boxes when using hue.
     whis : float, default=1.5
         Proportion of IQR past low and high quartiles to extend whiskers.
+    showcaps: bool, default=False
+        Whether to show the caps.
     fliersize : float, optional
         Size of outlier markers.
     linewidth : float, optional
@@ -160,6 +163,7 @@ def boxplot(
         "width": width,
         "gap": gap,
         "whis": whis,
+        "showcaps": showcaps,
         "fliersize": fliersize,
         "linewidth": linewidth,
         "fill": True,  # Need fill=True to get patches

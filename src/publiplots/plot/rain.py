@@ -16,7 +16,10 @@ import numpy as np
 
 from publiplots.themes.colors import resolve_palette_map
 from publiplots.utils.transparency import ArtistTracker
-from publiplots.plot.violin import violinplot as pp_violinplot
+from publiplots.utils.validation import is_categorical
+from publiplots.plot.violin import violinplot
+from publiplots.plot.box import boxplot
+from publiplots.plot.swarm import swarmplot
 
 
 def rainplot(
@@ -26,10 +29,11 @@ def rainplot(
     hue: Optional[str] = None,
     order: Optional[List] = None,
     hue_order: Optional[List] = None,
-    orient: Optional[str] = None,
     color: Optional[str] = None,
     palette: Optional[Union[str, Dict, List]] = None,
     saturation: float = 1.0,
+    dodge: bool = True,
+    gap: float = 0.3,
     # Violin (cloud) parameters
     cloud_alpha: Optional[float] = None,
     width: float = 0.6,
@@ -47,7 +51,6 @@ def rainplot(
     rain: str = "strip",
     rain_alpha: Optional[float] = 0.6,
     point_size: float = 3,
-    jitter: float = 0.05,
     # Offset control
     offset: float = 0.0,
     move: float = 0.0,
@@ -83,14 +86,16 @@ def rainplot(
         Order for the categorical levels.
     hue_order : list, optional
         Order for the hue levels.
-    orient : str, optional
-        Orientation of the plot ('v' or 'h').
     color : str, optional
         Fixed color for all elements (only used when hue is None).
     palette : str, dict, or list, optional
         Color palette for hue grouping.
     saturation : float, default=1.0
         Proportion of the original saturation to draw colors at.
+    dodge : bool, default=True
+        Whether to dodge the violin and box plot.
+    gap : float, default=0.3
+        Gap between the violin and the box plot.
     cloud_alpha : float, optional
         Transparency of violin fill (0-1). Defaults to rcParams alpha.
     width : float, default=0.6
@@ -119,8 +124,6 @@ def rainplot(
         Transparency of rain points.
     point_size : float, default=3
         Size of rain points.
-    jitter : float, default=0.05
-        Amount of jitter for strip plot (ignored for swarm).
     offset : float, default=0.0
         Horizontal offset for the entire raincloud.
     move : float, default=0.0
@@ -187,12 +190,10 @@ def rainplot(
         )
 
     # Determine orientation
-    if orient is None:
-        orient = "v"  # default vertical
-    is_vertical = orient in ("v", "vertical")
+    is_vertical = is_categorical(data[x])
 
     # 1. Draw the half-violin (cloud) using pp.violinplot with side parameter
-    pp_violinplot(
+    violinplot(
         data=data,
         x=x,
         y=y,
@@ -202,94 +203,63 @@ def rainplot(
         color=color,
         palette=palette,
         saturation=saturation,
-        fill=False,
         inner=None,
         width=width,
-        dodge="auto",
+        dodge=dodge,
         linewidth=linewidth,
         cut=cut,
+        gap=gap,
         gridsize=gridsize,
         bw_method=bw_method,
         bw_adjust=bw_adjust,
         density_norm=density_norm,
         alpha=cloud_alpha,
         ax=ax,
-        legend=False,
+        legend=True,
         side="right",
     )
 
     # 2. Draw box plot (umbrella) if requested
     if box:
-        box_tracker = ArtistTracker(ax)
+        boxplot(
+            data=data,
+            x=x,
+            y=y,
+            hue=hue,
+            order=order,
+            hue_order=hue_order,
+            dodge=dodge,
+            color=color if hue is None else None,
+            palette=palette if hue else None,
+            width=width,
+            gap=(1 - box_width),
+            whis=whis,
+            linewidth=linewidth,
+            ax=ax,
+            legend=False,
+            showfliers=False,
+        )
 
-        boxplot_kwargs = {
-            "data": data,
-            "x": x,
-            "y": y,
-            "hue": hue,
-            "order": order,
-            "hue_order": hue_order,
-            "orient": orient,
-            "color": color if hue is None else None,
-            "palette": palette if hue else None,
-            "width": box_width,
-            "whis": whis,
-            "linewidth": linewidth,
-            "fill": True,
-            "ax": ax,
-            "legend": False,
-            "fliersize": 0,  # Hide outliers (shown as rain)
-        }
-
-        sns.boxplot(**boxplot_kwargs)
-
-        # Set edge colors and apply transparency to box
-        for patch in box_tracker.get_new_patches():
-            patch.set_edgecolor(patch.get_facecolor())
-
-        box_tracker.apply_transparency(on=["patches", "lines"], face_alpha=box_alpha)
 
     # 3. Draw rain (strip or swarm plot)
     if rain:
         rain_tracker = ArtistTracker(ax)
-
-        if rain == "strip":
-            rain_kwargs = {
-                "data": data,
-                "x": x,
-                "y": y,
-                "hue": hue,
-                "order": order,
-                "hue_order": hue_order,
-                "orient": orient,
-                "color": color if hue is None else None,
-                "palette": palette if hue else None,
-                "size": point_size,
-                "jitter": jitter,
-                "linewidth": linewidth * 0.5,
-                "ax": ax,
-                "legend": False,
-                "dodge": hue is not None,
-            }
-            sns.stripplot(**rain_kwargs)
-        elif rain == "swarm":
-            rain_kwargs = {
-                "data": data,
-                "x": x,
-                "y": y,
-                "hue": hue,
-                "order": order,
-                "hue_order": hue_order,
-                "orient": orient,
-                "color": color if hue is None else None,
-                "palette": palette if hue else None,
-                "size": point_size,
-                "linewidth": linewidth * 0.5,
-                "ax": ax,
-                "legend": False,
-                "dodge": hue is not None,
-            }
-            sns.swarmplot(**rain_kwargs)
+        swarmplot(
+            data=data,
+            x=x,
+            y=y,
+            hue=hue,
+            order=order,
+            hue_order=hue_order,
+            color=color if hue is None else None,
+            palette=palette if hue else None,
+            alpha=rain_alpha,
+            size=point_size,
+            linewidth=linewidth * 0.5,
+            ax=ax,
+            legend=False,
+            dodge=dodge,
+        )
 
         # Offset rain points to the left of center
         rain_offset = -width / 4 - move
@@ -300,10 +270,6 @@ def rainplot(
             else:
                 offsets[:, 1] += rain_offset
             coll.set_offsets(offsets)
-            # Set edge colors
-            coll.set_edgecolors(coll.get_facecolors())
-
-        rain_tracker.apply_transparency(on="collections", face_alpha=rain_alpha)
 
     # Apply global offset if specified
     if offset != 0:
@@ -324,27 +290,12 @@ def rainplot(
                         offsets[:, 1] += offset
                     coll.set_offsets(offsets)
 
-    # Add legend if hue is used
-    if legend and hue is not None:
-        from publiplots.utils.legend import legend as pp_legend
-        from publiplots.utils.legend import create_legend_handles
-
-        handles = create_legend_handles(
-            labels=list(palette.keys()) if isinstance(palette, dict) else None,
-            colors=list(palette.values()) if isinstance(palette, dict) else None,
-            alpha=cloud_alpha,
-            linewidth=linewidth,
-        )
-
-        legend_kwargs = legend_kws or dict(label=hue)
-        pp_legend(ax, handles=handles, **legend_kwargs)
-
     # Set labels
-    if xlabel:
+    if xlabel is not None:
         ax.set_xlabel(xlabel)
-    if ylabel:
+    if ylabel is not None:
         ax.set_ylabel(ylabel)
-    if title:
+    if title is not None:
         ax.set_title(title)
 
     return fig, ax
