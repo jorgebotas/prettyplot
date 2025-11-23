@@ -10,60 +10,13 @@ from typing import Optional, List, Dict, Tuple, Union
 from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
-from matplotlib.path import Path
 import seaborn as sns
 import pandas as pd
 import numpy as np
 
 from publiplots.themes.colors import resolve_palette_map
 from publiplots.utils.transparency import ArtistTracker
-
-
-def _clip_violin_to_side(collections, side, is_vertical, ax, linewidth):
-    """Clip violin collections to show only one side and add closing line."""
-    for coll in collections:
-        paths = coll.get_paths()
-        new_paths = []
-        for path in paths:
-            vertices = path.vertices.copy()
-
-            if is_vertical:
-                center_x = np.mean(vertices[:, 0])
-                if side == "right":
-                    vertices[:, 0] = np.maximum(vertices[:, 0], center_x)
-                else:  # left
-                    vertices[:, 0] = np.minimum(vertices[:, 0], center_x)
-            else:
-                center_y = np.mean(vertices[:, 1])
-                if side == "right":
-                    vertices[:, 1] = np.maximum(vertices[:, 1], center_y)
-                else:  # left
-                    vertices[:, 1] = np.minimum(vertices[:, 1], center_y)
-
-            new_paths.append(vertices)
-
-        coll.set_verts(new_paths)
-
-    # Add closing lines
-    for coll in collections:
-        paths = coll.get_paths()
-        edgecolor = coll.get_edgecolor()
-
-        for i, path in enumerate(paths):
-            vertices = path.vertices
-            color_idx = min(i, len(edgecolor) - 1)
-            line_color = edgecolor[color_idx] if len(edgecolor) > 0 else edgecolor[0]
-
-            if is_vertical:
-                center_x = np.mean(vertices[:, 0])
-                y_min, y_max = vertices[:, 1].min(), vertices[:, 1].max()
-                ax.plot([center_x, center_x], [y_min, y_max],
-                       color=line_color, linewidth=linewidth, zorder=coll.get_zorder())
-            else:
-                center_y = np.mean(vertices[:, 1])
-                x_min, x_max = vertices[:, 0].min(), vertices[:, 0].max()
-                ax.plot([x_min, x_max], [center_y, center_y],
-                       color=line_color, linewidth=linewidth, zorder=coll.get_zorder())
+from publiplots.plot.violin import violinplot as pp_violinplot
 
 
 def rainplot(
@@ -238,44 +191,32 @@ def rainplot(
         orient = "v"  # default vertical
     is_vertical = orient in ("v", "vertical")
 
-    # Track all artists
-    tracker = ArtistTracker(ax)
-
-    # 1. Draw the half-violin (cloud)
-    violin_kwargs = {
-        "data": data,
-        "x": x,
-        "y": y,
-        "hue": hue,
-        "order": order,
-        "hue_order": hue_order,
-        "orient": orient,
-        "color": color if hue is None else None,
-        "palette": palette if hue else None,
-        "saturation": saturation,
-        "fill": False,
-        "inner": None,  # No inner elements in violin
-        "split": False,
-        "width": width,
-        "linewidth": linewidth,
-        "cut": cut,
-        "gridsize": gridsize,
-        "bw_method": bw_method,
-        "bw_adjust": bw_adjust,
-        "density_norm": density_norm,
-        "ax": ax,
-        "legend": False,
-        "dodge": hue is not None,
-    }
-
-    sns.violinplot(**violin_kwargs)
-
-    # Clip violins to show only right half (cloud side)
-    violin_collections = tracker.get_new_collections()
-    _clip_violin_to_side(violin_collections, "right", is_vertical, ax, linewidth)
-
-    # Apply transparency to violin collections
-    tracker.apply_transparency(on="collections", face_alpha=cloud_alpha)
+    # 1. Draw the half-violin (cloud) using pp.violinplot with side parameter
+    pp_violinplot(
+        data=data,
+        x=x,
+        y=y,
+        hue=hue,
+        order=order,
+        hue_order=hue_order,
+        color=color,
+        palette=palette,
+        saturation=saturation,
+        fill=False,
+        inner=None,
+        width=width,
+        dodge="auto",
+        linewidth=linewidth,
+        cut=cut,
+        gridsize=gridsize,
+        bw_method=bw_method,
+        bw_adjust=bw_adjust,
+        density_norm=density_norm,
+        alpha=cloud_alpha,
+        ax=ax,
+        legend=False,
+        side="right",
+    )
 
     # 2. Draw box plot (umbrella) if requested
     if box:
