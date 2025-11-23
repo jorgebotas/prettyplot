@@ -52,8 +52,8 @@ def rainplot(
     rain_alpha: Optional[float] = 0.6,
     point_size: float = 3,
     # Offset control
-    offset: float = 0.0,
-    move: float = 0.0,
+    box_offset: float = 0.0,
+    rain_offset: float = -0.15,
     # General styling
     linewidth: Optional[float] = None,
     figsize: Optional[Tuple[float, float]] = None,
@@ -124,10 +124,11 @@ def rainplot(
         Transparency of rain points.
     point_size : float, default=3
         Size of rain points.
-    offset : float, default=0.0
-        Horizontal offset for the entire raincloud.
-    move : float, default=0.0
-        Additional offset for rain points from center.
+    box_offset : float, default=0.0
+        Offset for the box plot from center position.
+    rain_offset : float, default=-0.15
+        Offset for rain points from center position. Negative values move
+        points to the left (for vertical) or down (for horizontal).
     linewidth : float, optional
         Width of edges.
     figsize : tuple, optional
@@ -221,6 +222,7 @@ def rainplot(
 
     # 2. Draw box plot (umbrella) if requested
     if box:
+        box_tracker = ArtistTracker(ax)
         boxplot(
             data=data,
             x=x,
@@ -228,7 +230,6 @@ def rainplot(
             hue=hue,
             order=order,
             hue_order=hue_order,
-            dodge=dodge,
             color=color if hue is None else None,
             palette=palette if hue else None,
             width=width,
@@ -237,9 +238,23 @@ def rainplot(
             linewidth=linewidth,
             ax=ax,
             legend=False,
-            showfliers=False,
+            fliersize=0,
         )
 
+        # Apply box offset
+        if box_offset != 0:
+            # Offset patches (box bodies)
+            for patch in box_tracker.get_new_patches():
+                if is_vertical:
+                    patch.set_x(patch.get_x() + box_offset)
+                else:
+                    patch.set_y(patch.get_y() + box_offset)
+            # Offset lines (whiskers, medians, caps)
+            for line in box_tracker.get_new_lines():
+                if is_vertical:
+                    line.set_xdata(line.get_xdata() + box_offset)
+                else:
+                    line.set_ydata(line.get_ydata() + box_offset)
 
     # 3. Draw rain (strip or swarm plot)
     if rain:
@@ -261,8 +276,7 @@ def rainplot(
             dodge=dodge,
         )
 
-        # Offset rain points to the left of center
-        rain_offset = -width / 4 - move
+        # Apply rain offset
         for coll in rain_tracker.get_new_collections():
             offsets = coll.get_offsets()
             if is_vertical:
@@ -270,25 +284,6 @@ def rainplot(
             else:
                 offsets[:, 1] += rain_offset
             coll.set_offsets(offsets)
-
-    # Apply global offset if specified
-    if offset != 0:
-        for coll in ax.collections:
-            if hasattr(coll, 'get_paths'):
-                paths = coll.get_paths()
-                for path in paths:
-                    if is_vertical:
-                        path.vertices[:, 0] += offset
-                    else:
-                        path.vertices[:, 1] += offset
-            if hasattr(coll, 'get_offsets'):
-                offsets = coll.get_offsets()
-                if len(offsets) > 0:
-                    if is_vertical:
-                        offsets[:, 0] += offset
-                    else:
-                        offsets[:, 1] += offset
-                    coll.set_offsets(offsets)
 
     # Set labels
     if xlabel is not None:
