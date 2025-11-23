@@ -334,8 +334,8 @@ def _side_clip_violin(
             # set_paths expects list of vertices arrays for PolyCollection
             coll.set_verts(new_paths)
 
-    # Clip inner lines (box, quart, quartile) to match half-violin
-    if inner in ("box", "quart", "quartile"):
+    # Clip inner lines (quart, quartile) to match half-violin
+    if inner in ("quart", "quartile"):
         new_lines = tracker.get_new_lines()
         for line in new_lines:
             xdata = line.get_xdata()
