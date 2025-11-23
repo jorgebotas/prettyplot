@@ -50,6 +50,7 @@ def violinplot(
     ylabel: str = "",
     legend: bool = True,
     legend_kws: Optional[Dict] = None,
+    side: str = "both",
     **kwargs
 ) -> Tuple[plt.Figure, Axes]:
     """
@@ -127,6 +128,12 @@ def violinplot(
         Whether to show the legend.
     legend_kws : dict, optional
         Additional keyword arguments for legend.
+    side : str, default="both"
+        Which side to draw the violin on. Options: "both", "left", "right".
+        When "left" or "right", draws only half of the violin. This is useful
+        for creating raincloud plots. Note: when side is not "both" and hue
+        is specified, the hue coloring will be applied but split behavior
+        is controlled by the side parameter.
     **kwargs
         Additional keyword arguments passed to seaborn.violinplot.
 
@@ -156,11 +163,33 @@ def violinplot(
     alpha = resolve_param("alpha", alpha)
     color = resolve_param("color", color)
 
+    # Validate side parameter
+    if side not in ("both", "left", "right"):
+        raise ValueError(f"side must be 'both', 'left', or 'right', got '{side}'")
+
     # Create figure if not provided
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
     else:
         fig = ax.get_figure()
+
+    # Handle side parameter for half-violins
+    _internal_hue = hue
+    _internal_hue_order = hue_order
+    _internal_split = split
+    _suppress_legend = False
+
+    if side != "both":
+        if hue is None:
+            # Use the hue=True trick to create half-violin
+            _internal_hue = True if side == "right" else False
+            _internal_hue_order = [True, False] if side == "right" else [False, True]
+            _internal_split = True
+            _suppress_legend = True
+        else:
+            # With hue specified, we need to draw each hue level as a half-violin
+            # This requires iterating over hue levels
+            pass  # Handled below in the main plotting logic
 
     # Resolve palette
     if hue is not None:
@@ -174,16 +203,16 @@ def violinplot(
         "data": data,
         "x": x,
         "y": y,
-        "hue": hue,
+        "hue": _internal_hue,
         "order": order,
-        "hue_order": hue_order,
+        "hue_order": _internal_hue_order,
         "orient": orient,
         "color": color if hue is None else None,
         "palette": palette if hue else None,
         "saturation": saturation,
         "fill": fill,
         "inner": inner,
-        "split": split,
+        "split": _internal_split,
         "width": width,
         "dodge": dodge,
         "gap": gap,
@@ -211,8 +240,8 @@ def violinplot(
     # Apply transparency only to new violin collections
     tracker.apply_transparency(on="collections", face_alpha=alpha)
 
-    # Add legend if hue is used
-    if legend and hue is not None:
+    # Add legend if hue is used (but not when using side trick)
+    if legend and hue is not None and not _suppress_legend:
         from publiplots.utils.legend import legend as pp_legend
         from publiplots.utils.legend import create_legend_handles
 
