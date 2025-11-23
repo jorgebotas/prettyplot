@@ -10,8 +10,11 @@ from typing import Optional, List, Dict, Tuple, Union
 from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.patches import Rectangle
+from matplotlib.path import Path
 import seaborn as sns
 import pandas as pd
+import numpy as np
 
 from publiplots.themes.colors import resolve_palette_map
 from publiplots.utils.transparency import ArtistTracker
@@ -173,24 +176,6 @@ def violinplot(
     else:
         fig = ax.get_figure()
 
-    # Handle side parameter for half-violins
-    _internal_hue = hue
-    _internal_hue_order = hue_order
-    _internal_split = split
-    _suppress_legend = False
-
-    if side != "both":
-        if hue is None:
-            # Use the hue=True trick to create half-violin
-            _internal_hue = True if side == "right" else False
-            _internal_hue_order = [True, False] if side == "right" else [False, True]
-            _internal_split = True
-            _suppress_legend = True
-        else:
-            # With hue specified, we need to draw each hue level as a half-violin
-            # This requires iterating over hue levels
-            pass  # Handled below in the main plotting logic
-
     # Resolve palette
     if hue is not None:
         palette = resolve_palette_map(
@@ -198,21 +183,24 @@ def violinplot(
             palette=palette,
         )
 
+    # Determine orientation for side clipping
+    is_vertical = orient in (None, "v", "vertical")
+
     # Prepare kwargs for seaborn violinplot
     violinplot_kwargs = {
         "data": data,
         "x": x,
         "y": y,
-        "hue": _internal_hue,
+        "hue": hue,
         "order": order,
-        "hue_order": _internal_hue_order,
+        "hue_order": hue_order,
         "orient": orient,
         "color": color if hue is None else None,
         "palette": palette if hue else None,
         "saturation": saturation,
         "fill": fill,
         "inner": inner,
-        "split": _internal_split,
+        "split": split,
         "width": width,
         "dodge": dodge,
         "gap": gap,
@@ -237,11 +225,80 @@ def violinplot(
     # Create violinplot
     sns.violinplot(**violinplot_kwargs)
 
+    # Apply side clipping to create half-violins
+    if side != "both":
+        new_collections = tracker.get_new_collections()
+        for coll in new_collections:
+            paths = coll.get_paths()
+            new_paths = []
+            for path in paths:
+                vertices = path.vertices
+                codes = path.codes if path.codes is not None else None
+
+                if is_vertical:
+                    # Find center x position (categorical axis)
+                    center_x = np.mean(vertices[:, 0])
+
+                    if side == "right":
+                        # Keep only right half (x >= center)
+                        mask = vertices[:, 0] >= center_x
+                        # Clip vertices to center
+                        new_vertices = vertices.copy()
+                        new_vertices[:, 0] = np.maximum(vertices[:, 0], center_x)
+                    else:  # left
+                        # Keep only left half (x <= center)
+                        mask = vertices[:, 0] <= center_x
+                        new_vertices = vertices.copy()
+                        new_vertices[:, 0] = np.minimum(vertices[:, 0], center_x)
+                else:
+                    # Horizontal orientation - clip on y axis
+                    center_y = np.mean(vertices[:, 1])
+
+                    if side == "right":
+                        # Keep only top half (y >= center)
+                        new_vertices = vertices.copy()
+                        new_vertices[:, 1] = np.maximum(vertices[:, 1], center_y)
+                    else:  # left
+                        # Keep only bottom half (y <= center)
+                        new_vertices = vertices.copy()
+                        new_vertices[:, 1] = np.minimum(vertices[:, 1], center_y)
+
+                new_paths.append(new_vertices)
+
+            # set_paths expects list of vertices arrays for PolyCollection
+            coll.set_verts(new_paths)
+
+        # Add closing lines at the center edge
+        for coll in new_collections:
+            paths = coll.get_paths()
+            facecolor = coll.get_facecolor()
+            edgecolor = coll.get_edgecolor()
+
+            for i, path in enumerate(paths):
+                vertices = path.vertices
+                if is_vertical:
+                    center_x = np.mean(vertices[:, 0])
+                    y_min = vertices[:, 1].min()
+                    y_max = vertices[:, 1].max()
+                    # Get the color for this violin
+                    color_idx = min(i, len(edgecolor) - 1)
+                    line_color = edgecolor[color_idx] if len(edgecolor) > 0 else edgecolor[0]
+                    ax.plot([center_x, center_x], [y_min, y_max],
+                           color=line_color, linewidth=linewidth, zorder=coll.get_zorder())
+                else:
+                    center_y = np.mean(vertices[:, 1])
+                    x_min = vertices[:, 0].min()
+                    x_max = vertices[:, 0].max()
+                    color_idx = min(i, len(edgecolor) - 1)
+                    line_color = edgecolor[color_idx] if len(edgecolor) > 0 else edgecolor[0]
+                    ax.plot([x_min, x_max], [center_y, center_y],
+                           color=line_color, linewidth=linewidth, zorder=coll.get_zorder())
+
     # Apply transparency only to new violin collections
     tracker.apply_transparency(on="collections", face_alpha=alpha)
 
-    # Add legend if hue is used (but not when using side trick)
-    if legend and hue is not None and not _suppress_legend:
+    # Add legend if hue is used
+    if legend and hue is not None:
         from publiplots.utils.legend import legend as pp_legend
         from publiplots.utils.legend import create_legend_handles
 

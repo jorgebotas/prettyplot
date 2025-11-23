@@ -10,12 +10,60 @@ from typing import Optional, List, Dict, Tuple, Union
 from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.path import Path
 import seaborn as sns
 import pandas as pd
 import numpy as np
 
 from publiplots.themes.colors import resolve_palette_map
 from publiplots.utils.transparency import ArtistTracker
+
+
+def _clip_violin_to_side(collections, side, is_vertical, ax, linewidth):
+    """Clip violin collections to show only one side and add closing line."""
+    for coll in collections:
+        paths = coll.get_paths()
+        new_paths = []
+        for path in paths:
+            vertices = path.vertices.copy()
+
+            if is_vertical:
+                center_x = np.mean(vertices[:, 0])
+                if side == "right":
+                    vertices[:, 0] = np.maximum(vertices[:, 0], center_x)
+                else:  # left
+                    vertices[:, 0] = np.minimum(vertices[:, 0], center_x)
+            else:
+                center_y = np.mean(vertices[:, 1])
+                if side == "right":
+                    vertices[:, 1] = np.maximum(vertices[:, 1], center_y)
+                else:  # left
+                    vertices[:, 1] = np.minimum(vertices[:, 1], center_y)
+
+            new_paths.append(vertices)
+
+        coll.set_verts(new_paths)
+
+    # Add closing lines
+    for coll in collections:
+        paths = coll.get_paths()
+        edgecolor = coll.get_edgecolor()
+
+        for i, path in enumerate(paths):
+            vertices = path.vertices
+            color_idx = min(i, len(edgecolor) - 1)
+            line_color = edgecolor[color_idx] if len(edgecolor) > 0 else edgecolor[0]
+
+            if is_vertical:
+                center_x = np.mean(vertices[:, 0])
+                y_min, y_max = vertices[:, 1].min(), vertices[:, 1].max()
+                ax.plot([center_x, center_x], [y_min, y_max],
+                       color=line_color, linewidth=linewidth, zorder=coll.get_zorder())
+            else:
+                center_y = np.mean(vertices[:, 1])
+                x_min, x_max = vertices[:, 0].min(), vertices[:, 0].max()
+                ax.plot([x_min, x_max], [center_y, center_y],
+                       color=line_color, linewidth=linewidth, zorder=coll.get_zorder())
 
 
 def rainplot(
@@ -194,21 +242,20 @@ def rainplot(
     tracker = ArtistTracker(ax)
 
     # 1. Draw the half-violin (cloud)
-    # Use the hue=True trick to create half-violin
     violin_kwargs = {
         "data": data,
         "x": x,
         "y": y,
-        "hue": True,  # Trick for half-violin
-        "hue_order": [True, False],  # Only True has data
+        "hue": hue,
         "order": order,
+        "hue_order": hue_order,
         "orient": orient,
         "color": color if hue is None else None,
-        "palette": {True: color} if hue is None else None,
+        "palette": palette if hue else None,
         "saturation": saturation,
         "fill": False,
         "inner": None,  # No inner elements in violin
-        "split": True,
+        "split": False,
         "width": width,
         "linewidth": linewidth,
         "cut": cut,
@@ -218,41 +265,14 @@ def rainplot(
         "density_norm": density_norm,
         "ax": ax,
         "legend": False,
+        "dodge": hue is not None,
     }
 
-    # Handle hue case - need to draw each hue level separately
-    if hue is not None:
-        hue_levels = hue_order if hue_order else data[hue].unique()
-        cat_var = x if is_vertical else y
-        categories = order if order else data[cat_var].unique()
-        n_hue = len(hue_levels)
+    sns.violinplot(**violin_kwargs)
 
-        for i, hue_val in enumerate(hue_levels):
-            subset = data[data[hue] == hue_val]
-            hue_color = palette[hue_val] if isinstance(palette, dict) else color
-
-            # Calculate dodge offset for this hue level
-            dodge_offset = (i - (n_hue - 1) / 2) * (width / n_hue)
-
-            violin_kwargs_hue = violin_kwargs.copy()
-            violin_kwargs_hue["data"] = subset
-            violin_kwargs_hue["color"] = hue_color
-            violin_kwargs_hue["palette"] = {True: hue_color}
-            violin_kwargs_hue["width"] = width / n_hue * 0.9
-
-            sns.violinplot(**violin_kwargs_hue)
-
-            # Offset the violin collection
-            if dodge_offset != 0:
-                for coll in tracker.get_new_collections():
-                    paths = coll.get_paths()
-                    for path in paths:
-                        if is_vertical:
-                            path.vertices[:, 0] += dodge_offset
-                        else:
-                            path.vertices[:, 1] += dodge_offset
-    else:
-        sns.violinplot(**violin_kwargs)
+    # Clip violins to show only right half (cloud side)
+    violin_collections = tracker.get_new_collections()
+    _clip_violin_to_side(violin_collections, "right", is_vertical, ax, linewidth)
 
     # Apply transparency to violin collections
     tracker.apply_transparency(on="collections", face_alpha=cloud_alpha)
