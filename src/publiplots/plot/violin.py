@@ -272,6 +272,33 @@ def violinplot(
             # set_paths expects list of vertices arrays for PolyCollection
             coll.set_verts(new_paths)
 
+        # Clip inner lines (quart, quartile, stick) to match half-violin
+        if inner in ("quart", "quartile", "stick"):
+            new_lines = tracker.get_new_lines()
+            for line in new_lines:
+                xdata = line.get_xdata()
+                ydata = line.get_ydata()
+
+                if len(xdata) == 0:
+                    continue
+
+                if is_vertical:
+                    # For vertical violins, clip the x-coordinates of horizontal lines
+                    center_x = np.mean(xdata)
+                    if side == "right":
+                        new_xdata = np.maximum(xdata, center_x)
+                    else:  # left
+                        new_xdata = np.minimum(xdata, center_x)
+                    line.set_xdata(new_xdata)
+                else:
+                    # For horizontal violins, clip the y-coordinates
+                    center_y = np.mean(ydata)
+                    if side == "right":
+                        new_ydata = np.maximum(ydata, center_y)
+                    else:  # left
+                        new_ydata = np.minimum(ydata, center_y)
+                    line.set_ydata(new_ydata)
+
 
     # Apply transparency only to new violin collections
     tracker.apply_transparency(on="collections", face_alpha=alpha)
