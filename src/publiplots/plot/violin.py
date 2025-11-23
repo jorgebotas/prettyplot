@@ -8,6 +8,7 @@ transparent fill and opaque edges.
 from typing import Optional, List, Dict, Tuple, Union
 
 from matplotlib.collections import FillBetweenPolyCollection
+from matplotlib.collections import LineCollection
 
 from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
@@ -333,8 +334,8 @@ def _side_clip_violin(
             # set_paths expects list of vertices arrays for PolyCollection
             coll.set_verts(new_paths)
 
-    # Clip inner lines (quart, quartile, stick) to match half-violin
-    if inner in ("quart", "quartile", "stick", "sticks"):
+    # Clip inner lines (quart, quartile) to match half-violin
+    if inner in ("quart", "quartile"):
         new_lines = tracker.get_new_lines()
         for line in new_lines:
             xdata = line.get_xdata()
@@ -359,3 +360,33 @@ def _side_clip_violin(
                 else:  # left
                     new_ydata = np.minimum(ydata, center_y)
                 line.set_ydata(new_ydata)
+
+    # Clip inner sticks (LineCollection) to match half-violin
+    if inner in ("stick", "sticks"):
+        for coll in new_collections:
+            if not isinstance(coll, LineCollection):
+                continue
+
+            segments = coll.get_segments()
+            new_segments = []
+
+            for segment in segments:
+                # Each segment is an array of points [[x1, y1], [x2, y2], ...]
+                new_segment = segment.copy()
+
+                if is_vertical:
+                    center_x = np.mean(segment[:, 0])
+                    if side == "right":
+                        new_segment[:, 0] = np.maximum(segment[:, 0], center_x)
+                    else:  # left
+                        new_segment[:, 0] = np.minimum(segment[:, 0], center_x)
+                else:
+                    center_y = np.mean(segment[:, 1])
+                    if side == "right":
+                        new_segment[:, 1] = np.maximum(segment[:, 1], center_y)
+                    else:  # left
+                        new_segment[:, 1] = np.minimum(segment[:, 1], center_y)
+
+                new_segments.append(new_segment)
+
+            coll.set_segments(new_segments)
