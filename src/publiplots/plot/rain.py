@@ -243,12 +243,13 @@ def rainplot(
 
         # Apply box offset
         if box_offset != 0:
-            # Offset patches (box bodies)
+            # Offset patches (box bodies) - modify path vertices
             for patch in box_tracker.get_new_patches():
+                path = patch.get_path()
                 if is_vertical:
-                    patch.set_x(patch.get_x() + box_offset)
+                    path.vertices[:, 0] += box_offset
                 else:
-                    patch.set_y(patch.get_y() + box_offset)
+                    path.vertices[:, 1] += box_offset
             # Offset lines (whiskers, medians, caps)
             for line in box_tracker.get_new_lines():
                 if is_vertical:
