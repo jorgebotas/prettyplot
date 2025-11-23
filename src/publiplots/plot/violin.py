@@ -19,6 +19,7 @@ import pandas as pd
 import numpy as np
 
 from publiplots.themes.colors import resolve_palette_map
+from publiplots.utils import is_categorical
 from publiplots.utils.transparency import ArtistTracker
 
 
@@ -80,6 +81,7 @@ def violinplot(
         Order for the hue levels.
     orient : str, optional
         Orientation of the plot ('v' or 'h').
+        Deprecated: use x and y instead.
     color : str, optional
         Fixed color for all violins (only used when hue is None).
     palette : str, dict, or list, optional
@@ -172,6 +174,9 @@ def violinplot(
     if side not in ("both", "left", "right"):
         raise ValueError(f"side must be 'both', 'left', or 'right', got '{side}'")
 
+    if orient is not None:
+        raise DeprecationWarning("orient is deprecated. Use x and y instead.")
+
     # Create figure if not provided
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
@@ -185,8 +190,10 @@ def violinplot(
             palette=palette,
         )
 
-    # Determine orientation for side clipping
-    is_vertical = orient in (None, "v", "vertical")
+    # Resolve linewidth for box whiskers
+    inner_kws = kwargs.pop("inner_kws", {})
+    if inner == "box":
+        inner_kws["whis_width"] = inner_kws.get("whis_width", linewidth)
 
     # Prepare kwargs for seaborn violinplot
     violinplot_kwargs = {
@@ -196,7 +203,7 @@ def violinplot(
         "hue": hue,
         "order": order,
         "hue_order": hue_order,
-        "orient": orient,
+        # "orient": orient,
         "color": color if hue is None else None,
         "palette": palette if hue else None,
         "saturation": saturation,
@@ -214,6 +221,7 @@ def violinplot(
         "bw_adjust": bw_adjust,
         "density_norm": density_norm,
         "common_norm": common_norm,
+        "inner_kws": inner_kws,
         "ax": ax,
         "legend": False,  # Handle legend ourselves
     }
@@ -227,10 +235,63 @@ def violinplot(
     # Create violinplot
     sns.violinplot(**violinplot_kwargs)
 
-    # Apply side clipping to create half-violins
+    # Side clip the violin
     if side != "both":
-        new_collections = tracker.get_new_collections()
-        for coll in new_collections:
+        # Determine orientation for side clipping
+        is_vertical = is_categorical(data[x])
+        _side_clip_violin(tracker, side, is_vertical, inner)
+
+    # Apply transparency only to new violin collections
+    tracker.apply_transparency(on="collections", face_alpha=alpha)
+
+    # Add legend if hue is used
+    if legend and hue is not None:
+        from publiplots.utils.legend import legend as pp_legend
+        from publiplots.utils.legend import create_legend_handles
+
+        handles = create_legend_handles(
+            labels=list(palette.keys()) if isinstance(palette, dict) else None,
+            colors=list(palette.values()) if isinstance(palette, dict) else None,
+            alpha=alpha,
+            linewidth=linewidth,
+        )
+
+        legend_kwargs = legend_kws or dict(label=hue)
+        pp_legend(ax, handles=handles, **legend_kwargs)
+
+    # Set labels
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
+    if title is not None:
+        ax.set_title(title)
+
+    return fig, ax
+
+
+def _side_clip_violin(
+    tracker: ArtistTracker,
+    side: str,
+    is_vertical: bool,
+    inner: str,
+) -> None:
+    """
+    Side clip a violin plot.
+
+    Parameters
+    ----------
+    tracker : ArtistTracker
+        Artist tracker object.
+    side : str
+        Side to clip the violin on.
+    is_vertical : bool
+        Whether the violin is vertical.
+    inner : str
+        Inner type of the violin.
+    """
+    new_collections = tracker.get_new_collections()
+    for coll in new_collections:
             if not isinstance(coll, FillBetweenPolyCollection):
                 continue
             paths = coll.get_paths()
@@ -272,58 +333,29 @@ def violinplot(
             # set_paths expects list of vertices arrays for PolyCollection
             coll.set_verts(new_paths)
 
-        # Clip inner lines (quart, quartile, stick) to match half-violin
-        if inner in ("quart", "quartile", "stick"):
-            new_lines = tracker.get_new_lines()
-            for line in new_lines:
-                xdata = line.get_xdata()
-                ydata = line.get_ydata()
+    # Clip inner lines (quart, quartile, stick) to match half-violin
+    if inner in ("quart", "quartile", "stick", "sticks"):
+        new_lines = tracker.get_new_lines()
+        for line in new_lines:
+            xdata = line.get_xdata()
+            ydata = line.get_ydata()
 
-                if len(xdata) == 0:
-                    continue
+            if len(xdata) == 0:
+                continue
 
-                if is_vertical:
-                    # For vertical violins, clip the x-coordinates of horizontal lines
-                    center_x = np.mean(xdata)
-                    if side == "right":
-                        new_xdata = np.maximum(xdata, center_x)
-                    else:  # left
-                        new_xdata = np.minimum(xdata, center_x)
-                    line.set_xdata(new_xdata)
-                else:
-                    # For horizontal violins, clip the y-coordinates
-                    center_y = np.mean(ydata)
-                    if side == "right":
-                        new_ydata = np.maximum(ydata, center_y)
-                    else:  # left
-                        new_ydata = np.minimum(ydata, center_y)
-                    line.set_ydata(new_ydata)
-
-
-    # Apply transparency only to new violin collections
-    tracker.apply_transparency(on="collections", face_alpha=alpha)
-
-    # Add legend if hue is used
-    if legend and hue is not None:
-        from publiplots.utils.legend import legend as pp_legend
-        from publiplots.utils.legend import create_legend_handles
-
-        handles = create_legend_handles(
-            labels=list(palette.keys()) if isinstance(palette, dict) else None,
-            colors=list(palette.values()) if isinstance(palette, dict) else None,
-            alpha=alpha,
-            linewidth=linewidth,
-        )
-
-        legend_kwargs = legend_kws or dict(label=hue)
-        pp_legend(ax, handles=handles, **legend_kwargs)
-
-    # Set labels
-    if xlabel is not None:
-        ax.set_xlabel(xlabel)
-    if ylabel is not None:
-        ax.set_ylabel(ylabel)
-    if title is not None:
-        ax.set_title(title)
-
-    return fig, ax
+            if is_vertical:
+                # For vertical violins, clip the x-coordinates of horizontal lines
+                center_x = np.mean(xdata)
+                if side == "right":
+                    new_xdata = np.maximum(xdata, center_x)
+                else:  # left
+                    new_xdata = np.minimum(xdata, center_x)
+                line.set_xdata(new_xdata)
+            else:
+                # For horizontal violins, clip the y-coordinates
+                center_y = np.mean(ydata)
+                if side == "right":
+                    new_ydata = np.maximum(ydata, center_y)
+                else:  # left
+                    new_ydata = np.minimum(ydata, center_y)
+                line.set_ydata(new_ydata)
