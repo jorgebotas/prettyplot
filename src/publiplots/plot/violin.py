@@ -7,6 +7,8 @@ transparent fill and opaque edges.
 
 from typing import Optional, List, Dict, Tuple, Union
 
+from matplotlib.collections import FillBetweenPolyCollection
+
 from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
@@ -229,6 +231,8 @@ def violinplot(
     if side != "both":
         new_collections = tracker.get_new_collections()
         for coll in new_collections:
+            if not isinstance(coll, FillBetweenPolyCollection):
+                continue
             paths = coll.get_paths()
             new_paths = []
             for path in paths:
@@ -268,31 +272,6 @@ def violinplot(
             # set_paths expects list of vertices arrays for PolyCollection
             coll.set_verts(new_paths)
 
-        # Add closing lines at the center edge
-        for coll in new_collections:
-            paths = coll.get_paths()
-            facecolor = coll.get_facecolor()
-            edgecolor = coll.get_edgecolor()
-
-            for i, path in enumerate(paths):
-                vertices = path.vertices
-                if is_vertical:
-                    center_x = np.mean(vertices[:, 0])
-                    y_min = vertices[:, 1].min()
-                    y_max = vertices[:, 1].max()
-                    # Get the color for this violin
-                    color_idx = min(i, len(edgecolor) - 1)
-                    line_color = edgecolor[color_idx] if len(edgecolor) > 0 else edgecolor[0]
-                    ax.plot([center_x, center_x], [y_min, y_max],
-                           color=line_color, linewidth=linewidth, zorder=coll.get_zorder())
-                else:
-                    center_y = np.mean(vertices[:, 1])
-                    x_min = vertices[:, 0].min()
-                    x_max = vertices[:, 0].max()
-                    color_idx = min(i, len(edgecolor) - 1)
-                    line_color = edgecolor[color_idx] if len(edgecolor) > 0 else edgecolor[0]
-                    ax.plot([x_min, x_max], [center_y, center_y],
-                           color=line_color, linewidth=linewidth, zorder=coll.get_zorder())
 
     # Apply transparency only to new violin collections
     tracker.apply_transparency(on="collections", face_alpha=alpha)
