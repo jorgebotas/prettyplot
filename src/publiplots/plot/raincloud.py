@@ -49,12 +49,12 @@ def raincloudplot(
     box_alpha: Optional[float] = None,
     whis: float = 1.5,
     # Points (rain) parameters
-    rain: str = "strip",
-    rain_alpha: Optional[float] = 0.6,
-    rain_size: float = 3,
+    rain: bool = True,
+    rain_alpha: Optional[float] = 1,
+    rain_size: float = 2,
     # Offset control
-    box_offset: float = 0.05,
-    rain_offset: float = 0.05,
+    box_offset: float = 0.1,
+    rain_offset: float = 0.1,
     # General styling
     linewidth: Optional[float] = None,
     figsize: Optional[Tuple[float, float]] = None,
@@ -119,11 +119,11 @@ def raincloudplot(
         Transparency of box fill. Defaults to cloud_alpha.
     whis : float, default=1.5
         Proportion of IQR past low and high quartiles to extend whiskers.
-    rain : str, default="strip"
-        Type of point plot for rain. Options: "strip", "swarm", or None.
-    rain_alpha : float, default=0.6
+    rain : bool, default=True
+        Whether to show the rain plot.
+    rain_alpha : float, default=1
         Transparency of rain points.
-    rain_size : float, default=3
+    rain_size : float, default=2
         Size of rain points.
     box_offset : float, default=0.0
         Offset for the box plot from center position.

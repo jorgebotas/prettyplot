@@ -178,3 +178,44 @@ for ax, inner in zip(axes.flat, inner_types):
 
 plt.tight_layout()
 plt.show()
+
+# %%
+# One-Sided Violin Plots
+# ~~~~~~~~~~~~~~~~~~~~~~
+# Create one-sided (half) violin plots using the side parameter.
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Left-sided violin
+pp.violinplot(
+    data=violin_data,
+    x='category',
+    y='value',
+    hue='group',
+    side='left',
+    gap=0.1,
+    ax=axes[0],
+    title='Left-Sided Violin Plot',
+    xlabel='Category',
+    ylabel='Value',
+    palette={'Group 1': '#8E8EC1', 'Group 2': '#75B375'},
+)
+
+# Right-sided violin
+pp.violinplot(
+    data=violin_data,
+    x='category',
+    y='value',
+    hue='group',
+    side='right',
+    gap=0.1,
+    ax=axes[1],
+    title='Right-Sided Violin Plot',
+    xlabel='Category',
+    ylabel='Value',
+    palette={'Group 1': '#8E8EC1', 'Group 2': '#75B375'},
+)
+
+plt.tight_layout()
+plt.show()
+
