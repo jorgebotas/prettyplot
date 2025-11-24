@@ -10,6 +10,7 @@ from typing import Optional, List, Dict, Tuple, Union
 from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.collections import PathCollection
 import seaborn as sns
 import pandas as pd
 import numpy as np
@@ -20,9 +21,9 @@ from publiplots.utils.validation import is_categorical
 from publiplots.plot.violin import violinplot
 from publiplots.plot.box import boxplot
 from publiplots.plot.swarm import swarmplot
+from publiplots.utils.offset import offset_lines, offset_patches, offset_collections
 
-
-def rainplot(
+def raincloudplot(
     data: pd.DataFrame,
     x: Optional[str] = None,
     y: Optional[str] = None,
@@ -35,8 +36,8 @@ def rainplot(
     dodge: bool = True,
     gap: float = 0.3,
     # Violin (cloud) parameters
+    cloud_side: str = "right",
     cloud_alpha: Optional[float] = None,
-    width: float = 0.6,
     cut: float = 2,
     gridsize: int = 100,
     bw_method: str = "scott",
@@ -50,10 +51,10 @@ def rainplot(
     # Points (rain) parameters
     rain: str = "strip",
     rain_alpha: Optional[float] = 0.6,
-    point_size: float = 3,
+    rain_size: float = 3,
     # Offset control
-    box_offset: float = 0.0,
-    rain_offset: float = -0.15,
+    box_offset: float = 0.05,
+    rain_offset: float = 0.05,
     # General styling
     linewidth: Optional[float] = None,
     figsize: Optional[Tuple[float, float]] = None,
@@ -96,10 +97,10 @@ def rainplot(
         Whether to dodge the violin and box plot.
     gap : float, default=0.3
         Gap between the violin and the box plot.
+    cloud_side : str, default="right"
+        Side of the cloud plot ("left" or "right").
     cloud_alpha : float, optional
         Transparency of violin fill (0-1). Defaults to rcParams alpha.
-    width : float, default=0.6
-        Width of the violin.
     cut : float, default=2
         Distance past extreme data points to extend density estimate.
     gridsize : int, default=100
@@ -122,7 +123,7 @@ def rainplot(
         Type of point plot for rain. Options: "strip", "swarm", or None.
     rain_alpha : float, default=0.6
         Transparency of rain points.
-    point_size : float, default=3
+    rain_size : float, default=3
         Size of rain points.
     box_offset : float, default=0.0
         Offset for the box plot from center position.
@@ -160,11 +161,11 @@ def rainplot(
     Simple raincloud plot:
 
     >>> import publiplots as pp
-    >>> fig, ax = pp.rainplot(data=df, x="category", y="value")
+    >>> fig, ax = pp.raincloudplot(data=df, x="category", y="value")
 
     Raincloud plot with hue grouping:
 
-    >>> fig, ax = pp.rainplot(
+    >>> fig, ax = pp.raincloudplot(
     ...     data=df, x="category", y="value", hue="group"
     ... )
     """
@@ -172,16 +173,9 @@ def rainplot(
     figsize = resolve_param("figure.figsize", figsize)
     linewidth = resolve_param("lines.linewidth", linewidth)
     cloud_alpha = resolve_param("alpha", cloud_alpha)
+    box_alpha = resolve_param("alpha", box_alpha)
+    rain_alpha = resolve_param("alpha", rain_alpha)
     color = resolve_param("color", color)
-
-    if box_alpha is None:
-        box_alpha = cloud_alpha
-
-    # Create figure if not provided
-    if ax is None:
-        fig, ax = plt.subplots(figsize=figsize)
-    else:
-        fig = ax.get_figure()
 
     # Resolve palette
     if hue is not None:
@@ -191,10 +185,10 @@ def rainplot(
         )
 
     # Determine orientation
-    is_vertical = is_categorical(data[x])
+    orientation = "vertical" if is_categorical(data[x]) else "horizontal"
 
     # 1. Draw the half-violin (cloud) using pp.violinplot with side parameter
-    violinplot(
+    fig, ax = violinplot(
         data=data,
         x=x,
         y=y,
@@ -205,7 +199,6 @@ def rainplot(
         palette=palette,
         saturation=saturation,
         inner=None,
-        width=width,
         dodge=dodge,
         linewidth=linewidth,
         cut=cut,
@@ -215,10 +208,11 @@ def rainplot(
         bw_adjust=bw_adjust,
         density_norm=density_norm,
         alpha=cloud_alpha,
-        ax=ax,
         legend=legend,
         legend_kws=legend_kws,
-        side="right",
+        side=cloud_side,
+        figsize=figsize,
+        ax=ax,
     )
 
     # 2. Draw box plot (umbrella) if requested
@@ -233,30 +227,31 @@ def rainplot(
             hue_order=hue_order,
             color=color,
             palette=palette,
-            width=width,
+            alpha=box_alpha,
             gap=(1 - box_width),
             whis=whis,
             linewidth=linewidth,
             ax=ax,
+            dodge=dodge,
             legend=False,
             fliersize=0,
         )
 
         # Apply box offset
         if box_offset != 0:
-            # Offset patches (box bodies) - modify path vertices
-            for patch in box_tracker.get_new_patches():
-                path = patch.get_path()
-                if is_vertical:
-                    path.vertices[:, 0] += box_offset
-                else:
-                    path.vertices[:, 1] += box_offset
+            box_offset = box_offset if cloud_side == "left" else -box_offset
+            # Offset patches (box bodies)
+            offset_patches(
+                patches=box_tracker.get_new_patches(),
+                offset=box_offset,
+                orientation=orientation,
+            )
             # Offset lines (whiskers, medians, caps)
-            for line in box_tracker.get_new_lines():
-                if is_vertical:
-                    line.set_xdata(line.get_xdata() + box_offset)
-                else:
-                    line.set_ydata(line.get_ydata() + box_offset)
+            offset_lines(
+                lines=box_tracker.get_new_lines(),
+                offset=box_offset,
+                orientation=orientation,
+            )
 
     # 3. Draw rain (strip or swarm plot)
     if rain:
@@ -271,21 +266,23 @@ def rainplot(
             color=color,
             palette=palette,
             alpha=rain_alpha,
-            size=point_size,
-            linewidth=linewidth * 0.5,
+            size=rain_size,
+            linewidth=linewidth,
             ax=ax,
             legend=False,
             dodge=dodge,
+            native_scale=True,
         )
 
         # Apply rain offset
-        for coll in rain_tracker.get_new_collections():
-            offsets = coll.get_offsets()
-            if is_vertical:
-                offsets[:, 0] += rain_offset
-            else:
-                offsets[:, 1] += rain_offset
-            coll.set_offsets(offsets)
+        if rain_offset != 0:
+            rain_offset = rain_offset if cloud_side == "left" else -rain_offset
+            offset_collections(
+                collections=rain_tracker.get_new_collections(),
+                offset=rain_offset,
+                orientation=orientation,
+                ax=ax,
+            )
 
     # Set labels
     if xlabel is not None:

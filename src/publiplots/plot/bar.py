@@ -16,7 +16,7 @@ import pandas as pd
 from publiplots.themes.colors import resolve_palette_map
 from publiplots.themes.hatches import resolve_hatch_map
 from publiplots.utils import is_categorical, create_legend_handles, legend
-
+from publiplots.utils.transparency import ArtistTracker
 
 _SPLIT_SEPARATOR = "---"
 
@@ -222,6 +222,11 @@ def barplot(
 
     # Create bars with fill and edges
     barplot_kwargs["fill"] = False
+
+    # Track artists before plotting
+    tracker = ArtistTracker(ax)
+
+    # Create bars
     sns.barplot(**barplot_kwargs)
 
     # Apply hatch patterns and override colors if needed
@@ -239,9 +244,11 @@ def barplot(
             hatch_map=hatch_map,
         )
 
+    # Face color is the same as the edge color
+    for patch in tracker.get_new_patches():
+        patch.set_facecolor(patch.get_edgecolor())
     # Apply differential transparency to face vs edge
-    from publiplots.utils.transparency import apply_transparency
-    apply_transparency(ax.patches, face_alpha=alpha, edge_alpha=1.0)
+    tracker.apply_transparency(on="patches", face_alpha=alpha, edge_alpha=1.0)
 
     # Add legend if hue or hatch is used
     if legend:

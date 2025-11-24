@@ -26,7 +26,7 @@ from publiplots.plot.scatter import scatterplot
 from publiplots.plot.box import boxplot
 from publiplots.plot.swarm import swarmplot
 from publiplots.plot.violin import violinplot
-from publiplots.plot.rain import rainplot
+from publiplots.plot.raincloud import raincloudplot
 from publiplots.plot.venn import venn
 from publiplots.plot.upset import upsetplot
 
@@ -86,7 +86,7 @@ __all__ = [
     "boxplot",
     "swarmplot",
     "violinplot",
-    "rainplot",
+    "raincloudplot",
     "venn",
     "upsetplot",
     # I/O utilities
