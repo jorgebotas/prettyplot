@@ -5,15 +5,12 @@ This module provides publication-ready raincloud plot visualizations that
 combine half-violin plots, box plots, and strip/swarm plots.
 """
 
-from typing import Optional, List, Dict, Tuple, Union
+from typing import Optional, List, Dict, Tuple, Union, Literal
 
 from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
-from matplotlib.collections import PathCollection
-import seaborn as sns
 import pandas as pd
-import numpy as np
 
 from publiplots.themes.colors import resolve_palette_map
 from publiplots.utils.transparency import ArtistTracker
@@ -21,6 +18,7 @@ from publiplots.utils.validation import is_categorical
 from publiplots.plot.violin import violinplot
 from publiplots.plot.box import boxplot
 from publiplots.plot.swarm import swarmplot
+from publiplots.plot.strip import stripplot
 from publiplots.utils.offset import offset_lines, offset_patches, offset_collections
 
 def raincloudplot(
@@ -46,15 +44,13 @@ def raincloudplot(
     # Box parameters
     box: bool = True,
     box_width: float = 0.15,
-    box_alpha: Optional[float] = None,
-    whis: float = 1.5,
+    box_kws: Optional[Dict] = None,
     # Points (rain) parameters
-    rain: bool = True,
-    rain_alpha: Optional[float] = 1,
-    rain_size: float = 2,
+    rain: Literal["strip", "swarm"] = "strip",
+    rain_kws: Optional[Dict] = dict(alpha=0.5, linewidth=0),
     # Offset control
-    box_offset: float = 0.1,
-    rain_offset: float = 0.1,
+    box_offset: float = 0.2,
+    rain_offset: float = 0.2,
     # General styling
     linewidth: Optional[float] = None,
     figsize: Optional[Tuple[float, float]] = None,
@@ -64,7 +60,6 @@ def raincloudplot(
     ylabel: str = "",
     legend: bool = True,
     legend_kws: Optional[Dict] = None,
-    **kwargs
 ) -> Tuple[plt.Figure, Axes]:
     """
     Create a publication-ready raincloud plot.
@@ -115,16 +110,12 @@ def raincloudplot(
         Whether to show the box plot.
     box_width : float, default=0.15
         Width of the box plot.
-    box_alpha : float, optional
-        Transparency of box fill. Defaults to cloud_alpha.
-    whis : float, default=1.5
-        Proportion of IQR past low and high quartiles to extend whiskers.
-    rain : bool, default=True
-        Whether to show the rain plot.
-    rain_alpha : float, default=1
-        Transparency of rain points.
-    rain_size : float, default=2
-        Size of rain points.
+    box_kws : dict, optional
+        Additional keyword arguments for box plot.
+    rain : Literal["strip", "swarm"], default="strip"
+        Type of rain plot: "strip" or "swarm".
+    rain_kws : dict, optional
+        Additional keyword arguments for rain plot.
     box_offset : float, default=0.0
         Offset for the box plot from center position.
     rain_offset : float, default=-0.15
@@ -146,8 +137,6 @@ def raincloudplot(
         Whether to show the legend.
     legend_kws : dict, optional
         Additional keyword arguments for legend.
-    **kwargs
-        Additional keyword arguments.
 
     Returns
     -------
@@ -173,8 +162,6 @@ def raincloudplot(
     figsize = resolve_param("figure.figsize", figsize)
     linewidth = resolve_param("lines.linewidth", linewidth)
     cloud_alpha = resolve_param("alpha", cloud_alpha)
-    box_alpha = resolve_param("alpha", box_alpha)
-    rain_alpha = resolve_param("alpha", rain_alpha)
     color = resolve_param("color", color)
 
     # Resolve palette
@@ -217,8 +204,8 @@ def raincloudplot(
 
     # 2. Draw box plot (umbrella) if requested
     if box:
-        box_tracker = ArtistTracker(ax)
-        boxplot(
+        box_kws = box_kws or {}
+        box_kws.update(dict(
             data=data,
             x=x,
             y=y,
@@ -227,15 +214,14 @@ def raincloudplot(
             hue_order=hue_order,
             color=color,
             palette=palette,
-            alpha=box_alpha,
-            gap=(1 - box_width),
-            whis=whis,
-            linewidth=linewidth,
             ax=ax,
-            dodge=dodge,
             legend=False,
-            fliersize=0,
-        )
+            dodge=dodge,
+            gap=(1 - box_width),
+            fliersize=0
+        ))
+        box_tracker = ArtistTracker(ax)
+        boxplot(**box_kws)
 
         # Apply box offset
         if box_offset != 0:
@@ -254,9 +240,9 @@ def raincloudplot(
             )
 
     # 3. Draw rain (strip or swarm plot)
-    if rain:
-        rain_tracker = ArtistTracker(ax)
-        swarmplot(
+    if rain is not None:
+        rain_kws = rain_kws or {}
+        rain_kws.update(dict(
             data=data,
             x=x,
             y=y,
@@ -265,14 +251,14 @@ def raincloudplot(
             hue_order=hue_order,
             color=color,
             palette=palette,
-            alpha=rain_alpha,
-            size=rain_size,
-            linewidth=linewidth,
             ax=ax,
             legend=False,
             dodge=dodge,
             native_scale=True,
-        )
+        ))
+        rain_tracker = ArtistTracker(ax)
+        rain_fn = swarmplot if rain == "swarm" else stripplot
+        rain_fn(**rain_kws)
 
         # Apply rain offset
         if rain_offset != 0:
