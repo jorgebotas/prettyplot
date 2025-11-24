@@ -150,6 +150,18 @@ def barplot(
     else:
         fig = ax.get_figure()
 
+    if hue is not None and not is_categorical(data[hue]):
+        data[hue] = pd.Categorical(data[hue], categories=data[hue].unique(), ordered=True)
+    if hatch is not None and not is_categorical(data[hatch]):
+        data[hatch] = pd.Categorical(data[hatch], categories=data[hatch].unique(), ordered=True)
+
+    # Find out categorical axis
+    categorical_axis = x if is_categorical(data[x]) else y
+    if not (is_categorical(data[x]) or is_categorical(data[y])):
+        raise ValueError(
+            "At least one of x or y must be categorical. "
+            "Run data[x].astype('category') or data[y].astype('category')"
+        )
 
     # Get hue palette and hatch mappings
     palette = resolve_palette_map(
@@ -161,9 +173,6 @@ def barplot(
         hatch_map=hatch_map,
     )
 
-
-    # Fint out categorical axis
-    categorical_axis = x if is_categorical(data[x]) else y
 
     prepareA = hue is not None and (hue != categorical_axis)
     prepareB = hatch is not None and (hatch != categorical_axis)

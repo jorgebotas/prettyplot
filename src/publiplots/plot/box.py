@@ -71,6 +71,8 @@ def boxplot(
         Orientation of the plot ('v' or 'h').
     color : str, optional
         Fixed color for all boxes (only used when hue is None).
+    linecolor : str, optional
+        Color of the box edges.
     palette : str, dict, or list, optional
         Color palette for hue grouping.
     width : float, default=0.8
