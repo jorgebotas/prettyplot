@@ -264,10 +264,16 @@ def _apply_to_patches(
 
         # Get current edge color
         edge_color = patch.get_edgecolor()
+        face_color = patch.get_facecolor()
 
+        if face_color is None:
+            face_color = edge_color
+
+        if edge_color is None:
+            edge_color = face_color
 
         # Now apply different alpha to face and edge
-        patch.set_facecolor(to_rgba(edge_color, alpha=face_alpha))
+        patch.set_facecolor(to_rgba(face_color, alpha=face_alpha))
         patch.set_edgecolor(to_rgba(edge_color, alpha=edge_alpha))
 
 

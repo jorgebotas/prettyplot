@@ -29,10 +29,12 @@ def boxplot(
     hue_order: Optional[List] = None,
     orient: Optional[str] = None,
     color: Optional[str] = None,
+    linecolor: Optional[str] = None,
     palette: Optional[Union[str, Dict, List]] = None,
     width: float = 0.8,
     gap: float = 0,
     whis: float = 1.5,
+    showcaps: bool = False,
     fliersize: Optional[float] = None,
     linewidth: Optional[float] = None,
     alpha: Optional[float] = None,
@@ -77,6 +79,8 @@ def boxplot(
         Gap between boxes when using hue.
     whis : float, default=1.5
         Proportion of IQR past low and high quartiles to extend whiskers.
+    showcaps: bool, default=False
+        Whether to show the caps.
     fliersize : float, optional
         Size of outlier markers.
     linewidth : float, optional
@@ -156,10 +160,12 @@ def boxplot(
         "hue_order": hue_order,
         "orient": orient,
         "color": color if hue is None else None,
+        "linecolor": linecolor,
         "palette": palette if hue else None,
         "width": width,
         "gap": gap,
         "whis": whis,
+        "showcaps": showcaps,
         "fliersize": fliersize,
         "linewidth": linewidth,
         "fill": True,  # Need fill=True to get patches
@@ -197,21 +203,22 @@ def boxplot(
     markeredgewidth = resolve_param("lines.markeredgewidth", markeredgewidth)
 
     # Recolor all new lines (whiskers, caps, medians, outliers) based on position
-    for line in new_lines:
-        line_data = line.get_xdata() if categorical_axis == "x" else line.get_ydata()
-        if len(line_data) == 0:
-            continue
-        pos = np.mean(line_data)
-        # Find closest patch position
-        closest_pos = min(patch_colors.keys(), key=lambda p: abs(p - pos))
-        base_color = patch_colors[closest_pos]
-        line.set_color(base_color)
-        line.set_linewidth(linewidth)
-        line.set_markeredgewidth(markeredgewidth)
+    if linecolor is None:
+        for line in new_lines:
+            line_data = line.get_xdata() if categorical_axis == "x" else line.get_ydata()
+            if len(line_data) == 0:
+                continue
+            pos = np.mean(line_data)
+            # Find closest patch position
+            closest_pos = min(patch_colors.keys(), key=lambda p: abs(p - pos))
+            base_color = patch_colors[closest_pos]
+            line.set_color(base_color)
+            line.set_linewidth(linewidth)
+            line.set_markeredgewidth(markeredgewidth)
 
-    # Set edge colors to match face colors
-    for patch in new_patches:
-        patch.set_edgecolor(patch.get_facecolor())
+        # Set edge colors to match face colors
+        for patch in new_patches:
+            patch.set_edgecolor(patch.get_facecolor())
 
     # Apply transparency to new patches and lines
     tracker.apply_transparency(on=["patches", "lines"], face_alpha=alpha)

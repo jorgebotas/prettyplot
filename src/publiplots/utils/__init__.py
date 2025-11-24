@@ -56,6 +56,12 @@ from publiplots.utils.legend import (
     legend,
 )
 
+from publiplots.utils.offset import (
+    offset_lines,
+    offset_patches,
+    offset_collections,
+)
+
 from publiplots.utils.transparency import (
     apply_transparency,
 )
@@ -106,4 +112,8 @@ __all__ = [
     "legend",
     # Transparency functions
     "apply_transparency",
+    # Offset functions
+    "offset_lines",
+    "offset_patches",
+    "offset_collections",
 ]

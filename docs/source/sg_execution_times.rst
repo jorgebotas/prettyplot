@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:16.008** total execution time for 9 files **from all galleries**:
+**00:14.050** total execution time for 10 files **from all galleries**:
 
 .. container::
 
@@ -33,29 +33,32 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_auto_examples_plot_07_upset_plots.py` (``../../examples/plots/plot_07_upset_plots.py``)
-     - 00:03.870
+     - 00:02.655
      - 0.0
    * - :ref:`sphx_glr_auto_examples_plot_05_violin_plots.py` (``../../examples/plots/plot_05_violin_plots.py``)
-     - 00:02.451
+     - 00:01.853
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_plot_08_hatch_patterns.py` (``../../examples/plots/plot_08_hatch_patterns.py``)
-     - 00:02.053
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_plot_09_configuration.py` (``../../examples/plots/plot_09_configuration.py``)
-     - 00:01.662
+   * - :ref:`sphx_glr_auto_examples_plot_06_raincloud_plots.py` (``../../examples/plots/plot_06_raincloud_plots.py``)
+     - 00:01.733
      - 0.0
    * - :ref:`sphx_glr_auto_examples_plot_02_scatter_plots.py` (``../../examples/plots/plot_02_scatter_plots.py``)
-     - 00:01.365
+     - 00:01.618
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_plot_06_venn_diagrams.py` (``../../examples/plots/plot_06_venn_diagrams.py``)
-     - 00:01.242
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_plot_03_swarm_plots.py` (``../../examples/plots/plot_03_swarm_plots.py``)
-     - 00:01.205
+   * - :ref:`sphx_glr_auto_examples_plot_09_configuration.py` (``../../examples/plots/plot_09_configuration.py``)
+     - 00:01.346
      - 0.0
    * - :ref:`sphx_glr_auto_examples_plot_04_box_plots.py` (``../../examples/plots/plot_04_box_plots.py``)
-     - 00:01.146
+     - 00:01.135
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_plot_03_swarm_plots.py` (``../../examples/plots/plot_03_swarm_plots.py``)
+     - 00:01.120
      - 0.0
    * - :ref:`sphx_glr_auto_examples_plot_01_bar_plots.py` (``../../examples/plots/plot_01_bar_plots.py``)
-     - 00:01.013
+     - 00:01.108
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_plot_08_hatch_patterns.py` (``../../examples/plots/plot_08_hatch_patterns.py``)
+     - 00:01.093
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_plot_06_venn_diagrams.py` (``../../examples/plots/plot_06_venn_diagrams.py``)
+     - 00:00.389
      - 0.0

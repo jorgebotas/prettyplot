@@ -7,13 +7,20 @@ transparent fill and opaque edges.
 
 from typing import Optional, List, Dict, Tuple, Union
 
+from matplotlib.collections import FillBetweenPolyCollection
+from matplotlib.collections import LineCollection
+
 from publiplots.themes.rcparams import resolve_param
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.patches import Rectangle
+from matplotlib.path import Path
 import seaborn as sns
 import pandas as pd
+import numpy as np
 
 from publiplots.themes.colors import resolve_palette_map
+from publiplots.utils import is_categorical
 from publiplots.utils.transparency import ArtistTracker
 
 
@@ -50,6 +57,7 @@ def violinplot(
     ylabel: str = "",
     legend: bool = True,
     legend_kws: Optional[Dict] = None,
+    side: str = "both",
     **kwargs
 ) -> Tuple[plt.Figure, Axes]:
     """
@@ -74,6 +82,7 @@ def violinplot(
         Order for the hue levels.
     orient : str, optional
         Orientation of the plot ('v' or 'h').
+        Deprecated: use x and y instead.
     color : str, optional
         Fixed color for all violins (only used when hue is None).
     palette : str, dict, or list, optional
@@ -127,6 +136,12 @@ def violinplot(
         Whether to show the legend.
     legend_kws : dict, optional
         Additional keyword arguments for legend.
+    side : str, default="both"
+        Which side to draw the violin on. Options: "both", "left", "right".
+        When "left" or "right", draws only half of the violin. This is useful
+        for creating raincloud plots. Note: when side is not "both" and hue
+        is specified, the hue coloring will be applied but split behavior
+        is controlled by the side parameter.
     **kwargs
         Additional keyword arguments passed to seaborn.violinplot.
 
@@ -156,6 +171,13 @@ def violinplot(
     alpha = resolve_param("alpha", alpha)
     color = resolve_param("color", color)
 
+    # Validate side parameter
+    if side not in ("both", "left", "right"):
+        raise ValueError(f"side must be 'both', 'left', or 'right', got '{side}'")
+
+    if orient is not None:
+        raise DeprecationWarning("orient is deprecated. Use x and y instead.")
+
     # Create figure if not provided
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
@@ -169,6 +191,11 @@ def violinplot(
             palette=palette,
         )
 
+    # Resolve linewidth for box whiskers
+    inner_kws = kwargs.pop("inner_kws", {})
+    if inner == "box":
+        inner_kws["whis_width"] = inner_kws.get("whis_width", linewidth)
+
     # Prepare kwargs for seaborn violinplot
     violinplot_kwargs = {
         "data": data,
@@ -177,7 +204,7 @@ def violinplot(
         "hue": hue,
         "order": order,
         "hue_order": hue_order,
-        "orient": orient,
+        # "orient": orient,
         "color": color if hue is None else None,
         "palette": palette if hue else None,
         "saturation": saturation,
@@ -195,6 +222,7 @@ def violinplot(
         "bw_adjust": bw_adjust,
         "density_norm": density_norm,
         "common_norm": common_norm,
+        "inner_kws": inner_kws,
         "ax": ax,
         "legend": False,  # Handle legend ourselves
     }
@@ -207,6 +235,12 @@ def violinplot(
 
     # Create violinplot
     sns.violinplot(**violinplot_kwargs)
+
+    # Side clip the violin
+    if side != "both":
+        # Determine orientation for side clipping
+        is_vertical = is_categorical(data[x])
+        _side_clip_violin(tracker, side, is_vertical, inner)
 
     # Apply transparency only to new violin collections
     tracker.apply_transparency(on="collections", face_alpha=alpha)
@@ -235,3 +269,124 @@ def violinplot(
         ax.set_title(title)
 
     return fig, ax
+
+
+def _side_clip_violin(
+    tracker: ArtistTracker,
+    side: str,
+    is_vertical: bool,
+    inner: str,
+) -> None:
+    """
+    Side clip a violin plot.
+
+    Parameters
+    ----------
+    tracker : ArtistTracker
+        Artist tracker object.
+    side : str
+        Side to clip the violin on.
+    is_vertical : bool
+        Whether the violin is vertical.
+    inner : str
+        Inner type of the violin.
+    """
+    new_collections = tracker.get_new_collections()
+    for coll in new_collections:
+            if not isinstance(coll, FillBetweenPolyCollection):
+                continue
+            paths = coll.get_paths()
+            new_paths = []
+            for path in paths:
+                vertices = path.vertices
+                codes = path.codes if path.codes is not None else None
+
+                if is_vertical:
+                    # Find center x position (categorical axis)
+                    center_x = np.mean(vertices[:, 0])
+
+                    if side == "right":
+                        # Keep only right half (x >= center)
+                        mask = vertices[:, 0] >= center_x
+                        # Clip vertices to center
+                        new_vertices = vertices.copy()
+                        new_vertices[:, 0] = np.maximum(vertices[:, 0], center_x)
+                    else:  # left
+                        # Keep only left half (x <= center)
+                        mask = vertices[:, 0] <= center_x
+                        new_vertices = vertices.copy()
+                        new_vertices[:, 0] = np.minimum(vertices[:, 0], center_x)
+                else:
+                    # Horizontal orientation - clip on y axis
+                    center_y = np.mean(vertices[:, 1])
+
+                    if side == "right":
+                        # Keep only top half (y >= center)
+                        new_vertices = vertices.copy()
+                        new_vertices[:, 1] = np.maximum(vertices[:, 1], center_y)
+                    else:  # left
+                        # Keep only bottom half (y <= center)
+                        new_vertices = vertices.copy()
+                        new_vertices[:, 1] = np.minimum(vertices[:, 1], center_y)
+
+                new_paths.append(new_vertices)
+
+            # set_paths expects list of vertices arrays for PolyCollection
+            coll.set_verts(new_paths)
+
+    # Clip inner lines (quart, quartile) to match half-violin
+    if inner in ("quart", "quartile"):
+        new_lines = tracker.get_new_lines()
+        for line in new_lines:
+            xdata = line.get_xdata()
+            ydata = line.get_ydata()
+
+            if len(xdata) == 0:
+                continue
+
+            if is_vertical:
+                # For vertical violins, clip the x-coordinates of horizontal lines
+                center_x = np.mean(xdata)
+                if side == "right":
+                    new_xdata = np.maximum(xdata, center_x)
+                else:  # left
+                    new_xdata = np.minimum(xdata, center_x)
+                line.set_xdata(new_xdata)
+            else:
+                # For horizontal violins, clip the y-coordinates
+                center_y = np.mean(ydata)
+                if side == "right":
+                    new_ydata = np.maximum(ydata, center_y)
+                else:  # left
+                    new_ydata = np.minimum(ydata, center_y)
+                line.set_ydata(new_ydata)
+
+    # Clip inner sticks (LineCollection) to match half-violin
+    if inner in ("stick", "sticks"):
+        for coll in new_collections:
+            if not isinstance(coll, LineCollection):
+                continue
+
+            segments = coll.get_segments()
+            new_segments = []
+
+            for segment in segments:
+                # Each segment is an array of points [[x1, y1], [x2, y2], ...]
+                new_segment = segment.copy()
+
+                if is_vertical:
+                    center_x = np.mean(segment[:, 0])
+                    if side == "right":
+                        new_segment[:, 0] = np.maximum(segment[:, 0], center_x)
+                    else:  # left
+                        new_segment[:, 0] = np.minimum(segment[:, 0], center_x)
+                else:
+                    center_y = np.mean(segment[:, 1])
+                    if side == "right":
+                        new_segment[:, 1] = np.maximum(segment[:, 1], center_y)
+                    else:  # left
+                        new_segment[:, 1] = np.minimum(segment[:, 1], center_y)
+
+                new_segments.append(new_segment)
+
+            coll.set_segments(new_segments)
