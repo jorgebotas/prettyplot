@@ -12,7 +12,7 @@ Basic usage:
     >>> pp.savefig(fig, 'output.png')
 """
 
-__version__ = "0.4.3"
+__version__ = "0.4.4"
 __author__ = "Jorge Botas"
 __license__ = "MIT"
 __copyright__ = "Copyright 2025, Jorge Botas"
@@ -25,6 +25,7 @@ from publiplots.plot.bar import barplot
 from publiplots.plot.scatter import scatterplot
 from publiplots.plot.box import boxplot
 from publiplots.plot.swarm import swarmplot
+from publiplots.plot.strip import stripplot
 from publiplots.plot.violin import violinplot
 from publiplots.plot.raincloud import raincloudplot
 from publiplots.plot.venn import venn
@@ -85,6 +86,7 @@ __all__ = [
     "scatterplot",
     "boxplot",
     "swarmplot",
+    "stripplot",
     "violinplot",
     "raincloudplot",
     "venn",

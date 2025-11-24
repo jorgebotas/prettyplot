@@ -25,25 +25,25 @@ pp.set_notebook_style()
 
 # Create sample data
 np.random.seed(42)
-n = 200
 raincloud_data = pd.DataFrame({
-    'category': np.repeat(['A', 'B', 'C', 'D'], n // 4),
-    'value': np.concatenate([
-        np.random.normal(10, 2, n // 4),
-        np.random.normal(15, 3, n // 4),
-        np.random.normal(12, 2.5, n // 4),
-        np.random.normal(18, 4, n // 4)
+    'time': np.repeat(['Day 1', 'Day 3', 'Day 7'], 40),
+    'group': np.tile(np.repeat(['Control', 'Treated'], 20), 3),
+    'measurement': np.concatenate([
+        np.random.normal(50, 8, 20), np.random.normal(52, 8, 20),
+        np.random.normal(52, 9, 20), np.random.normal(70, 12, 20),
+        np.random.normal(55, 10, 20), np.random.normal(85, 14, 20),
     ])
 })
+
 
 # Create simple raincloud plot
 fig, ax = pp.raincloudplot(
     data=raincloud_data,
-    x='category',
-    y='value',
+    x='time',
+    y='measurement',
     title='Simple Raincloud Plot',
-    xlabel='Category',
-    ylabel='Value',
+    xlabel='Time',
+    ylabel='Measurement',
     cloud_alpha=0.6,
 )
 plt.show()
@@ -53,21 +53,19 @@ plt.show()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Use the hue parameter to create grouped raincloud plots.
 
-# Add group variable
-raincloud_data['group'] = np.tile(['Group 1', 'Group 2'], n // 2)
-
 # Create grouped raincloud plot
 fig, ax = pp.raincloudplot(
     data=raincloud_data,
-    x='category',
-    y='value',
+    x='time',
+    y='measurement',
     hue='group',
-    gap=0.1,
     title='Grouped Raincloud Plot',
-    xlabel='Category',
-    ylabel='Value',
+    xlabel='Time',
+    ylabel='Measurement',
     cloud_alpha=0.6,
     palette=['#5D83C3', '#e67e7e'],
+    box_offset=0.1,
+    rain_offset=0.1,
 )
 plt.show()
 
@@ -78,17 +76,24 @@ plt.show()
 
 fig, ax = pp.raincloudplot(
     data=raincloud_data,
-    x='value',
-    y='category',
+    x='measurement',
+    y='time',
     hue='group',
-    gap=0.1,
-    cloud_side='left',
+    cloud_side="left",
     title='Horizontal Raincloud Plot',
-    xlabel='Value',
-    ylabel='Category',
+    xlabel='Measurement',
+    ylabel='Time',
     cloud_alpha=0.6,
     palette=['#5D83C3', '#e67e7e'],
-    figsize=(4, 6),
+    figsize=(4, 7),
+    box_offset=0.1,
+    rain_offset=0.2,
+    rain_kws=dict(
+        linewidth=1,
+        alpha=0.5,
+        jitter=False,
+        marker="x"
+    )
 )
 plt.show()
 
@@ -101,13 +106,13 @@ plt.show()
 # Create raincloud plot with only cloud and rain elements.
 
 fig, ax = pp.raincloudplot(
-    data=raincloud_data[raincloud_data['group'] == 'Group 1'],
-    x='category',
-    y='value',
+    data=raincloud_data[raincloud_data['group'] == 'Control'],
+    x='time',
+    y='measurement',
     box=False,
     title='Raincloud without Box Plot',
-    xlabel='Category',
-    ylabel='Value',
+    xlabel='Time',
+    ylabel='Measurement',
     cloud_alpha=0.6,
 )
 plt.show()
@@ -121,27 +126,27 @@ fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
 # Cloud on the left
 pp.raincloudplot(
-    data=raincloud_data[raincloud_data['group'] == 'Group 1'],
-    x='category',
-    y='value',
+    data=raincloud_data[raincloud_data['group'] == 'Control'],
+    x='time',
+    y='measurement',
     cloud_side='left',
     ax=axes[0],
     title='Cloud on Left',
-    xlabel='Category',
+    xlabel='Time',
     ylabel='Value',
     cloud_alpha=0.6,
 )
 
 # Cloud on the right (default)
 pp.raincloudplot(
-    data=raincloud_data[raincloud_data['group'] == 'Group 1'],
-    x='category',
-    y='value',
+    data=raincloud_data[raincloud_data['group'] == 'Control'],
+    x='time',
+    y='measurement',
     cloud_side='right',
     ax=axes[1],
     title='Cloud on Right',
-    xlabel='Category',
-    ylabel='Value',
+    xlabel='Time',
+    ylabel='Measurement',
     cloud_alpha=0.6,
 )
 
@@ -155,16 +160,17 @@ plt.show()
 
 fig, ax = pp.raincloudplot(
     data=raincloud_data,
-    x='category',
-    y='value',
+    x='time',
+    y='measurement',
     hue='group',
-    gap=0.1,
     title='Raincloud with Custom Alpha',
-    xlabel='Category',
-    ylabel='Value',
+    xlabel='Time',
+    ylabel='Measurement',
     cloud_alpha=0.3,
-    box_alpha=0.5,
-    rain_alpha=0.8,
+    box_kws=dict(alpha=0.5),
+    rain_kws=dict(alpha=0.8, linewidth=0),
     palette=['#5D83C3', '#e67e7e'],
+    box_offset=0.1,
+    rain_offset=0.1,
 )
 plt.show()

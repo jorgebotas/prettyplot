@@ -9,5 +9,6 @@ Plotting Functions
    publiplots.scatterplot
    publiplots.boxplot
    publiplots.swarmplot
+   publiplots.stripplot
    publiplots.venn
    publiplots.upsetplot
