@@ -12,6 +12,22 @@ PubliPlots is a Python visualization library that provides beautiful, publicatio
 - **Highly configurable**: Extensive customization while maintaining sensible defaults
 - **Publication-ready**: Optimized for scientific publications and presentations
 
+> [!IMPORTANT]
+> **Documentation**: Full documentation is available at [jorgebotas.github.io/publiplots](https://jorgebotas.github.io/publiplots/)
+
+## Gallery
+
+<p align="center" style="background-color: white">
+  <img src="docs/images/barplot_hatch_hue.png" width="45%" alt="Barplot with Hatch and Hue">
+  <img src="docs/images/raincloud_hue.png" width="45%" alt="Raincloud Plot">
+</p>
+<p align="center" style="background-color: white">
+  <img src="docs/images/venn_4way.png" width="45%" alt="4-Way Venn Diagram" style="vertical-align: middle">
+  <img src="docs/images/upsetplot.png" width="45%" alt="UpSet Plot" style="vertical-align: middle">
+</p>
+
+For interactive examples, check out the [examples.ipynb](examples.ipynb) notebook.
+
 ## Installation
 
 ### From PyPI
@@ -89,32 +105,6 @@ fig, ax = pp.scatterplot(
 # Save with publication-ready settings
 pp.savefig(fig, 'figure.pdf')
 ```
-
-## Features
-
-### Base Plotting Functions
-
-- `scatterplot()` - Scatter plots with flexible styling
-- `barplot()` - Bar plots with error bars and grouping
-
-### Advanced Functions
-
-- `venn()` - 2-way and 3-way Venn diagrams
-- `upsetplot()` - UpSet plots for visualizing set intersections
-
-### Theming
-
-- Pastel color palettes optimized for publications
-- Customizable matplotlib styles
-- Consistent styling across all plots
-
-## Documentation
-
-Full documentation is available at [jorgebotas.github.io/publiplots](https://jorgebotas.github.io/publiplots/)
-
-## Development Status
-
-PubliPlots is currently in active development (v0.1.0). The API may change in future releases.
 
 ## Contributing
 
