@@ -43,7 +43,8 @@ def pointplot(
     err_kws: Optional[Dict] = None,
     alpha: Optional[float] = None,
     linewidth: Optional[float] = None,
-    edgecolor: Optional[str] = None,
+    markersize: Optional[float] = None,
+    markeredgewidth: Optional[float] = None,
     figsize: Optional[Tuple[float, float]] = None,
     ax: Optional[Axes] = None,
     title: str = "",
@@ -124,8 +125,10 @@ def pointplot(
         Transparency level for marker fill (0-1).
     linewidth : float, default=2.0
         Width of marker edges and connecting lines.
-    edgecolor : str, optional
-        Color for marker edges. If None, uses same color as fill.
+    markersize : float, default=10
+        Size of markers.
+    markeredgewidth : float, default=1.0
+        Width of marker edges.
     figsize : tuple, default=(6, 4)
         Figure size (width, height) if creating new figure.
     ax : Axes, optional
@@ -171,6 +174,8 @@ def pointplot(
     # Read defaults from rcParams if not provided
     figsize = resolve_param("figure.figsize", figsize)
     linewidth = resolve_param("lines.linewidth", linewidth)
+    markersize = resolve_param("lines.markersize", markersize)
+    markeredgewidth = resolve_param("lines.markeredgewidth", markeredgewidth)
     alpha = resolve_param("alpha", alpha)
     color = resolve_param("color", color)
 
@@ -221,7 +226,10 @@ def pointplot(
         "weights": weights,
         "color": color if hue is None else None,
         "palette": palette if hue else None,
+        "linewidth": linewidth,
         "markers": markers if hue else "o",
+        "markersize": markersize,
+        "markeredgewidth": markeredgewidth,
         "linestyles": linestyles,
         "dodge": dodge,
         "orient": orient,
@@ -238,18 +246,17 @@ def pointplot(
     sns.pointplot(**pointplot_kwargs)
 
     # Apply marker styling (double-layer effect)
-    marker_info = _apply_marker_styling(
+    _apply_marker_styling(
         ax=ax,
         alpha=alpha,
-        linewidth=linewidth,
     )
 
     # Set labels
-    if xlabel:
+    if xlabel is not None:
         ax.set_xlabel(xlabel)
-    if ylabel:
+    if ylabel is not None:
         ax.set_ylabel(ylabel)
-    if title:
+    if title is not None:
         ax.set_title(title)
 
     # Add legend if hue is used
@@ -259,7 +266,9 @@ def pointplot(
             hue=hue,
             palette=palette,
             markers=markers,
-            marker_info=marker_info,
+            linestyles=linestyles,
+            markersize=markersize,
+            markeredgewidth=markeredgewidth,
             alpha=alpha,
             linewidth=linewidth,
             kwargs=legend_kws,
@@ -271,7 +280,6 @@ def pointplot(
 def _apply_marker_styling(
     ax: Axes,
     alpha: float,
-    linewidth: float,
 ) -> List[Dict]:
     """
     Apply double-layer marker styling to pointplot.
@@ -286,23 +294,16 @@ def _apply_marker_styling(
         Axes containing the pointplot.
     alpha : float
         Transparency for marker fill.
-    linewidth : float
-        Width of marker edges and connecting lines.
+    markeredgewidth : float
+        Width of marker edges.
 
-    Returns
-    -------
-    marker_info : list of dict
-        Information about each marker group for legend creation.
-        Each dict contains: 'color', 'marker', 'markersize', 'linestyle', 'linewidth', 'label'
     """
-    marker_info = []
-
     # Extract markers and line info from lines
-    markers_data = []
+    markers = []
     for line in ax.lines:
         marker = line.get_marker()
         if marker != "None":
-            markers_data.append({
+            markers.append({
                 'x': line.get_xdata(),
                 'y': line.get_ydata(),
                 'marker': marker,
@@ -310,21 +311,19 @@ def _apply_marker_styling(
                 'markersize': line.get_markersize(),
                 'linestyle': line.get_linestyle(),
                 'linewidth': line.get_linewidth(),
-                'label': line.get_label(),
+                'markeredgewidth': line.get_markeredgewidth(),
             })
             # Remove marker from original line (keep the line itself)
             line.set_markersize(0)
 
     # Redraw markers with double-layer effect
-    for marker_data in markers_data:
-        x = marker_data['x']
-        y = marker_data['y']
-        marker = marker_data['marker']
-        color = marker_data['color']
-        size = marker_data['markersize']
-        linestyle = marker_data['linestyle']
-        line_linewidth = marker_data['linewidth']
-        label = marker_data['label']
+    for data in markers:
+        x = data['x']
+        y = data['y']
+        marker = data['marker']
+        color = data['color']
+        size = data['markersize']
+        markeredgewidth = data['markeredgewidth'] 
 
         # Layer 1: White background (no edge)
         ax.plot(
@@ -343,23 +342,10 @@ def _apply_marker_styling(
             markeredgecolor=color,
             markerfacecolor=to_rgba(color, alpha),
             markersize=size,
-            markeredgewidth=linewidth,
+            markeredgewidth=markeredgewidth,
             linestyle='none',
             zorder=100
         )
-
-        # Store marker info for legend (preserve order, don't filter by label)
-        # Seaborn creates lines in hue_order, so we match by index
-        marker_info.append({
-            'color': color,
-            'marker': marker,
-            'markersize': size,
-            'linestyle': linestyle,
-            'linewidth': line_linewidth,
-            'label': label,  # Keep even if it starts with '_'
-        })
-
-    return marker_info
 
 
 def _legend(
@@ -367,7 +353,9 @@ def _legend(
     hue: str,
     palette: Union[Dict, str],
     markers: Union[List, Dict],
-    marker_info: List[Dict],
+    linestyles: Union[List, Dict],
+    markersize: Optional[float] = None,
+    markeredgewidth: Optional[float] = None,
     alpha: Optional[float] = None,
     linewidth: Optional[float] = None,
     kwargs: Optional[Dict] = None,
@@ -385,8 +373,10 @@ def _legend(
         Color palette mapping.
     markers : list or dict
         Marker symbols for each hue level.
-    marker_info : list of dict
-        Marker information extracted from plot.
+    markersize : float, optional
+        Marker size for legend markers.
+    markeredgewidth : float, optional
+        Marker edge width for legend markers.
     alpha : float, optional
         Transparency for legend markers.
     linewidth : float, optional
@@ -397,6 +387,8 @@ def _legend(
     # Read defaults from rcParams if not provided
     alpha = resolve_param("alpha", alpha)
     linewidth = resolve_param("lines.linewidth", linewidth)
+    markersize = resolve_param("lines.markersize", markersize)
+    markeredgewidth = resolve_param("lines.markeredgewidth", markeredgewidth)
 
     kwargs = kwargs or {}
 
@@ -408,41 +400,18 @@ def _legend(
         # Use palette keys as the source of truth for labels
         labels = list(palette.keys())
         colors = list(palette.values())
-
-        # Match markers, sizes, and linestyles to labels using marker_info
-        # Seaborn creates lines in hue_order, so marker_info is in the same order
-        marker_list = []
-        size_list = []
-        linestyle_list = []
-
-        # Match by index/order (seaborn creates lines in hue_order)
-        for i, label in enumerate(labels):
-            if i < len(marker_info):
-                # Use actual info from plot
-                info = marker_info[i]
-                marker_list.append(info['marker'])
-                size_list.append(info['markersize'])
-                linestyle_list.append(info['linestyle'])
-            else:
-                # Fallback if index out of range
-                if isinstance(markers, dict):
-                    marker_list.append(markers.get(label, 'o'))
-                elif isinstance(markers, list) and i < len(markers):
-                    marker_list.append(markers[i])
-                else:
-                    marker_list.append('o')
-                size_list.append(resolve_param("lines.markersize"))
-                linestyle_list.append(resolve_param("lines.linestyle"))
+        print(markersize)
 
         # Create legend handles with line+marker style
         hue_handles = create_legend_handles(
             labels=[str(label) for label in labels],
             colors=colors,
-            markers=marker_list,
-            linestyles=linestyle_list,
-            sizes=size_list,
+            markers=markers,
+            linestyles=linestyles,
             alpha=alpha,
             linewidth=linewidth,
+            sizes=[markersize],
+            markeredgewidth=markeredgewidth,
         )
 
         legend_data["hue"] = {

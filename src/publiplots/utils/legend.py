@@ -36,9 +36,11 @@ class MarkerPatch(Patch):
     Embeds marker symbol and markersize properties.
     """
     def __init__(self, marker='o', **kwargs):
-        markersize = kwargs.pop("markersize", plt.rcParams["lines.markersize"])
+        markersize = kwargs.pop("markersize", resolve_param("lines.markersize"))
+        markeredgewidth = kwargs.pop("markeredgewidth", resolve_param("lines.markeredgewidth"))
         self.marker = marker
         self.markersize = markersize
+        self.markeredgewidth = markeredgewidth
         super().__init__(**kwargs)
 
     def get_marker(self) -> str:
@@ -49,11 +51,19 @@ class MarkerPatch(Patch):
 
     def get_markersize(self) -> float:
         return self.markersize
-
+    
     def set_markersize(self, markersize: float):
         if markersize is None or markersize == 0:
-            markersize = plt.rcParams["lines.markersize"]
+            markersize = resolve_param("lines.markersize")
         self.markersize = markersize
+    
+    def get_markeredgewidth(self) -> float:
+        return self.markeredgewidth
+
+    def set_markeredgewidth(self, markeredgewidth: float):
+        if markeredgewidth is None or markeredgewidth == 0:
+            markeredgewidth = resolve_param("lines.markeredgewidth")
+        self.markeredgewidth = markeredgewidth
 
 
 class LineMarkerPatch(Patch):
@@ -62,9 +72,11 @@ class LineMarkerPatch(Patch):
     Embeds marker symbol, markersize, linestyle, and all styling properties.
     """
     def __init__(self, marker='o', linestyle='-', **kwargs):
-        markersize = kwargs.pop("markersize", plt.rcParams["lines.markersize"])
+        markersize = kwargs.pop("markersize", resolve_param("lines.markersize"))
+        markeredgewidth = kwargs.pop("markeredgewidth", resolve_param("lines.markeredgewidth"))
         self.marker = marker
         self.markersize = markersize
+        self.markeredgewidth = markeredgewidth
         self.linestyle = linestyle
         super().__init__(**kwargs)
 
@@ -79,8 +91,16 @@ class LineMarkerPatch(Patch):
 
     def set_markersize(self, markersize: float):
         if markersize is None or markersize == 0:
-            markersize = plt.rcParams["lines.markersize"]
+            markersize = resolve_param("lines.markersize")
         self.markersize = markersize
+
+    def get_markeredgewidth(self) -> float:
+        return self.markeredgewidth
+
+    def set_markeredgewidth(self, markeredgewidth: float):
+        if markeredgewidth is None or markeredgewidth == 0:
+            markeredgewidth = resolve_param("lines.markeredgewidth")
+        self.markeredgewidth = markeredgewidth
 
     def get_linestyle(self) -> str:
         return self.linestyle
@@ -230,36 +250,24 @@ class HandlerMarker(HandlerBase):
         cy = 0.5 * height - 0.5 * ydescent
 
         # Extract all properties from the handle
-        marker, color, size, alpha, linewidth, edgecolor = self._extract_properties(
+        marker, color, size, alpha, linewidth, markeredgewidth, edgecolor = self._extract_properties(
             orig_handle, fontsize
         )
 
         # Create filled marker with transparency
-        marker_fill = Line2D(
+        marker_artist = Line2D(
             [cx], [cy],
             marker=marker,
             markersize=size,
             markerfacecolor=to_rgba(color, alpha),
-            markeredgecolor='none',
+            markeredgecolor=to_rgba(edgecolor, 1.0),
+            markeredgewidth=markeredgewidth,
             linestyle='none',
             transform=trans,
             zorder=2
         )
 
-        # Create edge marker
-        marker_edge = Line2D(
-            [cx], [cy],
-            marker=marker,
-            markersize=size,
-            markerfacecolor='none',
-            markeredgecolor=to_rgba(edgecolor, 1.0),
-            markeredgewidth=linewidth,
-            linestyle='none',
-            transform=trans,
-            zorder=3
-        )
-
-        return [marker_fill, marker_edge]
+        return [marker_artist]
 
     def _extract_properties(
         self,
@@ -279,9 +287,10 @@ class HandlerMarker(HandlerBase):
         # Defaults
         marker = 'o'
         color = "gray"
-        size = fontsize * 0.8
-        alpha = resolve_param("alpha", None)
-        linewidth = resolve_param("lines.linewidth", None)
+        size = resolve_param("lines.markersize")
+        alpha = resolve_param("alpha")
+        linewidth = resolve_param("lines.linewidth")
+        markeredgewidth = resolve_param("lines.markeredgewidth")
         edgecolor = None
 
         # Extract from MarkerPatch (created by create_legend_handles)
@@ -292,13 +301,14 @@ class HandlerMarker(HandlerBase):
             alpha = orig_handle.get_alpha() if orig_handle.get_alpha() is not None else alpha
             linewidth = orig_handle.get_linewidth() if orig_handle.get_linewidth() else linewidth
             size = orig_handle.get_markersize() if orig_handle.get_markersize() is not None else size
+            markeredgewidth = orig_handle.get_markeredgewidth()
 
         # Extract from Line2D (standard matplotlib)
         elif isinstance(orig_handle, Line2D):
             marker = orig_handle.get_marker() or 'o'
             color = orig_handle.get_color() or orig_handle.get_markerfacecolor()
             size = orig_handle.get_markersize() or size
-            linewidth = orig_handle.get_markeredgewidth() or linewidth
+            markeredgewidth = orig_handle.get_mairkeredgewidth() or linewidth
             # Line2D doesn't store alpha separately - use default
             # edgecolor will default to face color below
 
@@ -306,7 +316,7 @@ class HandlerMarker(HandlerBase):
         if edgecolor is None:
             edgecolor = color
 
-        return marker, color, size, alpha, linewidth, edgecolor
+        return marker, color, size, alpha, linewidth, markeredgewidth, edgecolor
 
 
 class HandlerLineMarker(HandlerBase):
@@ -337,7 +347,7 @@ class HandlerLineMarker(HandlerBase):
         from matplotlib.colors import to_rgba
 
         # Extract all properties from the handle
-        marker, color, size, alpha, linewidth, edgecolor, linestyle = self._extract_properties(
+        marker, color, size, alpha, linewidth, markeredgewidth, edgecolor, linestyle = self._extract_properties(
             orig_handle, fontsize
         )
 
@@ -362,7 +372,7 @@ class HandlerLineMarker(HandlerBase):
         )
 
         # Layer 1: White background marker (covers the line)
-        marker_white = Line2D(
+        marker_background = Line2D(
             [marker_x], [marker_y],
             marker=marker,
             markersize=size,
@@ -375,31 +385,19 @@ class HandlerLineMarker(HandlerBase):
         )
 
         # Layer 2: Semi-transparent filled marker
-        marker_fill = Line2D(
+        marker_artist = Line2D(
             [marker_x], [marker_y],
             marker=marker,
             markersize=size,
             markerfacecolor=to_rgba(color, alpha),
-            markeredgecolor='none',
+            markeredgecolor=to_rgba(color, 1.0),
+            markeredgewidth=markeredgewidth,
             linestyle='none',
             transform=trans,
             zorder=3
         )
 
-        # Layer 3: Edge marker
-        marker_edge = Line2D(
-            [marker_x], [marker_y],
-            marker=marker,
-            markersize=size,
-            markerfacecolor='none',
-            markeredgecolor=to_rgba(edgecolor, 1.0),
-            markeredgewidth=linewidth,
-            linestyle='none',
-            transform=trans,
-            zorder=4
-        )
-
-        return [line, marker_white, marker_fill, marker_edge]
+        return [line, marker_background, marker_artist]
 
     def _extract_properties(
         self,
@@ -419,20 +417,23 @@ class HandlerLineMarker(HandlerBase):
         # Defaults
         marker = 'o'
         color = "gray"
-        size = fontsize * 0.8  # Default fallback
-        alpha = resolve_param("alpha", None)
-        linewidth = resolve_param("lines.linewidth", None)
+        size = resolve_param("lines.markersize")
+        alpha = resolve_param("alpha")
+        linewidth = resolve_param("lines.linewidth")
+        markeredgewidth = resolve_param("lines.markeredgewidth")
         edgecolor = None
         linestyle = '-'
 
         # Extract from LineMarkerPatch (created by create_legend_handles)
         if isinstance(orig_handle, LineMarkerPatch):
             marker = orig_handle.get_marker()
+            print("line style", linestyle, orig_handle.get_linestyle())
             linestyle = orig_handle.get_linestyle()
             color = orig_handle.get_facecolor()
             edgecolor = orig_handle.get_edgecolor()
             alpha = orig_handle.get_alpha() if orig_handle.get_alpha() is not None else alpha
             linewidth = orig_handle.get_linewidth() if orig_handle.get_linewidth() else linewidth
+            markeredgewidth = orig_handle.get_markeredgewidth()
             # Use actual markersize from patch (already in correct units)
             patch_size = orig_handle.get_markersize()
             if patch_size is not None:
@@ -440,8 +441,8 @@ class HandlerLineMarker(HandlerBase):
 
         # Extract from Line2D (standard matplotlib - fallback)
         elif isinstance(orig_handle, Line2D):
-            marker = orig_handle.get_marker() or 'o'
-            linestyle = orig_handle.get_linestyle() or '-'
+            marker = orig_handle.get_marker() or marker
+            linestyle = orig_handle.get_linestyle() or linestyle
             color = orig_handle.get_color() or orig_handle.get_markerfacecolor()
             line_size = orig_handle.get_markersize()
             if line_size:
@@ -454,7 +455,7 @@ class HandlerLineMarker(HandlerBase):
         if edgecolor is None:
             edgecolor = color
 
-        return marker, color, size, alpha, linewidth, edgecolor, linestyle
+        return marker, color, size, alpha, linewidth, markeredgewidth, edgecolor, linestyle
 
 
 # =============================================================================
@@ -491,6 +492,7 @@ def create_legend_handles(
     linestyles: Optional[List[str]] = None,
     alpha: Optional[float] = None,
     linewidth: Optional[float] = None,
+    markeredgewidth: Optional[float] = None,
     style: str = "rectangle",
     color: Optional[str] = None
 ) -> List[Patch]:
@@ -518,8 +520,10 @@ def create_legend_handles(
         Transparency level for fill layers.
     linewidth : float, default=DEFAULT_LINEWIDTH
         Width of edge lines.
+    markeredgewidth : float, default=DEFAULT_MARKEREDEDGWIDTH
+        Width of marker edges.
     style : str, default="rectangle"
-        Style of legend markers: "rectangle", "circle", or "marker".
+        Style of legend markers: "rectangle", "circle", "marker", or "line".
         Ignored if markers parameter is provided.
     color : str, optional
         Single color for all entries if colors not provided.
@@ -532,6 +536,7 @@ def create_legend_handles(
     # Read defaults from rcParams if not provided
     alpha = resolve_param("alpha", alpha)
     linewidth = resolve_param("lines.linewidth", linewidth)
+    markeredgewidth = resolve_param("lines.markeredgewidth", markeredgewidth)
 
     if colors is None:
         default_color = resolve_param("color", None)
@@ -540,8 +545,9 @@ def create_legend_handles(
     if hatches is None or len(hatches) == 0 or style == "circle" or markers is not None:
         hatches = [""] * len(labels)
 
-    if sizes is None or len(sizes) == 0:
-        sizes = [plt.rcParams["lines.markersize"]] * len(labels)
+    if sizes is None or len(sizes) < len(labels):
+        sizes = sizes or [resolve_param("lines.markersize")]
+        sizes = [sizes[i % len(sizes)] for i in range(len(labels))]
 
     if markers is not None and len(markers) == 0:
         markers = None
@@ -551,7 +557,7 @@ def create_legend_handles(
 
     # Ensure linestyles has the right length if provided
     if linestyles is not None and len(linestyles) < len(labels):
-        linestyles = list(linestyles) + ['-'] * (len(labels) - len(linestyles))
+        linestyles = [linestyles[i % len(linestyles)] for i in range(len(labels))]
 
     handles = []
 
@@ -567,7 +573,8 @@ def create_legend_handles(
                 alpha=alpha,
                 linewidth=linewidth,
                 label=label,
-                markersize=size
+                markersize=size,
+                markeredgewidth=markeredgewidth,
             )
             handles.append(handle)
     elif markers is not None:
@@ -580,7 +587,8 @@ def create_legend_handles(
                 alpha=alpha,
                 linewidth=linewidth,
                 label=label,
-                markersize=size
+                markersize=size,
+                markeredgewidth=markeredgewidth,
             )
             handles.append(handle)
     else:
@@ -595,7 +603,8 @@ def create_legend_handles(
                     alpha=alpha,
                     linewidth=linewidth,
                     label=label,
-                    markersize=size
+                    markersize=size,
+                    markeredgewidth=markeredgewidth,
                 )
                 handles.append(handle)
         else:
@@ -608,7 +617,7 @@ def create_legend_handles(
                     linewidth=linewidth,
                     label=label,
                     hatch=hatch,
-                    markersize=size
+                    markersize=size,
                 )
                 handles.append(handle)
 
@@ -755,7 +764,7 @@ class LegendBuilder:
                 transform=self.ax.transAxes,
                 ha="left",
                 va="top",  # Align top of text with current_y
-                fontsize=plt.rcParams.get("legend.title_fontsize", plt.rcParams["font.size"]),
+                fontsize=resolve_param("legend.title_fontsize", resolve_param("font.size")),
                 fontweight="normal"
             )
             
