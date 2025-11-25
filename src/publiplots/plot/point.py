@@ -348,18 +348,16 @@ def _apply_marker_styling(
             zorder=100
         )
 
-        # Store marker info for legend (only unique entries)
-        if label and not label.startswith('_'):
-            # Check if this label already exists in marker_info
-            if not any(info['label'] == label for info in marker_info):
-                marker_info.append({
-                    'color': color,
-                    'marker': marker,
-                    'markersize': size,
-                    'linestyle': linestyle,
-                    'linewidth': line_linewidth,
-                    'label': label,
-                })
+        # Store marker info for legend (preserve order, don't filter by label)
+        # Seaborn creates lines in hue_order, so we match by index
+        marker_info.append({
+            'color': color,
+            'marker': marker,
+            'markersize': size,
+            'linestyle': linestyle,
+            'linewidth': line_linewidth,
+            'label': label,  # Keep even if it starts with '_'
+        })
 
     return marker_info
 
@@ -412,25 +410,25 @@ def _legend(
         colors = list(palette.values())
 
         # Match markers, sizes, and linestyles to labels using marker_info
+        # Seaborn creates lines in hue_order, so marker_info is in the same order
         marker_list = []
         size_list = []
         linestyle_list = []
 
-        # Create a mapping from label to marker_info
-        info_by_label = {info['label']: info for info in marker_info if info['label']}
-
-        for label in labels:
-            if label in info_by_label:
-                info = info_by_label[label]
+        # Match by index/order (seaborn creates lines in hue_order)
+        for i, label in enumerate(labels):
+            if i < len(marker_info):
+                # Use actual info from plot
+                info = marker_info[i]
                 marker_list.append(info['marker'])
                 size_list.append(info['markersize'])
                 linestyle_list.append(info['linestyle'])
             else:
-                # Fallback if label not found in marker_info
+                # Fallback if index out of range
                 if isinstance(markers, dict):
                     marker_list.append(markers.get(label, 'o'))
-                elif isinstance(markers, list) and len(marker_list) < len(markers):
-                    marker_list.append(markers[len(marker_list)])
+                elif isinstance(markers, list) and i < len(markers):
+                    marker_list.append(markers[i])
                 else:
                     marker_list.append('o')
                 size_list.append(resolve_param("lines.markersize"))
