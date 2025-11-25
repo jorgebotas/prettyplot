@@ -433,8 +433,8 @@ def _legend(
                     marker_list.append(markers[len(marker_list)])
                 else:
                     marker_list.append('o')
-                size_list.append(plt.rcParams["lines.markersize"])
-                linestyle_list.append('-')
+                size_list.append(resolve_param("lines.markersize"))
+                linestyle_list.append(resolve_param("lines.linestyle"))
 
         # Create legend handles with line+marker style
         hue_handles = create_legend_handles(
