@@ -400,7 +400,6 @@ def _legend(
         # Use palette keys as the source of truth for labels
         labels = list(palette.keys())
         colors = list(palette.values())
-        print(markersize)
 
         # Create legend handles with line+marker style
         hue_handles = create_legend_handles(
@@ -424,4 +423,4 @@ def _legend(
         ax.lines[0]._legend_data = legend_data
 
     # Create legend using legend() API
-    builder = legend(ax=ax)
+    return legend(ax=ax)

@@ -71,14 +71,15 @@ class LineMarkerPatch(Patch):
     Custom patch for line+marker legend handles (pointplot, lineplot, etc.).
     Embeds marker symbol, markersize, linestyle, and all styling properties.
     """
-    def __init__(self, marker='o', linestyle='-', **kwargs):
+    def __init__(self, marker='o', linestyle=None, **kwargs):
         markersize = kwargs.pop("markersize", resolve_param("lines.markersize"))
         markeredgewidth = kwargs.pop("markeredgewidth", resolve_param("lines.markeredgewidth"))
         self.marker = marker
         self.markersize = markersize
         self.markeredgewidth = markeredgewidth
-        self.linestyle = linestyle
         super().__init__(**kwargs)
+        # Override linestyle if provided
+        self.linestyle = resolve_param("lines.linestyle", linestyle)
 
     def get_marker(self) -> str:
         return self.marker
@@ -422,16 +423,15 @@ class HandlerLineMarker(HandlerBase):
         linewidth = resolve_param("lines.linewidth")
         markeredgewidth = resolve_param("lines.markeredgewidth")
         edgecolor = None
-        linestyle = '-'
+        linestyle = resolve_param("lines.linestyle")
 
         # Extract from LineMarkerPatch (created by create_legend_handles)
         if isinstance(orig_handle, LineMarkerPatch):
             marker = orig_handle.get_marker()
-            print("line style", linestyle, orig_handle.get_linestyle())
-            linestyle = orig_handle.get_linestyle()
             color = orig_handle.get_facecolor()
             edgecolor = orig_handle.get_edgecolor()
             alpha = orig_handle.get_alpha() if orig_handle.get_alpha() is not None else alpha
+            linestyle = orig_handle.get_linestyle() or linestyle
             linewidth = orig_handle.get_linewidth() if orig_handle.get_linewidth() else linewidth
             markeredgewidth = orig_handle.get_markeredgewidth()
             # Use actual markersize from patch (already in correct units)
@@ -557,7 +557,6 @@ def create_legend_handles(
         linestyles = [linestyles[i % len(linestyles)] for i in range(len(labels))]
 
     handles = []
-    print(linestyles)
 
     # Determine patch type
     if markers is not None and linestyles is not None:
