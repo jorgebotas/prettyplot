@@ -552,14 +552,12 @@ def create_legend_handles(
     if markers is not None and len(markers) == 0:
         markers = None
 
-    if linestyles is not None and len(linestyles) == 0:
-        linestyles = None
-
-    # Ensure linestyles has the right length if provided
     if linestyles is not None and len(linestyles) < len(labels):
+        linestyles = linestyles or [resolve_param("lines.linestyle")]
         linestyles = [linestyles[i % len(linestyles)] for i in range(len(labels))]
 
     handles = []
+    print(linestyles)
 
     # Determine patch type
     if markers is not None and linestyles is not None:
