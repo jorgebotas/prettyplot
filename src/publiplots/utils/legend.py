@@ -361,7 +361,20 @@ class HandlerLineMarker(HandlerBase):
             zorder=1
         )
 
-        # Create filled marker with transparency
+        # Layer 1: White background marker (covers the line)
+        marker_white = Line2D(
+            [marker_x], [marker_y],
+            marker=marker,
+            markersize=size,
+            markerfacecolor='white',
+            markeredgecolor=color,
+            markeredgewidth=0,
+            linestyle='none',
+            transform=trans,
+            zorder=2
+        )
+
+        # Layer 2: Semi-transparent filled marker
         marker_fill = Line2D(
             [marker_x], [marker_y],
             marker=marker,
@@ -370,10 +383,10 @@ class HandlerLineMarker(HandlerBase):
             markeredgecolor='none',
             linestyle='none',
             transform=trans,
-            zorder=2
+            zorder=3
         )
 
-        # Create edge marker
+        # Layer 3: Edge marker
         marker_edge = Line2D(
             [marker_x], [marker_y],
             marker=marker,
@@ -383,10 +396,10 @@ class HandlerLineMarker(HandlerBase):
             markeredgewidth=linewidth,
             linestyle='none',
             transform=trans,
-            zorder=3
+            zorder=4
         )
 
-        return [line, marker_fill, marker_edge]
+        return [line, marker_white, marker_fill, marker_edge]
 
     def _extract_properties(
         self,
@@ -406,7 +419,7 @@ class HandlerLineMarker(HandlerBase):
         # Defaults
         marker = 'o'
         color = "gray"
-        size = fontsize * 0.8
+        size = fontsize * 0.8  # Default fallback
         alpha = resolve_param("alpha", None)
         linewidth = resolve_param("lines.linewidth", None)
         edgecolor = None
@@ -420,14 +433,19 @@ class HandlerLineMarker(HandlerBase):
             edgecolor = orig_handle.get_edgecolor()
             alpha = orig_handle.get_alpha() if orig_handle.get_alpha() is not None else alpha
             linewidth = orig_handle.get_linewidth() if orig_handle.get_linewidth() else linewidth
-            size = orig_handle.get_markersize() if orig_handle.get_markersize() is not None else size
+            # Use actual markersize from patch (already in correct units)
+            patch_size = orig_handle.get_markersize()
+            if patch_size is not None:
+                size = patch_size
 
         # Extract from Line2D (standard matplotlib - fallback)
         elif isinstance(orig_handle, Line2D):
             marker = orig_handle.get_marker() or 'o'
             linestyle = orig_handle.get_linestyle() or '-'
             color = orig_handle.get_color() or orig_handle.get_markerfacecolor()
-            size = orig_handle.get_markersize() or size
+            line_size = orig_handle.get_markersize()
+            if line_size:
+                size = line_size
             linewidth = orig_handle.get_linewidth() or linewidth
             # Line2D doesn't store alpha separately - use default
             # edgecolor will default to face color below
