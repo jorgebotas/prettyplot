@@ -23,6 +23,7 @@ __description__ = "Publication-ready plotting with a clean, modular API"
 # Plotting functions
 from publiplots.plot.bar import barplot
 from publiplots.plot.scatter import scatterplot
+from publiplots.plot.point import pointplot
 from publiplots.plot.box import boxplot
 from publiplots.plot.swarm import swarmplot
 from publiplots.plot.strip import stripplot
@@ -84,6 +85,7 @@ __all__ = [
     # Plots
     "barplot",
     "scatterplot",
+    "pointplot",
     "boxplot",
     "swarmplot",
     "stripplot",

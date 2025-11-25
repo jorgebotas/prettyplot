@@ -662,7 +662,7 @@ class LegendBuilder:
 
 def _get_legend_data(ax: Axes) -> dict:
     """
-    Get stored legend data from axes collections/patches.
+    Get stored legend data from axes collections/patches/lines.
 
     Parameters
     ----------
@@ -683,6 +683,11 @@ def _get_legend_data(ax: Axes) -> dict:
     for patch in ax.patches:
         if hasattr(patch, '_legend_data'):
             return patch._legend_data
+
+    # Check lines (for pointplot)
+    for line in ax.lines:
+        if hasattr(line, '_legend_data'):
+            return line._legend_data
 
     return {}
 
