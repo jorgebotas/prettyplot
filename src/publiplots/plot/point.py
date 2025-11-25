@@ -287,17 +287,17 @@ def _apply_marker_styling(
     alpha : float
         Transparency for marker fill.
     linewidth : float
-        Width of marker edges.
+        Width of marker edges and connecting lines.
 
     Returns
     -------
     marker_info : list of dict
         Information about each marker group for legend creation.
-        Each dict contains: 'color', 'marker', 'label' (if available)
+        Each dict contains: 'color', 'marker', 'markersize', 'linestyle', 'linewidth', 'label'
     """
     marker_info = []
 
-    # Extract markers from lines
+    # Extract markers and line info from lines
     markers_data = []
     for line in ax.lines:
         marker = line.get_marker()
@@ -308,9 +308,11 @@ def _apply_marker_styling(
                 'marker': marker,
                 'color': line.get_color(),
                 'markersize': line.get_markersize(),
+                'linestyle': line.get_linestyle(),
+                'linewidth': line.get_linewidth(),
                 'label': line.get_label(),
             })
-            # Remove marker from original line
+            # Remove marker from original line (keep the line itself)
             line.set_markersize(0)
 
     # Redraw markers with double-layer effect
@@ -320,6 +322,8 @@ def _apply_marker_styling(
         marker = marker_data['marker']
         color = marker_data['color']
         size = marker_data['markersize']
+        linestyle = marker_data['linestyle']
+        line_linewidth = marker_data['linewidth']
         label = marker_data['label']
 
         # Layer 1: White background (no edge)
@@ -344,12 +348,18 @@ def _apply_marker_styling(
             zorder=100
         )
 
-        # Store marker info for legend
-        marker_info.append({
-            'color': color,
-            'marker': marker,
-            'label': label if label and not label.startswith('_') else None,
-        })
+        # Store marker info for legend (only unique entries)
+        if label and not label.startswith('_'):
+            # Check if this label already exists in marker_info
+            if not any(info['label'] == label for info in marker_info):
+                marker_info.append({
+                    'color': color,
+                    'marker': marker,
+                    'markersize': size,
+                    'linestyle': linestyle,
+                    'linewidth': line_linewidth,
+                    'label': label,
+                })
 
     return marker_info
 
@@ -401,22 +411,40 @@ def _legend(
         labels = list(palette.keys())
         colors = list(palette.values())
 
-        # Match markers to labels
-        if isinstance(markers, dict):
-            marker_list = [markers[label] for label in labels]
-        elif isinstance(markers, list):
-            marker_list = markers[:len(labels)]
-        else:
-            marker_list = ['o'] * len(labels)
+        # Match markers, sizes, and linestyles to labels using marker_info
+        marker_list = []
+        size_list = []
+        linestyle_list = []
 
-        # Create legend handles
+        # Create a mapping from label to marker_info
+        info_by_label = {info['label']: info for info in marker_info if info['label']}
+
+        for label in labels:
+            if label in info_by_label:
+                info = info_by_label[label]
+                marker_list.append(info['marker'])
+                size_list.append(info['markersize'])
+                linestyle_list.append(info['linestyle'])
+            else:
+                # Fallback if label not found in marker_info
+                if isinstance(markers, dict):
+                    marker_list.append(markers.get(label, 'o'))
+                elif isinstance(markers, list) and len(marker_list) < len(markers):
+                    marker_list.append(markers[len(marker_list)])
+                else:
+                    marker_list.append('o')
+                size_list.append(plt.rcParams["lines.markersize"])
+                linestyle_list.append('-')
+
+        # Create legend handles with line+marker style
         hue_handles = create_legend_handles(
             labels=[str(label) for label in labels],
             colors=colors,
             markers=marker_list,
+            linestyles=linestyle_list,
+            sizes=size_list,
             alpha=alpha,
             linewidth=linewidth,
-            style="circle",
         )
 
         legend_data["hue"] = {

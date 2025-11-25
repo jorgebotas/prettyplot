@@ -56,6 +56,39 @@ class MarkerPatch(Patch):
         self.markersize = markersize
 
 
+class LineMarkerPatch(Patch):
+    """
+    Custom patch for line+marker legend handles (pointplot, lineplot, etc.).
+    Embeds marker symbol, markersize, linestyle, and all styling properties.
+    """
+    def __init__(self, marker='o', linestyle='-', **kwargs):
+        markersize = kwargs.pop("markersize", plt.rcParams["lines.markersize"])
+        self.marker = marker
+        self.markersize = markersize
+        self.linestyle = linestyle
+        super().__init__(**kwargs)
+
+    def get_marker(self) -> str:
+        return self.marker
+
+    def set_marker(self, marker: str):
+        self.marker = marker
+
+    def get_markersize(self) -> float:
+        return self.markersize
+
+    def set_markersize(self, markersize: float):
+        if markersize is None or markersize == 0:
+            markersize = plt.rcParams["lines.markersize"]
+        self.markersize = markersize
+
+    def get_linestyle(self) -> str:
+        return self.linestyle
+
+    def set_linestyle(self, linestyle: str):
+        self.linestyle = linestyle
+
+
 class HandlerRectangle(HandlerPatch):
     """
     Custom legend handler for double-layer rectangle markers.
@@ -276,6 +309,136 @@ class HandlerMarker(HandlerBase):
         return marker, color, size, alpha, linewidth, edgecolor
 
 
+class HandlerLineMarker(HandlerBase):
+    """
+    Legend handler for line+marker combinations (pointplot, lineplot, etc.).
+
+    Draws a horizontal line with a marker on top using double-layer styling
+    (transparent fill + opaque edge). This handler is designed for plots that
+    show both lines and markers (e.g., pointplot, lineplot with markers).
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def create_artists(
+        self,
+        legend: Legend,
+        orig_handle: Any,
+        xdescent: float,
+        ydescent: float,
+        width: float,
+        height: float,
+        fontsize: float,
+        trans: Any
+    ) -> List:
+        """Create the legend line+marker artists."""
+        from matplotlib.lines import Line2D
+        from matplotlib.colors import to_rgba
+
+        # Extract all properties from the handle
+        marker, color, size, alpha, linewidth, edgecolor, linestyle = self._extract_properties(
+            orig_handle, fontsize
+        )
+
+        # Line coordinates (horizontal line across the legend entry)
+        line_y = 0.5 * height - 0.5 * ydescent
+        line_x_start = -xdescent
+        line_x_end = width - xdescent
+
+        # Marker position (center of the line)
+        marker_x = 0.5 * width - 0.5 * xdescent
+        marker_y = line_y
+
+        # Create the connecting line
+        line = Line2D(
+            [line_x_start, line_x_end],
+            [line_y, line_y],
+            color=to_rgba(color, 1.0),
+            linewidth=linewidth,
+            linestyle=linestyle,
+            transform=trans,
+            zorder=1
+        )
+
+        # Create filled marker with transparency
+        marker_fill = Line2D(
+            [marker_x], [marker_y],
+            marker=marker,
+            markersize=size,
+            markerfacecolor=to_rgba(color, alpha),
+            markeredgecolor='none',
+            linestyle='none',
+            transform=trans,
+            zorder=2
+        )
+
+        # Create edge marker
+        marker_edge = Line2D(
+            [marker_x], [marker_y],
+            marker=marker,
+            markersize=size,
+            markerfacecolor='none',
+            markeredgecolor=to_rgba(edgecolor, 1.0),
+            markeredgewidth=linewidth,
+            linestyle='none',
+            transform=trans,
+            zorder=3
+        )
+
+        return [line, marker_fill, marker_edge]
+
+    def _extract_properties(
+        self,
+        orig_handle: Any,
+        fontsize: float
+    ) -> Tuple[str, str, float, float, float, str, str]:
+        """
+        Extract all properties from the handle.
+
+        Returns
+        -------
+        Tuple[str, str, float, float, float, str, str]
+            (marker, color, size, alpha, linewidth, edgecolor, linestyle)
+        """
+        from matplotlib.lines import Line2D
+
+        # Defaults
+        marker = 'o'
+        color = "gray"
+        size = fontsize * 0.8
+        alpha = resolve_param("alpha", None)
+        linewidth = resolve_param("lines.linewidth", None)
+        edgecolor = None
+        linestyle = '-'
+
+        # Extract from LineMarkerPatch (created by create_legend_handles)
+        if isinstance(orig_handle, LineMarkerPatch):
+            marker = orig_handle.get_marker()
+            linestyle = orig_handle.get_linestyle()
+            color = orig_handle.get_facecolor()
+            edgecolor = orig_handle.get_edgecolor()
+            alpha = orig_handle.get_alpha() if orig_handle.get_alpha() is not None else alpha
+            linewidth = orig_handle.get_linewidth() if orig_handle.get_linewidth() else linewidth
+            size = orig_handle.get_markersize() if orig_handle.get_markersize() is not None else size
+
+        # Extract from Line2D (standard matplotlib - fallback)
+        elif isinstance(orig_handle, Line2D):
+            marker = orig_handle.get_marker() or 'o'
+            linestyle = orig_handle.get_linestyle() or '-'
+            color = orig_handle.get_color() or orig_handle.get_markerfacecolor()
+            size = orig_handle.get_markersize() or size
+            linewidth = orig_handle.get_linewidth() or linewidth
+            # Line2D doesn't store alpha separately - use default
+            # edgecolor will default to face color below
+
+        # Use face color as edge color if not specified
+        if edgecolor is None:
+            edgecolor = color
+
+        return marker, color, size, alpha, linewidth, edgecolor, linestyle
+
+
 # =============================================================================
 # Helper Functions
 # =============================================================================
@@ -292,10 +455,12 @@ def get_legend_handler_map() -> Dict[type, HandlerBase]:
     """
     handler_rectangle = HandlerRectangle()
     handler_marker = HandlerMarker()
+    handler_line_marker = HandlerLineMarker()
 
     return {
         Rectangle: handler_rectangle,
         MarkerPatch: handler_marker,
+        LineMarkerPatch: handler_line_marker,
         Patch: handler_rectangle,
     }
 
@@ -305,6 +470,7 @@ def create_legend_handles(
     hatches: Optional[List[str]] = None,
     sizes: Optional[List[float]] = None,
     markers: Optional[List[str]] = None,
+    linestyles: Optional[List[str]] = None,
     alpha: Optional[float] = None,
     linewidth: Optional[float] = None,
     style: str = "rectangle",
@@ -325,7 +491,11 @@ def create_legend_handles(
         Sizes for each legend entry (markersizes).
     markers : List[str], optional
         Marker symbols for each legend entry (e.g., ['o', '^', 's']).
-        If provided, creates MarkerPatch handles regardless of style parameter.
+        If provided with linestyles, creates LineMarkerPatch handles.
+        If provided without linestyles, creates MarkerPatch handles.
+    linestyles : List[str], optional
+        Line styles for each legend entry (e.g., ['-', '--', ':']).
+        If provided with markers, creates LineMarkerPatch handles.
     alpha : float, default=DEFAULT_ALPHA
         Transparency level for fill layers.
     linewidth : float, default=DEFAULT_LINEWIDTH
@@ -358,14 +528,34 @@ def create_legend_handles(
     if markers is not None and len(markers) == 0:
         markers = None
 
+    if linestyles is not None and len(linestyles) == 0:
+        linestyles = None
+
+    # Ensure linestyles has the right length if provided
+    if linestyles is not None and len(linestyles) < len(labels):
+        linestyles = list(linestyles) + ['-'] * (len(labels) - len(linestyles))
+
     handles = []
 
     # Determine patch type
-    if markers is not None:
-        # Use MarkerPatch when markers are specified
-        patch = MarkerPatch
+    if markers is not None and linestyles is not None:
+        # Use LineMarkerPatch when both markers and linestyles are specified
+        for label, col, size, marker, linestyle in zip(labels, colors, sizes, markers, linestyles):
+            handle = LineMarkerPatch(
+                marker=marker,
+                linestyle=linestyle,
+                facecolor=col,
+                edgecolor=col,
+                alpha=alpha,
+                linewidth=linewidth,
+                label=label,
+                markersize=size
+            )
+            handles.append(handle)
+    elif markers is not None:
+        # Use MarkerPatch when only markers are specified
         for label, col, hatch, size, marker in zip(labels, colors, hatches, sizes, markers):
-            handle = patch(
+            handle = MarkerPatch(
                 marker=marker,
                 facecolor=col,
                 edgecolor=col,
@@ -790,8 +980,10 @@ def legend(
 __all__ = [
     "HandlerRectangle",
     "HandlerMarker",
+    "HandlerLineMarker",
     "RectanglePatch",
     "MarkerPatch",
+    "LineMarkerPatch",
     "get_legend_handler_map",
     "create_legend_handles",
     "LegendBuilder",

@@ -43,8 +43,10 @@ from publiplots.utils.axes import (
 from publiplots.utils.legend import (
     HandlerRectangle,
     HandlerMarker,
+    HandlerLineMarker,
     RectanglePatch,
     MarkerPatch,
+    LineMarkerPatch,
     get_legend_handler_map,
     create_legend_handles,
     LegendBuilder,
@@ -105,8 +107,10 @@ __all__ = [
     # Legend utilities
     "HandlerRectangle",
     "HandlerMarker",
+    "HandlerLineMarker",
     "RectanglePatch",
     "MarkerPatch",
+    "LineMarkerPatch",
     "get_legend_handler_map",
     "create_legend_handles",
     "LegendBuilder",
