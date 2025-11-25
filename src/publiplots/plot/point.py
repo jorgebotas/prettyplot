@@ -36,6 +36,7 @@ def pointplot(
     color: Optional[str] = None,
     palette: Optional[Union[str, Dict, List]] = None,
     markers: Optional[Union[bool, List[str], Dict[str, str]]] = None,
+    linestyle: Optional[str] = None,
     linestyles: Optional[Union[str, List[str], Dict[str, str]]] = None,
     dodge: Union[bool, float] = False,
     orient: Optional[str] = None,
@@ -178,6 +179,7 @@ def pointplot(
     markeredgewidth = resolve_param("lines.markeredgewidth", markeredgewidth)
     alpha = resolve_param("alpha", alpha)
     color = resolve_param("color", color)
+    linestyle = resolve_param("lines.linestyle", linestyle)
 
     # Create figure if not provided
     if ax is None:
@@ -203,6 +205,18 @@ def pointplot(
         marker_map = resolve_marker_map(values=list(hue_values), marker_map=None)
         # Convert to list for seaborn
         markers = [marker_map[val] for val in hue_values]
+    
+    if kwargs.pop("join", None) is not None:
+        raise DeprecationWarning(
+            "join parameter is deprecated. Use linestyle='none' instead for no connecting lines."
+        )
+    
+    if linestyle == "none":
+        linestyles = ["none"]
+    
+    if hue is not None and (isinstance(linestyles, str) or len(linestyles) < data[hue].nunique()):
+        linestyles = [linestyles] if isinstance(linestyles, str) else linestyles
+        linestyles = linestyles * data[hue].nunique()
 
     # Prepare err_kws with linewidth
     if err_kws is None:
@@ -230,6 +244,7 @@ def pointplot(
         "markers": markers if hue else "o",
         "markersize": markersize,
         "markeredgewidth": markeredgewidth,
+        "linestyle": "none",
         "linestyles": linestyles,
         "dodge": dodge,
         "orient": orient,

@@ -76,7 +76,7 @@ MATPLOTLIB_RCPARAMS: Dict[str, Any] = {
     "axes.grid": False,
     "grid.linewidth": 0.8,
     "grid.color": "0.8",
-    "grid.alpha": 0.3,
+    "grid.alpha": 1,
     "grid.linestyle": "--",
 
     # Legend settings

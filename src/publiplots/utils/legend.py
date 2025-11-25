@@ -79,7 +79,7 @@ class LineMarkerPatch(Patch):
         self.markeredgewidth = markeredgewidth
         super().__init__(**kwargs)
         # Override linestyle if provided
-        self.linestyle = resolve_param("lines.linestyle", linestyle)
+        self.linestyle = linestyle
 
     def get_marker(self) -> str:
         return self.marker
@@ -423,7 +423,7 @@ class HandlerLineMarker(HandlerBase):
         linewidth = resolve_param("lines.linewidth")
         markeredgewidth = resolve_param("lines.markeredgewidth")
         edgecolor = None
-        linestyle = resolve_param("lines.linestyle")
+        linestyle = None
 
         # Extract from LineMarkerPatch (created by create_legend_handles)
         if isinstance(orig_handle, LineMarkerPatch):
@@ -431,8 +431,8 @@ class HandlerLineMarker(HandlerBase):
             color = orig_handle.get_facecolor()
             edgecolor = orig_handle.get_edgecolor()
             alpha = orig_handle.get_alpha() if orig_handle.get_alpha() is not None else alpha
-            linestyle = orig_handle.get_linestyle() or linestyle
-            linewidth = orig_handle.get_linewidth() if orig_handle.get_linewidth() else linewidth
+            linestyle = orig_handle.get_linestyle()
+            linewidth = orig_handle.get_linewidth()
             markeredgewidth = orig_handle.get_markeredgewidth()
             # Use actual markersize from patch (already in correct units)
             patch_size = orig_handle.get_markersize()
@@ -442,12 +442,12 @@ class HandlerLineMarker(HandlerBase):
         # Extract from Line2D (standard matplotlib - fallback)
         elif isinstance(orig_handle, Line2D):
             marker = orig_handle.get_marker() or marker
-            linestyle = orig_handle.get_linestyle() or linestyle
+            linestyle = orig_handle.get_linestyle()
             color = orig_handle.get_color() or orig_handle.get_markerfacecolor()
             line_size = orig_handle.get_markersize()
             if line_size:
                 size = line_size
-            linewidth = orig_handle.get_linewidth() or linewidth
+            linewidth = orig_handle.get_linewidth()
             # Line2D doesn't store alpha separately - use default
             # edgecolor will default to face color below
 
