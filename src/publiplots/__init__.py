@@ -12,7 +12,7 @@ Basic usage:
     >>> pp.savefig(fig, 'output.png')
 """
 
-__version__ = "0.4.4"
+__version__ = "0.4.5"
 __author__ = "Jorge Botas"
 __license__ = "MIT"
 __copyright__ = "Copyright 2025, Jorge Botas"
@@ -23,6 +23,7 @@ __description__ = "Publication-ready plotting with a clean, modular API"
 # Plotting functions
 from publiplots.plot.bar import barplot
 from publiplots.plot.scatter import scatterplot
+from publiplots.plot.point import pointplot
 from publiplots.plot.box import boxplot
 from publiplots.plot.swarm import swarmplot
 from publiplots.plot.strip import stripplot
@@ -42,8 +43,10 @@ from publiplots.utils.axes import (
 from publiplots.utils.legend import (
     HandlerRectangle,
     HandlerMarker,
+    HandlerLineMarker,
     RectanglePatch,
     MarkerPatch,
+    LineMarkerPatch,
     get_legend_handler_map,
     create_legend_handles,
     LegendBuilder,
@@ -84,6 +87,7 @@ __all__ = [
     # Plots
     "barplot",
     "scatterplot",
+    "pointplot",
     "boxplot",
     "swarmplot",
     "stripplot",
@@ -103,8 +107,10 @@ __all__ = [
     # Legend utilities
     "HandlerRectangle",
     "HandlerMarker",
+    "HandlerLineMarker",
     "RectanglePatch",
     "MarkerPatch",
+    "LineMarkerPatch",
     "get_legend_handler_map",
     "create_legend_handles",
     "LegendBuilder",
