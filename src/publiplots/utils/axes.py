@@ -5,7 +5,7 @@ This module provides functions for manipulating axes appearance,
 including spines, grids, labels, and limits.
 """
 
-from typing import Optional, List, Union, Tuple
+from typing import Optional, List, Union, Tuple, Literal
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
@@ -246,14 +246,15 @@ def set_axis_limits(
         ax.set_ylim(y_min, y_max)
 
 
-def rotate_xticklabels(
+def rotate(
     ax: Axes,
+    axis: Literal["x", "y"] = "x",
     rotation: float = 45,
-    ha: str = 'right',
-    va: str = 'top'
+    ha: Optional[Literal["left", "center", "right"]] = None,
+    va: Optional[Literal["top", "center", "bottom", "baseline"]] = None
 ) -> None:
     """
-    Rotate x-axis tick labels.
+    Rotate axis tick labels.
 
     Commonly used when labels are long or numerous.
 
@@ -261,56 +262,27 @@ def rotate_xticklabels(
     ----------
     ax : Axes
         Matplotlib axes object.
+    axis : Literal['x', 'y'], default='x'
+        Axis to rotate tick labels for: 'x', 'y'.
     rotation : float, default=45
         Rotation angle in degrees.
-    ha : str, default='right'
+    ha : Literal['left', 'center', 'right'], default=None
         Horizontal alignment: 'left', 'center', 'right'.
-    va : str, default='top'
+    va : Literal['top', 'center', 'bottom', 'baseline'], default=None
         Vertical alignment: 'top', 'center', 'bottom', 'baseline'.
 
     Examples
     --------
-    >>> pp.rotate_xticklabels(ax, rotation=45)
-    >>> pp.rotate_xticklabels(ax, rotation=90, ha='right')
+    >>> pp.rotate(ax, axis='x', rotation=45)
+    >>> pp.rotate(ax, axis='y', rotation=90, ha='right')
     """
-    ax.set_xticklabels(
-        ax.get_xticklabels(),
-        rotation=rotation,
-        ha=ha,
-        va=va
-    )
+    assert axis in ["x", "y"], ValueError(f"Invalid axis: {axis}. Use 'x' or 'y'.")
+    labels = ax.get_xticklabels() if axis == "x" else ax.get_yticklabels()
 
-
-def rotate_yticklabels(
-    ax: Axes,
-    rotation: float = 0,
-    ha: str = 'right',
-    va: str = 'center'
-) -> None:
-    """
-    Rotate y-axis tick labels.
-
-    Parameters
-    ----------
-    ax : Axes
-        Matplotlib axes object.
-    rotation : float, default=0
-        Rotation angle in degrees.
-    ha : str, default='right'
-        Horizontal alignment: 'left', 'center', 'right'.
-    va : str, default='center'
-        Vertical alignment: 'top', 'center', 'bottom'.
-
-    Examples
-    --------
-    >>> pp.rotate_yticklabels(ax, rotation=45)
-    """
-    ax.set_yticklabels(
-        ax.get_yticklabels(),
-        rotation=rotation,
-        ha=ha,
-        va=va
-    )
+    for lbl in labels:
+        lbl.set_rotation(rotation)
+        if ha is not None: lbl.set_ha(ha)
+        if va is not None: lbl.set_va(va)
 
 
 def invert_axis(ax: Axes, axis: str = 'y') -> None:
