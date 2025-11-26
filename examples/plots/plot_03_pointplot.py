@@ -42,31 +42,14 @@ fig, ax = pp.pointplot(
     xlabel='Time Point',
     ylabel='Measurement',
 )
-ax.grid(axis="y", alpha=0.3)
+ax.grid(axis="y")
 plt.show()
 
-# %%
-# Point Plot with Custom Color
-# -----------------------------
-# Control the color of points and lines.
-
-# Create point plot with custom color
-fig, ax = pp.pointplot(
-    data=simple_data,
-    x='time',
-    y='measurement',
-    color='#8E8EC1',
-    title='Point Plot with Custom Color',
-    xlabel='Time Point',
-    ylabel='Measurement',
-)
-ax.grid(axis="y", alpha=0.3)
-plt.show()
 
 # %%
 # Point Plot with Hue Grouping
 # -----------------------------
-# Compare multiple groups with different colors and markers.
+# Compare multiple groups with different colors.
 
 # Create grouped data
 np.random.seed(123)
@@ -91,26 +74,9 @@ fig, ax = pp.pointplot(
     xlabel='Time Point',
     ylabel='Measurement',
 )
-ax.grid(axis="y", alpha=0.3)
+ax.grid(axis="y")
 plt.show()
 
-# %%
-# Point Plot with Custom Palette
-# -------------------------------
-# Use a custom color palette for groups.
-
-fig, ax = pp.pointplot(
-    data=hue_data,
-    x='time',
-    y='measurement',
-    hue='group',
-    palette={'Control': '#8E8EC1', 'Treated': '#75B375'},
-    title='Point Plot with Custom Palette',
-    xlabel='Time Point',
-    ylabel='Measurement',
-)
-ax.grid(axis="y", alpha=0.3)
-plt.show()
 
 # %%
 # Point Plot with Custom Markers
@@ -128,7 +94,7 @@ fig, ax = pp.pointplot(
     xlabel='Time Point',
     ylabel='Measurement',
 )
-ax.grid(axis="y", alpha=0.3)
+ax.grid(axis="y")
 plt.show()
 
 # %%
@@ -147,7 +113,7 @@ fig, ax = pp.pointplot(
     xlabel='Time Point',
     ylabel='Measurement',
 )
-ax.grid(axis="y", alpha=0.3)
+ax.grid(axis="y")
 plt.show()
 
 # %%
@@ -168,7 +134,7 @@ fig, ax = pp.pointplot(
     xlabel='Time Point',
     ylabel='Measurement',
 )
-ax.grid(axis="y", alpha=0.3)
+ax.grid(axis="y")
 plt.show()
 
 # %%
@@ -186,7 +152,7 @@ fig, ax = pp.pointplot(
     xlabel='Time Point',
     ylabel='Measurement',
 )
-ax.grid(axis="y", alpha=0.3)
+ax.grid(axis="y")
 plt.show()
 
 # %%
@@ -208,92 +174,129 @@ ax.grid(axis="y", alpha=0.3)
 plt.show()
 
 # %%
-# Forest Plot Example
-# -------------------
-# Create a forest plot showing effect sizes with confidence intervals.
-# Forest plots are commonly used in meta-analyses and clinical trials.
-# We use a horizontal pointplot (swap x and y) to create the forest plot.
+# Forest Plot: Log2 Odds Ratios with Significance Coloring
+# ---------------------------------------------------------
+# Forest plot showing log2 odds ratios from a genetic association study.
+# Points are colored based on statistical significance:
+# - Blue (#5D83C3): Protective effect (upper CI < 1, i.e., log2(upper) < 0)
+# - Gray (0.5): Non-significant (CI crosses 1, i.e., log2 CI crosses 0)
+# - Red (#e67e7e): Risk effect (lower CI > 1, i.e., log2(lower) > 0)
+#
+# .. tip::
+#    PubliPlots supports **custom precomputed error bars** via 
+#    ``errorbar=('custom', (lower, upper))``, where ``lower`` and ``upper`` 
+#    are column names in your DataFrame. This is a distinguishing feature 
+#    compared to seaborn, which only accepts long-format data for automatic 
+#    CI calculation.
+#
+# .. note::
+#    For more information on error bars in statistical visualization, see the
+#    excellent guide by the seaborn authors: 
+#    https://seaborn.pydata.org/tutorial/error_bars.html
 
-# Create forest plot data
-np.random.seed(456)
-forest_data = pd.DataFrame({
-    'study': [
-        'Smith et al. (2020)',
-        'Johnson et al. (2019)',
-        'Williams et al. (2021)',
-        'Brown et al. (2018)',
-        'Davis et al. (2022)',
-        'Miller et al. (2020)',
-        'Wilson et al. (2019)',
-        'Moore et al. (2021)',
+# Create realistic genetic association data (log2 odds ratios)
+np.random.seed(101)
+genetic_data = pd.DataFrame({
+    'gene': [
+        'APOE-ε4',
+        'TREM2',
+        'CLU',
+        'CR1',
+        'PICALM',
+        'BIN1',
+        'ABCA7',
+        'MS4A6A',
+        'CD33',
+        'EPHA1',
     ],
-    'effect_size': [0.45, 0.62, 0.38, 0.71, 0.55, 0.48, 0.59, 0.52],
+    'log2_or': [0.85, 0.45, -0.25, 0.15, -0.35, 0.08, 0.38, -0.18, 0.05, -0.12],
+    'log2_lower': [0.65, 0.25, -0.45, -0.05, -0.55, -0.12, 0.18, -0.38, -0.15, -0.32],
+    'log2_upper': [1.05, 0.65, -0.05, 0.35, -0.15, 0.28, 0.58, 0.02, 0.25, 0.08],
 })
 
-# Create forest plot using pointplot with horizontal orientation
+# Determine significance category for coloring
+def get_significance(row):
+    if row['log2_upper'] < 0:
+        return 'Protective'  # Protective (upper CI < 1)
+    elif row['log2_lower'] > 0:
+        return 'Risk'  # Risk (lower CI > 1)
+    else:
+        return 'Non-significant'  # Non-significant (CI crosses 1)
+palette = {
+    "Risk": "#e67e7e",
+    "Non-significant": "0.5",
+    "Protective": "#5D83C3",
+}
+
+genetic_data['Significance'] = genetic_data.apply(get_significance, axis=1)
+
+
 fig, ax = pp.pointplot(
-    data=forest_data,
-    x='effect_size',
-    y='study',
-    color='#8E8EC1',
-    errorbar=('pi', 100),
+    data=genetic_data,
+    x='log2_or',
+    y='gene',
+    hue='Significance',
+    palette=palette,
+    linestyle="none",
+    errorbar=('custom', ('log2_lower', 'log2_upper')),
     capsize=0.1,
-    title='Forest Plot: Meta-Analysis of Treatment Effect',
-    xlabel='Effect Size (95% CI)',
-    ylabel='Study',
-    figsize=(8, 6),
+    title="Genetic Association Study: Alzheimer's Disease Risk",
+    xlabel="Log2 Odds Ratio (95% CI)",
+    ylabel="Gene/Variant",
 )
 
-# Add vertical line at null effect
-ax.axvline(x=0, color='gray', linestyle='--', linewidth=1, alpha=0.5)
-ax.grid(axis='x', alpha=0.3)
-
-plt.tight_layout()
-plt.show()
+ax.axvline(x=0, color='black', linestyle='--', linewidth=1, alpha=0.7, 
+           label='Null effect (OR = 1)')
+ax.grid(axis='x')
 
 # %%
-# Forest Plot with Subgroups
-# ---------------------------
-# Forest plot showing different study types or subgroups using hue.
+# Forest Plot: Long-Format Data with Automatic CI Calculation
+# ------------------------------------------------------------
+# This example demonstrates using long-format data (typical in seaborn)
+# where confidence intervals are automatically calculated from raw observations.
+# This is useful when you have individual measurements rather than 
+# pre-computed summary statistics.
 
-# Create forest plot data with subgroups
-np.random.seed(789)
-subgroup_forest_data = pd.DataFrame({
-    'study': [
-        'Smith 2020',
-        'Johnson 2019',
-        'Williams 2021',
-        'Brown 2018',
-        'Davis 2022',
-        'Miller 2020',
-        'Wilson 2019',
-        'Moore 2021',
-    ],
-    'type': ['RCT', 'RCT', 'RCT', 'RCT', 
-             'Observational', 'Observational', 'Observational', 'Observational'],
-    'effect_size': [0.45, 0.62, 0.38, 0.71, 0.35, 0.28, 0.42, 0.31],
+# Create long-format data with multiple observations per treatment
+np.random.seed(202)
+n_obs = 30
+long_format_data = pd.DataFrame({
+    'treatment': np.repeat([
+        'Drug A',
+        'Drug B', 
+        'Drug C',
+        'Drug D',
+        'Placebo',
+    ], n_obs),
+    'response': np.concatenate([
+        np.random.normal(0.65, 0.15, n_obs),  # Drug A
+        np.random.normal(0.48, 0.18, n_obs),  # Drug B
+        np.random.normal(0.35, 0.12, n_obs),  # Drug C
+        np.random.normal(0.52, 0.16, n_obs),  # Drug D
+        np.random.normal(0.25, 0.10, n_obs),  # Placebo
+    ])
 })
 
-# Create forest plot with hue for study types
+# Create forest plot with automatic CI calculation
 fig, ax = pp.pointplot(
-    data=subgroup_forest_data,
-    x='effect_size',
-    y='study',
-    hue='type',
-    errorbar=('pi', 100),
+    data=long_format_data,
+    x='response',
+    y='treatment',
+    color='#8E8EC1',
+    linestyle="none",
+    errorbar='ci',  # Automatically calculate 95% CI from data
     capsize=0.1,
-    palette={'RCT': '#75B375', 'Observational': '#8E8EC1'},
-    markers=['o', 's'],
-    dodge=0.3,
-    title='Forest Plot: Treatment Effect by Study Type',
-    xlabel='Effect Size (95% CI)',
-    ylabel='Study',
-    figsize=(8, 7),
+    title='Clinical Trial: Treatment Response Rates',
+    xlabel='Response Rate (95% CI)',
+    ylabel='Treatment',
 )
 
-# Add vertical line at null effect
-ax.axvline(x=0, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+# Add vertical line at placebo mean for reference
+placebo_mean = long_format_data[long_format_data['treatment'] == 'Placebo']['response'].mean()
+ax.axvline(x=placebo_mean, color='red', linestyle=':', linewidth=1.5, 
+           alpha=0.7, label=f'Placebo mean ({placebo_mean:.2f})')
 ax.grid(axis='x', alpha=0.3)
+ax.legend(loc='lower right')
 
 plt.tight_layout()
 plt.show()

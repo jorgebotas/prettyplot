@@ -32,6 +32,11 @@ from publiplots.themes.markers import (
     MARKER_SIZES,
 )
 
+from publiplots.themes.linestyles import (
+    STANDARD_LINESTYLES,
+    resolve_linestyle_map,
+)
+
 from publiplots.themes.hatches import (
     get_hatch_patterns,
     set_hatch_mode,
@@ -64,6 +69,9 @@ __all__ = [
     "STANDARD_MARKERS",
     "FILLED_UNFILLED_MARKERS",
     "MARKER_SIZES",
+    # Line style functions
+    "resolve_linestyle_map",
+    "STANDARD_LINESTYLES",
     # Hatch functions
     "get_hatch_patterns",
     "set_hatch_mode",

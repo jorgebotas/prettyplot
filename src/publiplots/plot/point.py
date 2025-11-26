@@ -5,6 +5,7 @@ Provides point plot (line plot with markers and error bars) visualizations
 with support for categorical grouping and custom marker styling.
 """
 
+from publiplots.utils.validation import is_categorical
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
@@ -17,6 +18,7 @@ from typing import Optional, Tuple, Union, Dict, List
 from publiplots.themes.rcparams import resolve_param
 from publiplots.themes.colors import resolve_palette_map
 from publiplots.themes.markers import resolve_marker_map
+from publiplots.themes.linestyles import resolve_linestyle_map
 from publiplots.utils import create_legend_handles, legend
 
 
@@ -35,7 +37,7 @@ def pointplot(
     weights: Optional[str] = None,
     color: Optional[str] = None,
     palette: Optional[Union[str, Dict, List]] = None,
-    markers: Optional[Union[bool, List[str], Dict[str, str]]] = None,
+    markers: Optional[Union[bool, List[str], Dict[str, str]]] = "o",
     linestyle: Optional[str] = None,
     linestyles: Optional[Union[str, List[str], Dict[str, str]]] = None,
     dodge: Union[bool, float] = False,
@@ -87,6 +89,10 @@ def pointplot(
         - ("pi", confidence_level): Prediction interval
         - ("se", multiplier): Standard error with optional multiplier
         - "sd": Standard deviation
+        - ("custom", (lower, upper)): Custom error values. Define precomputed
+          lower and upper error bounds in the data.
+          NOTE: If custom error values are provided, errorbar and estimator
+          parameters are ignored.
         - None: No error bars
     n_boot : int, default=1000
         Number of bootstrap iterations for computing confidence intervals.
@@ -104,7 +110,7 @@ def pointplot(
         - dict: mapping of hue values to colors
         - list: list of colors
         - None: uses default palette
-    markers : bool, list, dict, optional
+    markers : bool, list, dict, optional. Default: "o"
         Markers to use for different hue levels:
         - True: use default marker set
         - list: list of marker symbols (e.g., ["o", "^", "s"])
@@ -180,6 +186,11 @@ def pointplot(
     alpha = resolve_param("alpha", alpha)
     color = resolve_param("color", color)
     linestyle = resolve_param("lines.linestyle", linestyle)
+    
+    if kwargs.pop("join", None) is not None:
+        raise DeprecationWarning(
+            "join parameter is deprecated. Use linestyle='none' instead for no connecting lines."
+        )
 
     # Create figure if not provided
     if ax is None:
@@ -187,42 +198,49 @@ def pointplot(
     else:
         fig = ax.get_figure()
 
-    # Resolve palette
+    # Resolve palette, markers and linestyles
+    marker_map = {}
+    linestyle_map = {}
+
+    if linestyle == "none":
+        linestyles = "none"
+
     if hue is not None:
         hue_values = data[hue].unique() if hue_order is None else hue_order
         palette = resolve_palette_map(
             values=hue_values,
             palette=palette,
         )
+        # hue_order = list(palette.keys())
 
-    # Resolve markers
-    if hue is not None and markers is None:
-        markers = True
-
-    if markers is True:
-        # Get marker mapping
-        hue_values = data[hue].unique() if hue_order is None else hue_order
-        marker_map = resolve_marker_map(values=list(hue_values), marker_map=None)
-        # Convert to list for seaborn
-        markers = [marker_map[val] for val in hue_values]
-    
-    if kwargs.pop("join", None) is not None:
-        raise DeprecationWarning(
-            "join parameter is deprecated. Use linestyle='none' instead for no connecting lines."
-        )
-    
-    if linestyle == "none":
-        linestyles = ["none"]
-    
-    if hue is not None and (isinstance(linestyles, str) or len(linestyles) < data[hue].nunique()):
-        linestyles = [linestyles] if isinstance(linestyles, str) else linestyles
-        linestyles = linestyles * data[hue].nunique()
+        if markers is not False:
+            if markers is True:
+                markers = None
+            elif isinstance(markers, str):
+                markers = [markers]
+            # Get marker mapping
+            marker_map = resolve_marker_map(values=list(hue_values), marker_map=markers)
+            # Convert to list for seaborn
+            markers = [marker_map[val] for val in data[hue].unique()]
+        
+        if linestyles is None:
+            linestyles = [linestyle]
+        elif isinstance(linestyles, str):
+            linestyles = [linestyles]
+        linestyle_map = resolve_linestyle_map(values=list(hue_values), linestyle_map=linestyles)
+        linestyles = [linestyle_map[val] for val in data[hue].unique()]
 
     # Prepare err_kws with linewidth
     if err_kws is None:
         err_kws = {}
     if 'linewidth' not in err_kws:
         err_kws['linewidth'] = linewidth
+
+    # Resolve errorbar if custom error values are provided
+    if isinstance(errorbar, tuple) and errorbar[0] == "custom":
+        data = _format_for_custom_errorbar(data, x, y, errorbar[1], orient)
+        estimator = "median"   # middle value for estimator
+        errorbar = ("pi", 100) # Use full range
 
     # Prepare kwargs for seaborn pointplot
     pointplot_kwargs = {
@@ -280,8 +298,8 @@ def pointplot(
             ax=ax,
             hue=hue,
             palette=palette,
-            markers=markers,
-            linestyles=linestyles,
+            markers=list(marker_map.values()),
+            linestyles=list(linestyle_map.values()),
             markersize=markersize,
             markeredgewidth=markeredgewidth,
             alpha=alpha,
@@ -290,6 +308,41 @@ def pointplot(
         )
 
     return fig, ax
+
+def _format_for_custom_errorbar(
+    data: pd.DataFrame,
+    x: str,
+    y: str,
+    custom_errorbar: Tuple[str, str],
+    orient: Optional[str] = None,
+) -> pd.DataFrame:
+    """"
+    Format data for custom errorbar.
+    """
+    # Figure out categorical variable
+    value_col = None
+    if is_categorical(data[y]) or orient.isin(["horizontal", "h", "x"]):
+        value_col = x
+    elif is_categorical(data[x]) or orient.isin(["vertical", "v", "y"]):
+        value_col = y
+    else:
+        raise ValueError(
+            "One of x or y must be categorical. "
+            "Or orient must be specified."
+        )
+
+    lower, upper = custom_errorbar
+    assert lower in data.columns and upper in data.columns, \
+        "Custom errorbar must be a tuple of column names."
+    
+    data = pd.concat([
+        data.assign(__value=data[lower]),
+        data.assign(__value=data[value_col]),
+        data.assign(__value=data[upper]),
+    ], ignore_index=True)
+    data[value_col] = data["__value"]
+    data.drop(columns=["__value"], inplace=True)
+    return data
 
 
 def _apply_marker_styling(

@@ -549,8 +549,11 @@ def create_legend_handles(
         sizes = sizes or [resolve_param("lines.markersize")]
         sizes = [sizes[i % len(sizes)] for i in range(len(labels))]
 
-    if markers is not None and len(markers) == 0:
-        markers = None
+    if markers is not None:
+        if isinstance(markers, str):
+            markers = [markers] * len(labels)
+        if len(markers) == 0:
+            markers = None
 
     if linestyles is not None and len(linestyles) < len(labels):
         linestyles = linestyles or [resolve_param("lines.linestyle")]
