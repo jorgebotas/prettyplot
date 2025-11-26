@@ -9,8 +9,6 @@ which shows individual data points with optional jitter.
 import publiplots as pp
 import pandas as pd
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 # Set style
@@ -42,8 +40,7 @@ fig, ax = pp.stripplot(
     xlabel='Category',
     ylabel='Value',
 )
-# plt.show()
-print("Plot generated successfully")
+plt.show()
 
 # %%
 # Strip Plot with Jitter
@@ -60,8 +57,7 @@ fig, ax = pp.stripplot(
     xlabel='Category',
     ylabel='Value',
 )
-# plt.show()
-print("Plot generated successfully")
+plt.show()
 
 # %%
 # Strip Plot with Hue Grouping
@@ -82,8 +78,7 @@ fig, ax = pp.stripplot(
     ylabel='Value',
     palette={'Group 1': '#8E8EC1', 'Group 2': '#75B375'},
 )
-# plt.show()
-print("Plot generated successfully")
+plt.show()
 
 # %%
 # Dodged Strip Plot
@@ -101,8 +96,7 @@ fig, ax = pp.stripplot(
     xlabel='Category',
     ylabel='Value',
 )
-# plt.show()
-print("Plot generated successfully")
+plt.show()
 
 # %%
 # Horizontal Strip Plot

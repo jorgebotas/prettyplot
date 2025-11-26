@@ -26,7 +26,7 @@ PubliPlots is a Python visualization library that provides beautiful, publicatio
   <img src="docs/images/upsetplot.png" width="45%" alt="UpSet Plot" style="vertical-align: middle">
 </p>
 
-For interactive examples, check out the [examples.ipynb](examples.ipynb) notebook.
+For interactive examples, check out the [examples.ipynb](examples/examples.ipynb) notebook.
 
 ## Installation
 
