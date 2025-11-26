@@ -39,6 +39,8 @@ from publiplots.utils.axes import (
     add_grid,
     set_axis_labels,
     add_reference_line,
+    rotate,
+    invert_axis,
 )
 from publiplots.utils.legend import (
     HandlerRectangle,
@@ -104,6 +106,8 @@ __all__ = [
     "add_grid",
     "set_axis_labels",
     "add_reference_line",
+    "rotate",
+    "invert_axis",
     # Legend utilities
     "HandlerRectangle",
     "HandlerMarker",
